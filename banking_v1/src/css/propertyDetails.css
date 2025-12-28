@@ -1,0 +1,421 @@
+/* Property Details Styles */
+
+.property-details-header {
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin: 0 0 8px 0;
+}
+
+.page-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #1e3a8a;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 24px;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: #2563eb;
+}
+
+.back-arrow {
+  width: 16px;
+  height: 16px;
+}
+
+/* Header Logo */
+.header-logo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e3a8a;
+}
+
+.logo-subtext {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Property Overview Card */
+.property-overview-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.property-overview-left {
+  flex: 1;
+}
+
+.property-name-large {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 12px 0;
+}
+
+.property-address-large {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  color: #374151;
+  margin-bottom: 16px;
+}
+
+.map-pin-icon-large {
+  flex-shrink: 0;
+}
+
+.property-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.property-status-tag.pending {
+  background-color: #fef3c7;
+  color: #f59e0b;
+}
+
+.property-status-tag.available {
+  background-color: #d1fae5;
+  color: #10b981;
+}
+
+.status-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.property-overview-right {
+  text-align: right;
+}
+
+.property-price-large {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1e3a8a;
+  line-height: 1.2;
+}
+
+.property-price-per-sqft-large {
+  font-size: 16px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* Property Details Grid */
+.property-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Property Information Card */
+.property-info-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.required-actions-card {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.card-icon {
+  flex-shrink: 0;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e3a8a;
+  margin: 0;
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.info-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  flex-shrink: 0;
+  min-width: 140px;
+}
+
+.info-value {
+  font-size: 14px;
+  color: #111827;
+  text-align: right;
+  flex: 1;
+}
+
+/* Required Actions */
+.required-actions-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.action-card {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: #ffffff;
+  transition: all 0.2s;
+}
+
+.action-card.available {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.action-card.disabled {
+  opacity: 0.6;
+  background-color: #f9fafb;
+}
+
+.action-icon-wrapper {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #1e3a8a;
+}
+
+.action-card.available .action-icon-wrapper {
+  background-color: #dbeafe;
+}
+
+.action-card.disabled .action-icon-wrapper {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+}
+
+.action-content {
+  flex: 1;
+}
+
+.action-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.action-card.disabled .action-title {
+  color: #6b7280;
+}
+
+.action-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Status Badge */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+/* Next Step Box */
+.next-step-box {
+  background-color: #dbeafe;
+  border: 1px solid #93c5fd;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+.next-step-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.info-icon {
+  width: 20px;
+  height: 20px;
+  color: #1e40af;
+  flex-shrink: 0;
+}
+
+.next-step-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e40af;
+  margin: 0;
+}
+
+.next-step-description {
+  font-size: 14px;
+  color: #1e40af;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Submit Button */
+.submit-approval-button {
+  width: 100%;
+  padding: 14px 20px;
+  background-color: #f97316;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+  margin-top: auto;
+}
+
+.submit-approval-button:hover {
+  background-color: #ea580c;
+}
+
+.submit-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+  .property-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .property-overview-card {
+    flex-direction: column;
+  }
+
+  .property-overview-right {
+    text-align: left;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-title {
+    font-size: 24px;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+  }
+
+  .property-name-large {
+    font-size: 24px;
+  }
+
+  .property-price-large {
+    font-size: 28px;
+  }
+
+  .property-info-card,
+  .required-actions-card {
+    padding: 20px;
+  }
+
+  .info-item {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .info-label {
+    min-width: auto;
+  }
+
+  .info-value {
+    text-align: left;
+  }
+}
+

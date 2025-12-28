@@ -1,0 +1,205 @@
+/* Workflow Timeline Styles */
+
+.workflow-timeline {
+  width: 100%;
+  padding: 32px 0;
+  background-color: #ffffff;
+  order: 1;
+  margin-bottom: 0;
+}
+
+.timeline-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.timeline-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 2;
+  min-width: 120px;
+}
+
+.timeline-link {
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  transition: transform 0.2s;
+}
+
+.timeline-link:hover {
+  transform: translateY(-2px);
+}
+
+.stage-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.stage-icon.blue {
+  background-color: #1e3a8a;
+  color: #ffffff;
+  border: 3px solid #1e3a8a;
+}
+
+.stage-icon.orange {
+  background-color: #f97316;
+  color: #ffffff;
+  border: 3px solid #f97316;
+}
+
+.stage-icon.gray {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border: 3px solid #e5e7eb;
+}
+
+.stage-icon.active {
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+  transform: scale(1.1);
+}
+
+.stage-icon.completed {
+  background-color: #1e3a8a;
+  color: #ffffff;
+  border-color: #1e3a8a;
+}
+
+.stage-label {
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.3;
+  max-width: 140px;
+}
+
+.stage-label.blue {
+  color: #1e3a8a;
+}
+
+.stage-label.orange {
+  color: #f97316;
+}
+
+.stage-label.gray {
+  color: #6b7280;
+}
+
+.stage-label.active {
+  font-weight: 600;
+  color: #f97316;
+}
+
+.stage-label.completed {
+  color: #1e3a8a;
+}
+
+.timeline-connector {
+  flex: 1;
+  height: 2px;
+  background-color: #e5e7eb;
+  margin: 0 8px;
+  position: relative;
+  z-index: 0;
+  transition: all 0.3s;
+}
+
+.timeline-connector.active {
+  background-color: #3b82f6;
+  height: 3px;
+  box-shadow: 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .timeline-container {
+    padding: 0 24px;
+  }
+
+  .stage-label {
+    font-size: 13px;
+    max-width: 120px;
+  }
+
+  .stage-icon {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+@media (max-width: 968px) {
+  .workflow-timeline {
+    padding: 24px 0;
+    overflow-x: auto;
+  }
+
+  .timeline-container {
+    min-width: 800px;
+    padding: 0 16px;
+  }
+
+  .timeline-stage {
+    min-width: 100px;
+  }
+
+  .stage-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .stage-label {
+    font-size: 12px;
+    max-width: 100px;
+  }
+}
+
+@media (max-width: 640px) {
+  .workflow-timeline {
+    padding: 20px 0;
+  }
+
+  .timeline-container {
+    min-width: 700px;
+    padding: 0 12px;
+  }
+
+  .stage-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .stage-label {
+    font-size: 11px;
+    max-width: 90px;
+  }
+
+  .timeline-connector {
+    margin: 0 4px;
+  }
+}
+
