@@ -1,0 +1,90 @@
+/* Two Factor Auth Styles */
+
+.two-factor-section {
+  margin-top: 20px;
+}
+
+.two-factor-heading {
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 8px 0;
+}
+
+.two-factor-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 25px 0;
+  line-height: 1.5;
+}
+
+.otp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.otp-inputs-container {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.otp-input {
+  flex: 1;
+  aspect-ratio: 1;
+  max-width: 60px;
+  height: 60px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 600;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #111827;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.otp-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.otp-input:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.login-button:disabled {
+  background-color: #fbbf24;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.login-button:disabled:hover {
+  background-color: #fbbf24;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .otp-input {
+    max-width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .otp-inputs-container {
+    gap: 8px;
+  }
+
+  .two-factor-heading {
+    font-size: 16px;
+  }
+
+  .two-factor-description {
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+}

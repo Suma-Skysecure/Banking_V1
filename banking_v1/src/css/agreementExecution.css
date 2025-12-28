@@ -1,0 +1,327 @@
+/* Agreement Execution Page Styles */
+
+.dashboard-container {
+  background-color: #ffffff;
+}
+
+.dashboard-main {
+  background-color: #ffffff;
+}
+
+.dashboard-content {
+  padding: 0 32px 32px 32px;
+  min-height: calc(100vh - 60px);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  color: #3b82f6;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 24px;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* Property Overview Card */
+.property-overview-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.property-overview-left {
+  flex: 1;
+}
+
+.property-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 12px 0;
+}
+
+.property-address {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.map-pin-icon {
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.property-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.status-icon {
+  color: #1e40af;
+  width: 14px;
+  height: 14px;
+}
+
+.property-id {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.property-overview-right {
+  text-align: right;
+}
+
+.property-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-bottom: 8px;
+}
+
+.property-completion-date {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Agreement Execution Status Section */
+.agreement-status-section {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.section-icon {
+  color: #10b981;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.status-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.status-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #f9fafb;
+}
+
+.status-card.yellow {
+  background-color: #fef3c7;
+}
+
+.status-card.light-blue {
+  background-color: #eff6ff;
+}
+
+.status-card.light-purple {
+  background-color: #f3e8ff;
+}
+
+.status-card-icon {
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.status-card-content {
+  flex: 1;
+}
+
+.status-card-label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.status-card-value {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.status-card-value.orange {
+  color: #f97316;
+}
+
+.status-card-value.blue {
+  color: #1e3a8a;
+}
+
+.status-card-value.purple {
+  color: #7c3aed;
+}
+
+/* Agreement Details Grid */
+.agreement-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.agreement-details-card,
+.terms-clauses-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.card-icon {
+  color: #3b82f6;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.details-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.details-subsection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.subsection-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 4px 0;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.detail-label {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 600;
+}
+
+.detail-value.green {
+  color: #10b981;
+}
+
+.detail-value.blue {
+  color: #1e3a8a;
+}
+
+.detail-value.bold {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.clauses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.clause-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.clause-checkmark {
+  color: #10b981;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.clause-text {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.clause-text strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 968px) {
+  .property-overview-card {
+    flex-direction: column;
+  }
+
+  .property-overview-right {
+    text-align: left;
+  }
+
+  .status-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .agreement-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

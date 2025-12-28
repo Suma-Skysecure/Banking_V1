@@ -1,0 +1,765 @@
+/* Business Approval Page Styles */
+
+.back-to-property-details {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #1e3a8a;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 24px;
+  transition: color 0.2s;
+}
+
+.back-to-property-details:hover {
+  color: #1d4ed8;
+}
+
+.back-arrow {
+  width: 16px;
+  height: 16px;
+}
+
+/* Property Overview Card */
+.property-overview-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.property-overview-left {
+  flex: 1;
+}
+
+.property-name-large {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 12px 0;
+}
+
+.property-address-large {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6b7280;
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.map-pin-icon-large {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.property-status-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.property-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.property-status-tag.pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.property-status-tag.available {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.submitted-date {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.property-overview-right {
+  text-align: right;
+}
+
+.property-price-large {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.property-price-per-sqft-large {
+  font-size: 16px;
+  color: #6b7280;
+}
+
+/* Business Details Summary Card */
+.business-details-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.card-icon {
+  width: 20px;
+  height: 20px;
+  color: #1e3a8a;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.active {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* Approval Status and History Grid */
+.approval-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* Business Approval Status Card */
+.approval-status-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.current-status-section {
+  margin-bottom: 24px;
+}
+
+.status-display {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.status-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-circle.pending {
+  background-color: #fef3c7;
+}
+
+.status-circle.approved {
+  background-color: #d1fae5;
+}
+
+.status-circle-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.status-text-section {
+  flex: 1;
+}
+
+.status-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.status-badge-inline {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge-inline.in-progress {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.timeline-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.timeline-icon-wrapper.completed {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.timeline-icon-wrapper.pending {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.timeline-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.timeline-content {
+  flex: 1;
+}
+
+.timeline-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.timeline-date {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.timeline-status {
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Approval History Card */
+.approval-history-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.history-item {
+  display: flex;
+  gap: 12px;
+}
+
+.history-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.history-content {
+  flex: 1;
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.history-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.history-role {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.history-action {
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.history-date {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.history-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.history-badge.approved {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.history-badge.submitted {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+  .approval-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .property-overview-card {
+    flex-direction: column;
+  }
+
+  .property-overview-right {
+    text-align: left;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Decision Section Grid */
+.decision-section-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Left Column - Workflow Timeline */
+.decision-left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.workflow-timeline-vertical {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.workflow-timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+}
+
+.workflow-timeline-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.workflow-timeline-icon-wrapper.completed {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.workflow-timeline-icon-wrapper.active {
+  background-color: #fef3c7;
+  color: #f59e0b;
+}
+
+.workflow-timeline-icon-wrapper.pending {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.workflow-timeline-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.workflow-timeline-content {
+  flex: 1;
+  padding-top: 2px;
+}
+
+.workflow-timeline-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.workflow-timeline-date {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.workflow-timeline-status {
+  font-size: 14px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.workflow-timeline-connector {
+  width: 2px;
+  height: 24px;
+  background-color: #e5e7eb;
+  margin-left: 20px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.estimated-review-time-box {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.info-icon-wrapper {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.info-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e40af;
+  margin-bottom: 4px;
+}
+
+.info-text {
+  font-size: 13px;
+  color: #1e40af;
+  line-height: 1.5;
+}
+
+/* Right Column - Submission Details */
+.decision-right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.submission-details-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.current-status-indicator {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-dots-icon {
+  width: 20px;
+  height: 20px;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.status-indicator-text {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+}
+
+/* Business Decision Card */
+.business-decision-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.decision-form {
+  margin-top: 24px;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.review-comments-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #111827;
+  resize: vertical;
+  min-height: 120px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.review-comments-textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.review-comments-textarea::placeholder {
+  color: #9ca3af;
+}
+
+.decision-impact-section {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.impact-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.impact-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.impact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.impact-item.approve .impact-icon {
+  color: #10b981;
+}
+
+.impact-item.reject .impact-icon {
+  color: #ef4444;
+}
+
+.impact-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.impact-text {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.decision-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+}
+
+.decision-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.decision-button.reject-button {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
+.decision-button.reject-button:hover {
+  background-color: #dc2626;
+}
+
+.decision-button.approve-button {
+  background-color: #f97316;
+  color: #ffffff;
+}
+
+.decision-button.approve-button:hover {
+  background-color: #ea580c;
+}
+
+.button-icon {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 640px) {
+  .property-name-large {
+    font-size: 24px;
+  }
+
+  .property-price-large {
+    font-size: 28px;
+  }
+
+  .status-display {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .decision-section-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .decision-actions {
+    flex-direction: column;
+  }
+
+  .decision-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+

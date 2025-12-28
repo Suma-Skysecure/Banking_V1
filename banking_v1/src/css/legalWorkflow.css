@@ -1,0 +1,637 @@
+/* Legal Workflow Page Styles */
+
+.back-to-business-approval {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #1e3a8a;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 24px;
+  transition: color 0.2s;
+}
+
+.back-to-business-approval:hover {
+  color: #1d4ed8;
+}
+
+.back-arrow {
+  width: 16px;
+  height: 16px;
+}
+
+/* Property Overview Card */
+.property-overview-header {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.property-overview-left {
+  flex: 1;
+}
+
+.property-name-header {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 12px 0;
+}
+
+.property-address-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6b7280;
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.map-pin-icon-header {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.property-status-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.loi-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.property-id-text {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.property-overview-right {
+  text-align: right;
+}
+
+.property-price-header {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-bottom: 4px;
+}
+
+.approval-date {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* LOI Status Tracker */
+.loi-status-tracker-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.loi-tracker-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.tracker-icon {
+  width: 20px;
+  height: 20px;
+  color: #1e3a8a;
+}
+
+.tracker-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.loi-stages-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+}
+
+.loi-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.loi-stage-connector {
+  position: absolute;
+  top: 24px;
+  left: calc(50% + 32px);
+  right: calc(-50% + 32px);
+  height: 2px;
+  z-index: 0;
+}
+
+.loi-stage-connector.completed {
+  background-color: #3b82f6;
+}
+
+.loi-stage-connector.pending {
+  background-color: #e5e7eb;
+}
+
+.loi-stage:last-child .loi-stage-connector {
+  display: none;
+}
+
+.loi-stage-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.loi-stage-icon.completed {
+  background-color: #1e3a8a;
+  color: #ffffff;
+}
+
+.loi-stage-icon.current {
+  background-color: #f59e0b;
+  color: #ffffff;
+}
+
+.loi-stage-icon.pending {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.loi-stage-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.loi-stage-content {
+  text-align: center;
+}
+
+.loi-stage-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.loi-stage-date {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.loi-stage-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.loi-stage-status.completed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.loi-stage-status.current {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.loi-stage-status.pending {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Document Upload and LOI Details Grid */
+.loi-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Document Upload Card */
+.document-upload-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.upload-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.upload-icon {
+  width: 20px;
+  height: 20px;
+  color: #1e3a8a;
+}
+
+.upload-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.upload-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  background-color: #f9fafb;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 16px;
+}
+
+.upload-area:hover {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.upload-icon-large {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  color: #3b82f6;
+}
+
+.upload-text {
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.upload-file-types {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.uploaded-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.uploaded-file-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.file-icon {
+  width: 24px;
+  height: 24px;
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.file-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.file-name {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.file-meta {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.file-icon.pdf {
+  color: #ef4444;
+}
+
+.file-icon.doc {
+  color: #3b82f6;
+}
+
+.file-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.file-delete-btn:hover {
+  color: #ef4444;
+}
+
+/* LOI Details Card */
+.loi-details-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.loi-details-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.loi-details-icon {
+  width: 20px;
+  height: 20px;
+  color: #1e3a8a;
+}
+
+.loi-details-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.loi-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.loi-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.loi-detail-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.loi-detail-value {
+  font-size: 16px;
+  color: #111827;
+  font-weight: 500;
+}
+
+.loi-detail-value.bold {
+  font-weight: 700;
+}
+
+.important-notice-box {
+  margin-top: 20px;
+  padding: 16px;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  display: flex;
+  gap: 12px;
+}
+
+.notice-icon-wrapper {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notice-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.notice-content {
+  flex: 1;
+}
+
+.notice-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e40af;
+  margin-bottom: 4px;
+}
+
+.notice-text {
+  font-size: 13px;
+  color: #1e40af;
+  line-height: 1.5;
+}
+
+/* Actions Section */
+.actions-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.actions-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.actions-icon {
+  width: 20px;
+  height: 20px;
+  color: #1e3a8a;
+}
+
+.actions-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.actions-buttons {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.provide-documents-btn {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+.provide-documents-btn:hover {
+  background-color: #2563eb;
+}
+
+.circulate-loi-btn {
+  background-color: #f97316;
+  color: #ffffff;
+  flex: 1;
+}
+
+.circulate-loi-btn:hover {
+  background-color: #ea580c;
+}
+
+.button-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.arrow-icon {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+}
+
+.next-steps-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.next-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.step-arrow {
+  width: 20px;
+  height: 20px;
+  color: #f97316;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.step-description {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+  .loi-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .property-overview-header {
+    flex-direction: column;
+  }
+
+  .property-overview-right {
+    text-align: left;
+  }
+
+  .loi-stages-container {
+    flex-wrap: wrap;
+  }
+
+  .loi-stage {
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 640px) {
+  .property-name-header {
+    font-size: 24px;
+  }
+
+  .property-price-header {
+    font-size: 28px;
+  }
+
+  .loi-stages-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .loi-stage-connector {
+    display: none;
+  }
+}
+

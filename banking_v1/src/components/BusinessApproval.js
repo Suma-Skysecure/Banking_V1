@@ -1,0 +1,693 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Sidebar from "@/components/Sidebar";
+import PageHeader from "@/components/PageHeader";
+import WorkflowTimeline from "@/components/WorkflowTimeline";
+import "@/css/branchTracker.css";
+import "@/css/pageHeader.css";
+import "@/css/workflowTimeline.css";
+import "@/css/businessApproval.css";
+
+export default function BusinessApproval() {
+  const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [reviewComments, setReviewComments] = useState("");
+
+  return (
+    <div className="dashboard-container">
+      <header className="dashboard-header">
+        <button
+          className="header-hamburger"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label="Toggle sidebar"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="hamburger-icon">
+            <path d="M3 5H17M3 10H17M3 15H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
+        <div className="header-search">
+          <input
+            type="text"
+            placeholder="Search branch..."
+            className="header-search-input"
+          />
+        </div>
+        <div className="header-actions">
+          <button className="header-icon-btn">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M10 2C10.5523 2 11 2.44772 11 3V4H15C15.5523 4 16 4.44772 16 5C16 5.55228 15.5523 6 15 6H5C4.44772 6 4 5.55228 4 5C4 4.44772 4.44772 4 5 4H9V3C9 2.44772 9.44772 2 10 2Z"
+                fill="#6b7280"
+              />
+              <path
+                d="M5 8H15L14.4 15.2C14.3 16.8 13 18 11.4 18H8.6C7 18 5.7 16.8 5.6 15.2L5 8Z"
+                fill="#6b7280"
+              />
+            </svg>
+          </button>
+          <div className="header-profile">
+            <div className="profile-avatar">AM</div>
+            <div className="profile-info">
+              <span className="profile-name">Ana Miller</span>
+              <span className="profile-email">analyst@pms.com</span>
+            </div>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              className="dropdown-chevron"
+            >
+              <path
+                d="M4 6L8 10L12 6"
+                stroke="#6b7280"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+      </header>
+
+      <div className="dashboard-content-wrapper">
+        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+        <main className="dashboard-main">
+          <div className="main-content">
+            {/* Workflow Timeline */}
+            <WorkflowTimeline activeStage="Business Approval" />
+            
+            <PageHeader
+              title="Business Approval"
+              subtitle="Review and approve property based on defined business criteria."
+            />
+
+            {/* Back to Property Details Link */}
+            <Link href="/property-details" className="back-to-property-details">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                className="back-arrow"
+              >
+                <path
+                  d="M10 12L6 8L10 4"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Back to Property Details
+            </Link>
+
+            {/* Property Overview Card */}
+            <div className="property-overview-card">
+              <div className="property-overview-left">
+                <h2 className="property-name-large">Downtown Arts Plaza</h2>
+                <div className="property-address-large">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    className="map-pin-icon-large"
+                  >
+                    <path
+                      d="M8 8C9.10457 8 10 7.10457 10 6C10 4.89543 9.10457 4 8 4C6.89543 4 6 4.89543 6 6C6 7.10457 6.89543 8 8 8Z"
+                      fill="#ef4444"
+                    />
+                    <path
+                      d="M8 1C5.23858 1 3 3.23858 3 6C3 10 8 15 8 15C8 15 13 10 13 6C13 3.23858 10.7614 1 8 1Z"
+                      stroke="#ef4444"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span>1450 Biscayne Boulevard, Miami, FL 33132</span>
+                </div>
+                <div className="property-status-section">
+                  <div className="property-status-tag pending">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className="status-icon"
+                    >
+                      <circle
+                        cx="8"
+                        cy="8"
+                        r="7"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      />
+                      <path
+                        d="M8 4V8L10.5 10.5"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Pending Approval
+                  </div>
+                  <div className="submitted-date">Submitted on Dec 15, 2024</div>
+                </div>
+              </div>
+              <div className="property-overview-right">
+                <div className="property-price-large">₹48,43,00,000</div>
+                <div className="property-price-per-sqft-large">₹1,15,313 per sq ft</div>
+              </div>
+            </div>
+
+            {/* Business Details Summary Card */}
+            <div className="business-details-card">
+              <div className="card-header">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  className="card-icon"
+                >
+                  <path
+                    d="M2 4H14V12H2V4Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M6 4V12M10 4V12"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <h3 className="card-title">Business Details Summary</h3>
+              </div>
+              <div className="details-grid">
+                <div className="detail-item">
+                  <span className="detail-label">Property ID</span>
+                  <span className="detail-value">PROP-MIA-2024-002</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Parking Spaces</span>
+                  <span className="detail-value">8 Reserved</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Zoning</span>
+                  <span className="detail-value">Commercial/Retail</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Property Type</span>
+                  <span className="detail-value">Mixed Use</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Year Built</span>
+                  <span className="detail-value">2019</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Listing Status</span>
+                  <span className="detail-value">
+                    <span className="status-badge active">Active</span>
+                  </span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Total Area</span>
+                  <span className="detail-value">4,200 sq ft</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Vendor Name</span>
+                  <span className="detail-value">Biscayne Development</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Availability</span>
+                  <span className="detail-value">30 days</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Floor Level</span>
+                  <span className="detail-value">Ground Floor + Mezzanine</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Vendor Contact</span>
+                  <span className="detail-value">+1 (305) 555-0198</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Last Inspection</span>
+                  <span className="detail-value">Dec 10, 2024</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Approval Status and History Grid */}
+            <div className="approval-grid">
+              {/* Business Approval Status Card */}
+              <div className="approval-status-card">
+                <div className="card-header">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="card-icon"
+                  >
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                    <path
+                      d="M9 12L11 14L15 10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <h3 className="card-title">Business Approval Status</h3>
+                </div>
+                <div className="current-status-section">
+                  <div className="status-display">
+                    <div className="status-circle pending">
+                      <svg
+                        width="32"
+                        height="32"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        className="status-circle-icon"
+                      >
+                        <circle
+                          cx="8"
+                          cy="8"
+                          r="7"
+                          stroke="#f59e0b"
+                          strokeWidth="1.5"
+                        />
+                        <path
+                          d="M8 4V8L10.5 10.5"
+                          stroke="#f59e0b"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                    <div className="status-text-section">
+                      <h4 className="status-title">Pending Business Review</h4>
+                      <span className="status-badge-inline in-progress">In Progress</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="status-timeline">
+                  <div className="timeline-item">
+                    <div className="timeline-icon-wrapper completed">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        className="timeline-icon"
+                      >
+                        <path
+                          d="M13 4L6 11L3 8"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                    <div className="timeline-content">
+                      <div className="timeline-title">Property Submitted</div>
+                      <div className="timeline-date">Dec 15, 2024 at 10:30 AM</div>
+                    </div>
+                  </div>
+                  <div className="timeline-item">
+                    <div className="timeline-icon-wrapper pending">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        className="timeline-icon"
+                      >
+                        <path
+                          d="M8 2V6M8 10V14M2 8H6M10 8H14"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </div>
+                    <div className="timeline-content">
+                      <div className="timeline-title">Business Review</div>
+                      <div className="timeline-status">Awaiting approval</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Approval History Card */}
+              <div className="approval-history-card">
+                <div className="card-header">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="card-icon"
+                  >
+                    <path
+                      d="M3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M12 8V12L15 15"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <h3 className="card-title">Approval History</h3>
+                </div>
+                <div className="history-list">
+                  <div className="history-item">
+                    <div className="history-avatar">MC</div>
+                    <div className="history-content">
+                      <div className="history-header">
+                        <span className="history-name">Michael Chen</span>
+                        <span className="history-role">(Regional Manager)</span>
+                        <span className="history-badge approved">Approved</span>
+                      </div>
+                      <div className="history-action">Approved property listing for business review</div>
+                      <div className="history-date">Dec 15, 2024 at 10:45 AM</div>
+                    </div>
+                  </div>
+                  <div className="history-item">
+                    <div className="history-avatar">AM</div>
+                    <div className="history-content">
+                      <div className="history-header">
+                        <span className="history-name">Ana Miller</span>
+                        <span className="history-role">(Property Analyst)</span>
+                        <span className="history-badge submitted">Submitted</span>
+                      </div>
+                      <div className="history-action">Submitted property for business approval</div>
+                      <div className="history-date">Dec 15, 2024 at 10:30 AM</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Business Approval Decision Section */}
+            <div className="decision-section-grid">
+              {/* Left Column - Workflow Timeline */}
+              <div className="decision-left-column">
+                <div className="workflow-timeline-vertical">
+                  <div className="workflow-timeline-item completed">
+                    <div className="workflow-timeline-icon-wrapper completed">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        className="workflow-timeline-icon"
+                      >
+                        <path
+                          d="M13 4L6 11L3 8"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                    <div className="workflow-timeline-content">
+                      <div className="workflow-timeline-title">Property Submitted</div>
+                      <div className="workflow-timeline-date">Dec 15, 2024 at 10:30 AM</div>
+                    </div>
+                  </div>
+                  <div className="workflow-timeline-connector"></div>
+                  <div className="workflow-timeline-item active">
+                    <div className="workflow-timeline-icon-wrapper active">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        className="workflow-timeline-icon"
+                      >
+                        <path
+                          d="M8 2V6M8 10V14M2 8H6M10 8H14"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </div>
+                    <div className="workflow-timeline-content">
+                      <div className="workflow-timeline-title">Business Review</div>
+                      <div className="workflow-timeline-status">Awaiting approval</div>
+                    </div>
+                  </div>
+                  <div className="workflow-timeline-connector"></div>
+                  <div className="workflow-timeline-item pending">
+                    <div className="workflow-timeline-icon-wrapper pending">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        className="workflow-timeline-icon"
+                      >
+                        <path
+                          d="M14 2H2V14H14V2Z"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M6 2V14M10 2V14"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </div>
+                    <div className="workflow-timeline-content">
+                      <div className="workflow-timeline-title">LOI Signing</div>
+                      <div className="workflow-timeline-status">Next step after approval</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="estimated-review-time-box">
+                  <div className="info-icon-wrapper">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      className="info-icon"
+                    >
+                      <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" />
+                      <path
+                        d="M10 6V10M10 14H10.01"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
+                  <div className="info-content">
+                    <div className="info-title">Estimated Review Time</div>
+                    <div className="info-text">
+                      Business approval typically takes 3-5 business days. You will be notified once the review is complete.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Submission Details */}
+              <div className="decision-right-column">
+                <div className="submission-details-card">
+                  <div className="history-item">
+                    <div className="history-avatar">AM</div>
+                    <div className="history-content">
+                      <div className="history-header">
+                        <span className="history-name">Ana Miller</span>
+                        <span className="history-role">(Property Analyst)</span>
+                        <span className="history-badge submitted">Submitted</span>
+                      </div>
+                      <div className="history-action">Submitted property for business approval</div>
+                      <div className="history-date">Dec 15, 2024 at 10:30 AM</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="current-status-indicator">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    className="status-dots-icon"
+                  >
+                    <circle cx="4" cy="10" r="1.5" fill="currentColor" />
+                    <circle cx="10" cy="10" r="1.5" fill="currentColor" />
+                    <circle cx="16" cy="10" r="1.5" fill="currentColor" />
+                  </svg>
+                  <span className="status-indicator-text">Awaiting final business approval decision</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Business Approval Decision Card */}
+            <div className="business-decision-card">
+              <div className="card-header">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="card-icon"
+                >
+                  <path
+                    d="M14 10L18 6M18 6L14 2M18 6H6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M10 18L6 14M6 14L10 10M6 14H18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <h3 className="card-title">Business Approval Decision</h3>
+              </div>
+
+              <div className="decision-form">
+                <div className="form-group">
+                  <label htmlFor="reviewComments" className="form-label">
+                    Review Comments
+                  </label>
+                  <textarea
+                    id="reviewComments"
+                    className="review-comments-textarea"
+                    placeholder="Enter your review comments and decision rationale..."
+                    value={reviewComments}
+                    onChange={(e) => setReviewComments(e.target.value)}
+                    rows={6}
+                  />
+                </div>
+
+                <div className="decision-impact-section">
+                  <div className="impact-title">Decision Impact</div>
+                  <div className="impact-items">
+                    <div className="impact-item approve">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        className="impact-icon"
+                      >
+                        <path
+                          d="M16 5L7 14L4 11"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <span className="impact-text">
+                        Approve: Property will proceed to LOI Signing stage and legal documentation process
+                      </span>
+                    </div>
+                    <div className="impact-item reject">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        className="impact-icon"
+                      >
+                        <path
+                          d="M5 5L15 15M15 5L5 15"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <span className="impact-text">
+                        Reject: Property listing will be returned for modification or removed from consideration
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="decision-actions">
+                  <button
+                    className="decision-button reject-button"
+                    onClick={() => {
+                      console.log("Reject property");
+                    }}
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      className="button-icon"
+                    >
+                      <path
+                        d="M5 5L15 15M15 5L5 15"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    Reject Property
+                  </button>
+                  <button
+                    className="decision-button approve-button"
+                    onClick={() => {
+                      console.log("Approve property");
+                      router.push("/legal-workflow");
+                    }}
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      className="button-icon"
+                    >
+                      <path
+                        d="M16 5L7 14L4 11"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Approve Property
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
