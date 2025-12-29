@@ -13,6 +13,7 @@ export default function BranchTracker() {
   const [cityFilter, setCityFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const branches = [
     {
@@ -198,7 +199,10 @@ export default function BranchTracker() {
                 >
                   Kanban
                 </button>
-                <button className="add-branch-btn">
+                <button 
+                  className="add-branch-btn"
+                  onClick={() => setIsModalOpen(true)}
+                >
                   <span>+</span> Add New Branch
                 </button>
               </div>
@@ -294,6 +298,203 @@ export default function BranchTracker() {
             </div>
           </div>
         </main>
+      </div>
+
+      {/* Create New Branch Modal */}
+      {isModalOpen && (
+        <CreateBranchModal 
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+// Create New Branch Modal Component
+function CreateBranchModal({ onClose }) {
+  const [formData, setFormData] = useState({
+    city: "",
+    locationName: "",
+    numberOfBranches: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveDraft = () => {
+    // Handle save draft logic here
+    console.log("Saving draft:", formData);
+    // You can add logic to save to localStorage or state
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Handle form submission logic here
+    console.log("Submitting form:", formData);
+    // You can add API call or state update here
+    onClose();
+  };
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={handleBackdropClick}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">Create New Branch</h2>
+          <button className="modal-close-btn" onClick={onClose}>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M15 5L5 15M5 5L15 15"
+                stroke="#6b7280"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="modal-form">
+          <div className="form-field">
+            <label className="form-label">
+              City <span className="required-asterisk">*</span>
+            </label>
+            <select
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              className="form-select"
+              required
+            >
+              <option value="">Select City</option>
+              <option value="manhattan">Manhattan</option>
+              <option value="beverly">Beverly Hills</option>
+              <option value="chicago">Chicago</option>
+              <option value="miami">Miami</option>
+              <option value="seattle">Seattle</option>
+            </select>
+          </div>
+
+          <div className="form-field">
+            <label className="form-label">
+              Location Name <span className="required-asterisk">*</span>
+            </label>
+            <input
+              type="text"
+              name="locationName"
+              value={formData.locationName}
+              onChange={handleChange}
+              className="form-input"
+              placeholder="e.g., Downtown Manhattan Branch"
+              required
+            />
+          </div>
+
+          <div className="form-field">
+            <label className="form-label">
+              Number of Branches <span className="required-asterisk">*</span>
+            </label>
+            <input
+              type="number"
+              name="numberOfBranches"
+              value={formData.numberOfBranches}
+              onChange={handleChange}
+              className="form-input"
+              placeholder="Enter number of branches"
+              min="1"
+              required
+            />
+          </div>
+
+          <div className="form-info-box">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M8 1C4.13401 1 1 4.13401 1 8C1 11.866 4.13401 15 8 15C11.866 15 15 11.866 15 8C15 4.13401 11.866 1 8 1ZM8 11.5C7.58579 11.5 7.25 11.1642 7.25 10.75C7.25 10.3358 7.58579 10 8 10C8.41421 10 8.75 10.3358 8.75 10.75C8.75 11.1642 8.41421 11.5 8 11.5ZM7.25 8.75V5.25C7.25 4.83579 7.58579 4.5 8 4.5C8.41421 4.5 8.75 4.83579 8.75 5.25V8.75C8.75 9.16421 8.41421 9.5 8 9.5C7.58579 9.5 7.25 9.16421 7.25 8.75Z"
+                fill="#1e40af"
+              />
+            </svg>
+            <span>All fields marked with * are mandatory</span>
+          </div>
+
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="btn-save-draft"
+              onClick={handleSaveDraft}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M2 2H11.5L14 4.5V14C14 14.5523 13.5523 15 13 15H3C2.44772 15 2 14.5523 2 14V2Z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M5 15V10H11V15"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M2 2V6H14"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Save Draft
+            </button>
+            <button type="submit" className="btn-submit">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M1 8L14 1M14 1L9.5 14M14 1L1 8L9.5 14"
+                  stroke="white"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Submit
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
