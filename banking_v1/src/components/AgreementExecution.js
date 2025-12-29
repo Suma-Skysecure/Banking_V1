@@ -6,14 +6,19 @@ import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import WorkflowTimeline from "@/components/WorkflowTimeline";
+import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/workflowTimeline.css";
-import "@/css/postLOIActivities.css";
+import "@/css/agreementExecution.css";
 
 export default function AgreementExecution() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
+  const { user } = useAuth();
+  
+  // Check if user is Legal Team
+  const isLegalTeam = user?.role === "Legal Team";
 
   return (
     <div className="dashboard-container">
@@ -484,6 +489,8 @@ export default function AgreementExecution() {
                   <button 
                     className="sign-agreement-button"
                     onClick={() => router.push("/agreement-registration")}
+                    disabled={!isLegalTeam}
+                    style={!isLegalTeam ? { opacity: 0.5, cursor: "not-allowed" } : {}}
                   >
                     <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="button-icon">
                       <path
@@ -503,6 +510,16 @@ export default function AgreementExecution() {
                     </svg>
                     Sign Agreement
                   </button>
+                  {!isLegalTeam && (
+                    <div style={{ 
+                      marginTop: "8px", 
+                      fontSize: "12px", 
+                      color: "#6b7280", 
+                      textAlign: "center" 
+                    }}>
+                      Only Legal Team can sign agreements
+                    </div>
+                  )}
                 </div>
 
                 {/* Seller Section */}

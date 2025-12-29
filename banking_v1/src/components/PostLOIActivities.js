@@ -5,13 +5,19 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import WorkflowTimeline from "@/components/WorkflowTimeline";
+import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/workflowTimeline.css";
 import "@/css/postLOIActivities.css";
 
 export default function PostLOIActivities() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  // Check if user is Legal Team
+  const isLegalTeam = user?.role === "Legal Team";
   const [vendorName, setVendorName] = useState("");
   const [contactPerson, setContactPerson] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -35,8 +41,19 @@ export default function PostLOIActivities() {
   const [termSheetCompleted, setTermSheetCompleted] = useState(false);
   const [stampDutyCompleted, setStampDutyCompleted] = useState(false);
   const [securityDepositCompleted, setSecurityDepositCompleted] = useState(false);
+  const [stampDutyFinalized, setStampDutyFinalized] = useState(false);
   
-  const router = useRouter();
+  // Handler for Finalize Stamp Duty button
+  const handleFinalizeStampDuty = () => {
+    setStampDutyFinalized(true);
+    setStampDutyCompleted(true);
+    // You can add additional logic here, like API calls
+    console.log("Stamp Duty finalized");
+  };
+  
+  // Check if Legal Team can proceed to agreement execution
+  // Only enabled if stamp duty has been finalized
+  const canProceedToAgreement = !isLegalTeam || stampDutyFinalized;
 
   return (
     <div className="dashboard-container">
@@ -391,6 +408,7 @@ export default function PostLOIActivities() {
                         className="form-input custom-select"
                         value={measurementStatus}
                         onChange={(e) => setMeasurementStatus(e.target.value)}
+                        disabled={isLegalTeam}
                       >
                         <option value="Scheduled">Scheduled</option>
                         <option value="In Progress">In Progress</option>
@@ -411,10 +429,15 @@ export default function PostLOIActivities() {
                       value={measurementNotes}
                       onChange={(e) => setMeasurementNotes(e.target.value)}
                       rows={4}
+                      disabled={isLegalTeam}
                     />
                   </div>
                 </div>
-                <button className="mark-complete-button">
+                <button 
+                  className="mark-complete-button"
+                  disabled={isLegalTeam}
+                  style={isLegalTeam ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+                >
                   <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="button-icon">
                     <path
                       d="M13 4L6 11L3 8"
@@ -466,6 +489,7 @@ export default function PostLOIActivities() {
                       placeholder="Enter vendor company name"
                       value={vendorName}
                       onChange={(e) => setVendorName(e.target.value)}
+                      disabled={isLegalTeam}
                     />
                   </div>
                   <div className="form-group">
@@ -479,6 +503,7 @@ export default function PostLOIActivities() {
                       placeholder="Contact name"
                       value={contactPerson}
                       onChange={(e) => setContactPerson(e.target.value)}
+                      disabled={isLegalTeam}
                     />
                   </div>
                   <div className="form-group">
@@ -492,6 +517,7 @@ export default function PostLOIActivities() {
                       placeholder="Phone"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
+                      disabled={isLegalTeam}
                     />
                   </div>
                   <div className="form-group">
@@ -505,6 +531,7 @@ export default function PostLOIActivities() {
                       placeholder="vendor@email.com"
                       value={emailAddress}
                       onChange={(e) => setEmailAddress(e.target.value)}
+                      disabled={isLegalTeam}
                     />
                   </div>
                   <div className="form-group">
@@ -517,11 +544,16 @@ export default function PostLOIActivities() {
                       placeholder="Enter complete business address"
                       value={businessAddress}
                       onChange={(e) => setBusinessAddress(e.target.value)}
+                      disabled={isLegalTeam}
                       rows={3}
                     />
                   </div>
                 </div>
-                <button className="create-vendor-button">
+                <button 
+                  className="create-vendor-button"
+                  disabled={isLegalTeam}
+                  style={isLegalTeam ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+                >
                   <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="button-icon">
                     <path
                       d="M8 2V14M2 8H14"
@@ -592,6 +624,7 @@ export default function PostLOIActivities() {
                         className="form-input custom-select"
                         value={termSheetApprovalStatus}
                         onChange={(e) => setTermSheetApprovalStatus(e.target.value)}
+                        disabled={isLegalTeam}
                       >
                         <option value="Pending Review">Pending Review</option>
                         <option value="Under Review">Under Review</option>
@@ -612,10 +645,15 @@ export default function PostLOIActivities() {
                       value={termSheetComments}
                       onChange={(e) => setTermSheetComments(e.target.value)}
                       rows={4}
+                      disabled={isLegalTeam}
                     />
                   </div>
                 </div>
-                <button className="approve-term-sheet-button">
+                <button 
+                  className="approve-term-sheet-button"
+                  disabled={isLegalTeam}
+                  style={isLegalTeam ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+                >
                   <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="button-icon">
                     <path
                       d="M4 7V13M4 7C3.5 7 3 6.5 3 6V5C3 4.5 3.5 4 4 4H6C6.5 4 7 3.5 7 3V2C7 1.5 7.5 1 8 1C8.5 1 9 1.5 9 2V3C9 3.5 9.5 4 10 4H12C12.5 4 13 4.5 13 5V6C13 6.5 12.5 7 12 7V13C12 13.5 11.5 14 11 14H5C4.5 14 4 13.5 4 13V7Z"
@@ -741,7 +779,12 @@ export default function PostLOIActivities() {
                     </div>
                   </div>
                 </div>
-                <button className="finalize-stamp-duty-button">
+                <button 
+                  className="finalize-stamp-duty-button"
+                  onClick={handleFinalizeStampDuty}
+                  disabled={isLegalTeam && stampDutyFinalized}
+                  style={isLegalTeam && stampDutyFinalized ? { opacity: 0.6, cursor: "not-allowed" } : {}}
+                >
                   <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="button-icon">
                     <path
                       d="M13 4L6 11L3 8"
@@ -751,7 +794,7 @@ export default function PostLOIActivities() {
                       strokeLinejoin="round"
                     />
                   </svg>
-                  Finalize Stamp Duty
+                  {stampDutyFinalized ? "Stamp Duty Finalized" : "Finalize Stamp Duty"}
                 </button>
               </div>
             </div>
@@ -806,6 +849,7 @@ export default function PostLOIActivities() {
                         className="form-input custom-select"
                         value={securityDepositPaymentMethod}
                         onChange={(e) => setSecurityDepositPaymentMethod(e.target.value)}
+                        disabled={isLegalTeam}
                       >
                         <option value="Wire Transfer">Wire Transfer</option>
                         <option value="Bank Transfer">Bank Transfer</option>
@@ -827,6 +871,7 @@ export default function PostLOIActivities() {
                       value={bankDetails}
                       onChange={(e) => setBankDetails(e.target.value)}
                       rows={4}
+                      disabled={isLegalTeam}
                     />
                   </div>
                 </div>
@@ -843,6 +888,7 @@ export default function PostLOIActivities() {
                         className="form-input custom-select"
                         value={securityDepositPaymentStatus}
                         onChange={(e) => setSecurityDepositPaymentStatus(e.target.value)}
+                        disabled={isLegalTeam}
                       >
                         <option value="Pending Initiation">Pending Initiation</option>
                         <option value="In Progress">In Progress</option>
@@ -864,6 +910,7 @@ export default function PostLOIActivities() {
                       placeholder="Enter transaction reference"
                       value={transactionReference}
                       onChange={(e) => setTransactionReference(e.target.value)}
+                      disabled={isLegalTeam}
                     />
                   </div>
                   
@@ -879,6 +926,7 @@ export default function PostLOIActivities() {
                         placeholder="dd-mm-yyyy"
                         value={securityDepositPaymentDate}
                         onChange={(e) => setSecurityDepositPaymentDate(e.target.value)}
+                        disabled={isLegalTeam}
                       />
                       <svg
                         width="20"
@@ -923,10 +971,15 @@ export default function PostLOIActivities() {
                       value={additionalNotes}
                       onChange={(e) => setAdditionalNotes(e.target.value)}
                       rows={4}
+                      disabled={isLegalTeam}
                     />
                   </div>
                   
-                  <button className="process-security-deposit-button">
+                  <button 
+                    className="process-security-deposit-button"
+                    disabled={isLegalTeam}
+                    style={isLegalTeam ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+                  >
                     <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="button-icon">
                       <rect
                         x="2"
@@ -1042,6 +1095,8 @@ export default function PostLOIActivities() {
               <button 
                 className="proceed-to-agreement-button"
                 onClick={() => router.push("/agreement-execution")}
+                disabled={!canProceedToAgreement}
+                style={!canProceedToAgreement ? { opacity: 0.5, cursor: "not-allowed" } : {}}
               >
                 <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="button-icon">
                   <path

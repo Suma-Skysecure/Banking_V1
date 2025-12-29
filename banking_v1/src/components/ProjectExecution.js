@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import WorkflowTimeline from "@/components/WorkflowTimeline";
+import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/workflowTimeline.css";
@@ -13,7 +14,11 @@ import "@/css/postLOIActivities.css";
 
 export default function ProjectExecution() {
   const router = useRouter();
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  // Check if user is Legal Team (view-only)
+  const isLegalTeam = user?.role === "Legal Team";
   
   // Security Requirements State
   const [securityRequirements, setSecurityRequirements] = useState({
@@ -406,6 +411,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox" 
                           checked={securityRequirements.vendorSelection}
                           onChange={() => handleSecurityChange('vendorSelection')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Security vendor selection and contract signing</span>
                       </label>
@@ -415,6 +421,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={securityRequirements.backgroundVerification}
                           onChange={() => handleSecurityChange('backgroundVerification')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Security guard background verification</span>
                       </label>
@@ -424,6 +431,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={securityRequirements.siteAssessment}
                           onChange={() => handleSecurityChange('siteAssessment')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Site security assessment and planning</span>
                       </label>
@@ -433,6 +441,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={securityRequirements.deployPersonnel}
                           onChange={() => handleSecurityChange('deployPersonnel')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Deploy security personnel to site</span>
                       </label>
@@ -487,6 +496,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={procurementTasks.officeFurniture}
                           onChange={() => handleProcurementChange('officeFurniture')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Office furniture and equipment procurement</span>
                       </label>
@@ -496,6 +506,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={procurementTasks.itHardware}
                           onChange={() => handleProcurementChange('itHardware')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">IT hardware and networking equipment</span>
                       </label>
@@ -505,6 +516,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={procurementTasks.securitySystems}
                           onChange={() => handleProcurementChange('securitySystems')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Security systems and cameras installation</span>
                       </label>
@@ -514,6 +526,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={procurementTasks.utilitiesSetup}
                           onChange={() => handleProcurementChange('utilitiesSetup')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Utilities setup and connection</span>
                       </label>
@@ -523,6 +536,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={procurementTasks.interiorRenovation}
                           onChange={() => handleProcurementChange('interiorRenovation')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Interior renovation and branding</span>
                       </label>
@@ -576,6 +590,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={itInfrastructure.serverRoom}
                           onChange={() => handleItInfrastructureChange('serverRoom')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Server room setup and configuration</span>
                       </label>
@@ -585,6 +600,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={itInfrastructure.networkInfrastructure}
                           onChange={() => handleItInfrastructureChange('networkInfrastructure')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Network infrastructure installation</span>
                       </label>
@@ -594,6 +610,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={itInfrastructure.softwareSystems}
                           onChange={() => handleItInfrastructureChange('softwareSystems')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Software systems deployment</span>
                       </label>
@@ -603,6 +620,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={itInfrastructure.securityIntegration}
                           onChange={() => handleItInfrastructureChange('securityIntegration')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Security systems integration</span>
                       </label>
@@ -612,6 +630,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={itInfrastructure.backupRecovery}
                           onChange={() => handleItInfrastructureChange('backupRecovery')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Backup and disaster recovery setup</span>
                       </label>
@@ -621,6 +640,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={itInfrastructure.userAccess}
                           onChange={() => handleItInfrastructureChange('userAccess')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">User access and permissions configuration</span>
                       </label>
@@ -677,6 +697,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={launchActivities.assetTagging}
                           onChange={() => handleLaunchActivitiesChange('assetTagging')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Asset tagging and inventory management</span>
                       </label>
@@ -686,6 +707,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={launchActivities.atmInstallation}
                           onChange={() => handleLaunchActivitiesChange('atmInstallation')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">ATM installation and activation</span>
                       </label>
@@ -695,6 +717,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={launchActivities.staffTraining}
                           onChange={() => handleLaunchActivitiesChange('staffTraining')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Staff training and orientation</span>
                       </label>
@@ -704,6 +727,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={launchActivities.complianceVerification}
                           onChange={() => handleLaunchActivitiesChange('complianceVerification')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Regulatory compliance verification</span>
                       </label>
@@ -713,6 +737,7 @@ export default function ProjectExecution() {
                           className="requirement-checkbox"
                           checked={launchActivities.grandOpening}
                           onChange={() => handleLaunchActivitiesChange('grandOpening')}
+                          disabled={isLegalTeam}
                         />
                         <span className="requirement-text">Grand opening preparation</span>
                       </label>
@@ -772,6 +797,7 @@ export default function ProjectExecution() {
                           className="project-requirement-checkbox"
                           checked={projectRequirements.securityDeployment}
                           onChange={() => setProjectRequirements(prev => ({ ...prev, securityDeployment: !prev.securityDeployment }))}
+                          disabled={isLegalTeam}
                         />
                         <span className="project-requirement-text">Security deployment completed</span>
                       </label>
@@ -781,6 +807,7 @@ export default function ProjectExecution() {
                           className="project-requirement-checkbox"
                           checked={projectRequirements.materialProcurement}
                           onChange={() => setProjectRequirements(prev => ({ ...prev, materialProcurement: !prev.materialProcurement }))}
+                          disabled={isLegalTeam}
                         />
                         <span className="project-requirement-text">Material procurement finished</span>
                       </label>
@@ -792,6 +819,7 @@ export default function ProjectExecution() {
                           className="project-requirement-checkbox"
                           checked={projectRequirements.itFacilitySetup}
                           onChange={() => setProjectRequirements(prev => ({ ...prev, itFacilitySetup: !prev.itFacilitySetup }))}
+                          disabled={isLegalTeam}
                         />
                         <span className="project-requirement-text">IT and facility setup complete</span>
                       </label>
@@ -801,6 +829,7 @@ export default function ProjectExecution() {
                           className="project-requirement-checkbox"
                           checked={projectRequirements.locationLaunch}
                           onChange={() => setProjectRequirements(prev => ({ ...prev, locationLaunch: !prev.locationLaunch }))}
+                          disabled={isLegalTeam}
                         />
                         <span className="project-requirement-text">Location launch activities finished</span>
                       </label>
@@ -808,10 +837,25 @@ export default function ProjectExecution() {
                   </div>
                 </div>
 
+                {isLegalTeam && (
+                  <div style={{ 
+                    padding: "16px", 
+                    backgroundColor: "#fef3c7", 
+                    borderRadius: "8px", 
+                    marginBottom: "20px",
+                    textAlign: "center",
+                    color: "#92400e",
+                    fontSize: "14px",
+                    fontWeight: "500"
+                  }}>
+                    Legal Team: View-only access. Cannot edit or complete project execution tasks.
+                  </div>
+                )}
                 <button 
                   className="mark-complete-button" 
                   onClick={() => router.push("/final-confirmation")}
-                  disabled={!isAllProjectRequirementsComplete}
+                  disabled={!isAllProjectRequirementsComplete || isLegalTeam}
+                  style={(!isAllProjectRequirementsComplete || isLegalTeam) ? { opacity: 0.5, cursor: "not-allowed" } : {}}
                 >
                   <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="button-icon">
                     <rect

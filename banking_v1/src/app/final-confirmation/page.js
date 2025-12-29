@@ -1,6 +1,11 @@
 import FinalConfirmation from "@/components/FinalConfirmation";
+import Providers from "@/components/Providers";
 
 export default function FinalConfirmationPage() {
-  return <FinalConfirmation />;
+  return (
+    <Providers>
+      <FinalConfirmation />
+    </Providers>
+  );
 }
 

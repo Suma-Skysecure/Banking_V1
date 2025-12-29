@@ -5,6 +5,7 @@ import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import WorkflowTimeline from "@/components/WorkflowTimeline";
+import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/workflowTimeline.css";
@@ -13,6 +14,10 @@ import "@/css/postLOIActivities.css";
 export default function AgreementRegistration() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const { user } = useAuth();
+  
+  // Check if user is Legal Team (view-only)
+  const isLegalTeam = user?.role === "Legal Team";
 
   return (
     <div className="dashboard-container">
@@ -77,7 +82,7 @@ export default function AgreementRegistration() {
         <main className="dashboard-main">
           <div className="main-content">
             {/* Workflow Timeline */}
-            <WorkflowTimeline activeStage="Agreement Execution" />
+            <WorkflowTimeline activeStage="Agreement Registration" />
             
             <PageHeader
               title="Agreement Registration"
@@ -282,7 +287,14 @@ export default function AgreementRegistration() {
                   <h3 className="card-title">Upload Signed Agreement</h3>
                 </div>
                 
-                <div className="upload-area">
+                <div 
+                  className="upload-area"
+                  style={isLegalTeam ? { 
+                    opacity: 0.5, 
+                    cursor: "not-allowed",
+                    pointerEvents: "none"
+                  } : {}}
+                >
                   <svg width="64" height="64" viewBox="0 0 16 16" fill="none" className="upload-icon-large">
                     <path
                       d="M2 3H14V13H2V3Z"
@@ -301,7 +313,11 @@ export default function AgreementRegistration() {
                   </svg>
                   <div className="upload-text">Upload Signed Agreement</div>
                   <div className="upload-instructions">Drag and drop your signed agreement file here, or click to browse</div>
-                  <button className="browse-files-button">
+                  <button 
+                    className="browse-files-button"
+                    disabled={isLegalTeam}
+                    style={isLegalTeam ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+                  >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="button-icon">
                       <path
                         d="M2 2H14V14H2V2Z"
@@ -320,6 +336,19 @@ export default function AgreementRegistration() {
                     Browse Files
                   </button>
                 </div>
+                {isLegalTeam && (
+                  <div style={{ 
+                    padding: "12px", 
+                    color: "#6b7280", 
+                    fontSize: "14px", 
+                    textAlign: "center",
+                    backgroundColor: "#fef3c7",
+                    borderRadius: "6px",
+                    marginTop: "12px"
+                  }}>
+                    Legal Team: View-only access. Cannot upload or edit details.
+                  </div>
+                )}
                 
                 <div className="upload-requirements-box">
                   <div className="requirements-header">
@@ -343,10 +372,11 @@ export default function AgreementRegistration() {
                 </div>
               </div>
 
-              {/* Registration Requirements */}
-              <div className="registration-requirements-card">
-                <div className="card-header">
-                  <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="card-icon">
+              {/* Registration Requirements - Three Separate Cards */}
+              <div className="requirements-cards-grid">
+                {/* Required Documents Card */}
+                <div className="requirement-info-card">
+                  <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="requirement-card-icon">
                     <path
                       d="M2 3H14M2 6H14M2 9H14M2 12H14"
                       stroke="currentColor"
@@ -354,92 +384,103 @@ export default function AgreementRegistration() {
                       strokeLinecap="round"
                     />
                   </svg>
-                  <h3 className="card-title">Registration Requirements</h3>
-                </div>
-                
-                <div className="requirements-content">
-                  <div className="requirements-subsection">
-                    <h4 className="subsection-title">Required Documents</h4>
-                    <div className="document-checklist">
-                      <div className="document-item">
-                        <input type="checkbox" className="document-checkbox" />
-                        <div className="document-info">
-                          <span className="document-name">Signed Purchase Agreement</span>
-                          <span className="document-status pending">Pending</span>
-                        </div>
-                      </div>
-                      <div className="document-item">
-                        <input type="checkbox" className="document-checkbox" checked disabled />
-                        <div className="document-info">
-                          <span className="document-name">Property Title Documents</span>
-                          <span className="document-status verified">Verified</span>
-                        </div>
-                      </div>
-                      <div className="document-item">
-                        <input type="checkbox" className="document-checkbox" checked disabled />
-                        <div className="document-info">
-                          <span className="document-name">Stamp Duty Payment Receipt</span>
-                          <span className="document-status verified">Verified</span>
-                        </div>
-                      </div>
-                      <div className="document-item">
-                        <input type="checkbox" className="document-checkbox" checked disabled />
-                        <div className="document-info">
-                          <span className="document-name">Legal Compliance Certificate</span>
-                          <span className="document-status verified">Verified</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="requirements-subsection">
-                    <h4 className="subsection-title">Registration Process</h4>
-                    <div className="process-steps">
-                      <div className="process-step active">
-                        <div className="step-number">1</div>
-                        <div className="step-text">Upload signed agreement</div>
-                      </div>
-                      <div className="process-step">
-                        <div className="step-number">2</div>
-                        <div className="step-text">Document verification</div>
-                      </div>
-                      <div className="process-step">
-                        <div className="step-number">3</div>
-                        <div className="step-text">Registry office submission</div>
-                      </div>
-                      <div className="process-step">
-                        <div className="step-number">4</div>
-                        <div className="step-text">Registration confirmation</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="requirements-subsection">
-                    <div className="timeline-header">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="timeline-icon">
-                        <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
-                        <path
-                          d="M8 4V8L10.5 10.5"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                  <div className="requirement-card-content">
+                    <div className="requirement-card-label">Required Documents</div>
+                    <div className="document-checklist-compact">
+                      <div className="document-item-compact">
+                        <input 
+                          type="checkbox" 
+                          className="document-checkbox-compact" 
+                          disabled={isLegalTeam}
                         />
-                      </svg>
-                      <h4 className="subsection-title">Processing Timeline</h4>
+                        <span className="document-name-compact">Signed Purchase Agreement</span>
+                        <span className="document-status-compact pending">Pending</span>
+                      </div>
+                      <div className="document-item-compact">
+                        <input type="checkbox" className="document-checkbox-compact" checked disabled />
+                        <span className="document-name-compact">Property Title Documents</span>
+                        <span className="document-status-compact verified">Verified</span>
+                      </div>
+                      <div className="document-item-compact">
+                        <input type="checkbox" className="document-checkbox-compact" checked disabled />
+                        <span className="document-name-compact">Stamp Duty Payment Receipt</span>
+                        <span className="document-status-compact verified">Verified</span>
+                      </div>
+                      <div className="document-item-compact">
+                        <input type="checkbox" className="document-checkbox-compact" checked disabled />
+                        <span className="document-name-compact">Legal Compliance Certificate</span>
+                        <span className="document-status-compact verified">Verified</span>
+                      </div>
                     </div>
-                    <div className="timeline-details-inline">
-                      <div className="timeline-item">
-                        <span className="timeline-label">Document Review:</span>
-                        <span className="timeline-value">1-2 business days</span>
+                  </div>
+                </div>
+
+                {/* Registration Process Card */}
+                <div className="requirement-info-card">
+                  <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="requirement-card-icon">
+                    <path
+                      d="M2 2H14V14H2V2Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M2 6H14M6 2V14M10 2V14"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="requirement-card-content">
+                    <div className="requirement-card-label">Registration Process</div>
+                    <div className="process-steps-compact">
+                      <div className="process-step-compact active">
+                        <div className="step-number-compact">1</div>
+                        <div className="step-text-compact">Upload signed agreement</div>
                       </div>
-                      <div className="timeline-item">
-                        <span className="timeline-label">Registry Processing:</span>
-                        <span className="timeline-value">3-5 business days</span>
+                      <div className="process-step-compact">
+                        <div className="step-number-compact">2</div>
+                        <div className="step-text-compact">Document verification</div>
                       </div>
-                      <div className="timeline-item">
-                        <span className="timeline-label">Total Time:</span>
-                        <span className="timeline-value">4-7 business days</span>
+                      <div className="process-step-compact">
+                        <div className="step-number-compact">3</div>
+                        <div className="step-text-compact">Registry office submission</div>
+                      </div>
+                      <div className="process-step-compact">
+                        <div className="step-number-compact">4</div>
+                        <div className="step-text-compact">Registration confirmation</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Processing Timeline Card */}
+                <div className="requirement-info-card">
+                  <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="requirement-card-icon">
+                    <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+                    <path
+                      d="M8 4V8L10.5 10.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <div className="requirement-card-content">
+                    <div className="requirement-card-label">Processing Timeline</div>
+                    <div className="timeline-details-compact">
+                      <div className="timeline-item-compact">
+                        <span className="timeline-label-compact">Document Review:</span>
+                        <span className="timeline-value-compact">1-2 business days</span>
+                      </div>
+                      <div className="timeline-item-compact">
+                        <span className="timeline-label-compact">Registry Processing:</span>
+                        <span className="timeline-value-compact">3-5 business days</span>
+                      </div>
+                      <div className="timeline-item-compact">
+                        <span className="timeline-label-compact">Total Time:</span>
+                        <span className="timeline-value-compact">4-7 business days</span>
                       </div>
                     </div>
                   </div>
@@ -558,7 +599,7 @@ export default function AgreementRegistration() {
                     <input
                       type="checkbox"
                       className="completion-checkbox"
-                      disabled
+                      disabled={true || isLegalTeam}
                     />
                     <span className="completion-text">Signed agreement uploaded and verified</span>
                   </label>
@@ -568,7 +609,7 @@ export default function AgreementRegistration() {
                       type="checkbox"
                       className="completion-checkbox"
                       checked
-                      disabled
+                      disabled={true || isLegalTeam}
                     />
                     <span className="completion-text">Registration fee payment completed</span>
                   </label>
@@ -578,14 +619,18 @@ export default function AgreementRegistration() {
                       type="checkbox"
                       className="completion-checkbox"
                       checked
-                      disabled
+                      disabled={true || isLegalTeam}
                     />
                     <span className="completion-text">All required documents submitted</span>
                   </label>
                 </div>
               </div>
               
-              <button className="complete-registration-button" disabled>
+              <button 
+                className="complete-registration-button" 
+                disabled={true || isLegalTeam}
+                style={isLegalTeam ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+              >
                 <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="button-icon">
                   <rect
                     x="2"
@@ -605,7 +650,11 @@ export default function AgreementRegistration() {
                 </svg>
                 Complete Registration
               </button>
-              <div className="completion-message">Please upload the signed agreement to proceed.</div>
+              <div className="completion-message">
+                {isLegalTeam 
+                  ? "Legal Team: View-only access. Cannot complete registration." 
+                  : "Please upload the signed agreement to proceed."}
+              </div>
             </div>
           </div>
         </main>

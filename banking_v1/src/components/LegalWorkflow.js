@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import WorkflowTimeline from "@/components/WorkflowTimeline";
+import { useAuth } from "@/contexts/AuthContext";
+import PermissionWrapper from "@/components/PermissionWrapper";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/workflowTimeline.css";
@@ -13,7 +15,129 @@ import "@/css/legalWorkflow.css";
 
 export default function LegalWorkflow() {
   const router = useRouter();
+  const { user, canUpload } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [uploadedFiles, setUploadedFiles] = useState([
+    {
+      id: 1,
+      name: "LOI_Draft_Downtown_Arts_Plaza.pdf",
+      size: 2.4,
+      date: new Date("2024-12-16").toISOString(),
+      type: "pdf",
+    },
+    {
+      id: 2,
+      name: "Property_Inspection_Report.docx",
+      size: 1.8,
+      date: new Date("2024-12-15").toISOString(),
+      type: "doc",
+    },
+    {
+      id: 3,
+      name: "Business_Approval_Document.pdf",
+      size: 1.2,
+      date: new Date("2024-12-16").toISOString(),
+      type: "pdf",
+    },
+  ]);
+  const fileInputRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Format file size
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  };
+
+  // Get file type from extension
+  const getFileType = (fileName) => {
+    const ext = fileName.split(".").pop().toLowerCase();
+    if (ext === "pdf") return "pdf";
+    if (["doc", "docx"].includes(ext)) return "doc";
+    return "pdf";
+  };
+
+  // Format date
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  // Handle file selection
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    handleFiles(files);
+  };
+
+  // Handle file drop
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
+  };
+
+  // Handle drag over
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  // Handle drag leave
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  // Process files
+  const handleFiles = (files) => {
+    const validFiles = files.filter((file) => {
+      const ext = file.name.split(".").pop().toLowerCase();
+      const validTypes = ["pdf", "doc", "docx"];
+      const maxSize = 10 * 1024 * 1024; // 10MB
+
+      if (!validTypes.includes(ext)) {
+        alert(`${file.name} is not a valid file type. Please upload PDF, DOC, or DOCX files.`);
+        return false;
+      }
+
+      if (file.size > maxSize) {
+        alert(`${file.name} exceeds the maximum file size of 10MB.`);
+        return false;
+      }
+
+      return true;
+    });
+
+    const newFiles = validFiles.map((file) => ({
+      id: Date.now() + Math.random(),
+      name: file.name,
+      size: file.size / (1024 * 1024), // Convert to MB
+      date: new Date().toISOString(),
+      type: getFileType(file.name),
+      file: file, // Store the actual file object
+    }));
+
+    setUploadedFiles((prev) => [...prev, ...newFiles]);
+  };
+
+  // Handle file delete
+  const handleDeleteFile = (fileId) => {
+    setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
+  };
+
+  // Handle upload area click
+  const handleUploadClick = () => {
+    if (canUpload("legalWorkflow")) {
+      fileInputRef.current?.click();
+    }
+  };
 
   return (
     <div className="dashboard-container">
@@ -304,149 +428,112 @@ export default function LegalWorkflow() {
                   </svg>
                   <h3 className="upload-title">Document Upload</h3>
                 </div>
-                <div className="upload-area">
-                  <svg
-                    width="64"
-                    height="64"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    className="upload-icon-large"
+                <PermissionWrapper page="legalWorkflow" action="upload">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileSelect}
+                    style={{ display: "none" }}
+                  />
+                  <div
+                    className={`upload-area ${isDragging ? "dragging" : ""}`}
+                    onClick={handleUploadClick}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    style={{ cursor: canUpload("legalWorkflow") ? "pointer" : "not-allowed", opacity: canUpload("legalWorkflow") ? 1 : 0.5 }}
                   >
-                    <path
-                      d="M14 2H2V14H14V2Z"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M6 2V14M10 2V14"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M8 6V10M6 8H10"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="upload-text">Click to upload or drag and drop</div>
-                  <div className="upload-file-types">PDF, DOC, DOCX (Max 10MB)</div>
-                </div>
+                    <svg
+                      width="64"
+                      height="64"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className="upload-icon-large"
+                    >
+                      <path
+                        d="M14 2H2V14H14V2Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M6 2V14M10 2V14"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M8 6V10M6 8H10"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="upload-text">Click to upload or drag and drop</div>
+                    <div className="upload-file-types">PDF, DOC, DOCX (Max 10MB)</div>
+                  </div>
+                </PermissionWrapper>
+                {!canUpload("legalWorkflow") && (
+                  <div style={{ padding: "12px", color: "#6b7280", fontSize: "14px", textAlign: "center" }}>
+                    Only Admin/Ops can upload documents
+                  </div>
+                )}
                 <div className="uploaded-files-list">
-                  <div className="uploaded-file-item">
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      className="file-icon pdf"
-                    >
-                      <path
-                        d="M14 2H2V14H14V2Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M6 2V14M10 2V14"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="file-info">
-                      <span className="file-name">LOI_Draft_Downtown_Arts_Plaza.pdf</span>
-                      <span className="file-meta">2.4 MB • Dec 16, 2024</span>
-                    </div>
-                    <button className="file-delete-btn" aria-label="Delete file">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  {uploadedFiles.map((file) => (
+                    <div key={file.id} className="uploaded-file-item">
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        className={`file-icon ${file.type}`}
+                      >
                         <path
-                          d="M4 4L12 12M12 4L4 12"
+                          d="M14 2H2V14H14V2Z"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M6 2V14M10 2V14"
                           stroke="currentColor"
                           strokeWidth="1.5"
                           strokeLinecap="round"
                         />
                       </svg>
-                    </button>
-                  </div>
-                  <div className="uploaded-file-item">
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      className="file-icon doc"
-                    >
-                      <path
-                        d="M14 2H2V14H14V2Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M6 2V14M10 2V14"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="file-info">
-                      <span className="file-name">Property_Inspection_Report.docx</span>
-                      <span className="file-meta">1.8 MB • Dec 15, 2024</span>
+                      <div className="file-info">
+                        <span className="file-name">{file.name}</span>
+                        <span className="file-meta">
+                          {file.size.toFixed(1)} MB • {formatDate(file.date)}
+                        </span>
+                      </div>
+                      <PermissionWrapper page="legalWorkflow" action="upload">
+                        <button
+                          className="file-delete-btn"
+                          aria-label="Delete file"
+                          onClick={() => handleDeleteFile(file.id)}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path
+                              d="M4 4L12 12M12 4L4 12"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </PermissionWrapper>
                     </div>
-                    <button className="file-delete-btn" aria-label="Delete file">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path
-                          d="M4 4L12 12M12 4L4 12"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="uploaded-file-item">
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      className="file-icon pdf"
-                    >
-                      <path
-                        d="M14 2H2V14H14V2Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M6 2V14M10 2V14"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="file-info">
-                      <span className="file-name">Business_Approval_Document.pdf</span>
-                      <span className="file-meta">1.2 MB • Dec 16, 2024</span>
+                  ))}
+                  {uploadedFiles.length === 0 && (
+                    <div style={{ padding: "20px", textAlign: "center", color: "#6b7280" }}>
+                      No documents uploaded yet
                     </div>
-                    <button className="file-delete-btn" aria-label="Delete file">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path
-                          d="M4 4L12 12M12 4L4 12"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
+                  )}
                 </div>
               </div>
 

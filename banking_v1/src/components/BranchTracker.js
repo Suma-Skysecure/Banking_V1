@@ -1,19 +1,40 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import WorkflowTimeline from "@/components/WorkflowTimeline";
+import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 
 export default function BranchTracker() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [viewMode, setViewMode] = useState("list");
   const [currentPage, setCurrentPage] = useState(1);
   const [cityFilter, setCityFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleViewDetails = (e, branchId) => {
+    e.preventDefault();
+    // Debug: Log user and role
+    console.log("User:", user);
+    console.log("User role:", user?.role);
+    
+    // Only redirect to legal workflow if user is Legal Team
+    // Check for exact match or case-insensitive match
+    if (user?.role === "Legal Team" || user?.role?.toLowerCase() === "legal team") {
+      console.log("Redirecting to legal workflow");
+      router.push("/legal-workflow");
+    } else {
+      console.log("Not Legal Team, no redirect");
+    }
+    // For other roles, do nothing (no redirect)
+  };
 
   const branches = [
     {
@@ -246,9 +267,12 @@ export default function BranchTracker() {
                         ></div>
                       </td>
                       <td>
-                        <a href="#" className="view-details-link">
+                        <button
+                          onClick={(e) => handleViewDetails(e, branch.id)}
+                          className="view-details-link"
+                        >
                           View Details
-                        </a>
+                        </button>
                       </td>
                     </tr>
                   ))}

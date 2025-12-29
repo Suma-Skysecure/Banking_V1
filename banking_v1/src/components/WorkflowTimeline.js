@@ -28,7 +28,7 @@ export default function WorkflowTimeline({ activeStage = "Property Search" }) {
         </svg>
       ),
       href: "/property-search",
-      color: "orange",
+      color: "gray",
     },
     {
       id: "business-approval",
@@ -107,7 +107,7 @@ export default function WorkflowTimeline({ activeStage = "Property Search" }) {
       color: "gray",
     },
     {
-      id: "agreement",
+      id: "agreement-execution",
       name: "Agreement Execution",
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -121,6 +121,41 @@ export default function WorkflowTimeline({ activeStage = "Property Search" }) {
             d="M3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z"
             stroke="currentColor"
             strokeWidth="2"
+          />
+        </svg>
+      ),
+      color: "gray",
+    },
+    {
+      id: "agreement-registration",
+      name: "Agreement Registration",
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M8 4L4 8V20H16V4H8Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M4 8H8V4"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M10 12H14M10 16H14"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M6 20V22"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
           />
         </svg>
       ),
@@ -196,9 +231,18 @@ export default function WorkflowTimeline({ activeStage = "Property Search" }) {
           const isActive = status === "active";
           const isCompleted = status === "completed";
 
-          // Use orange color when stage is active, otherwise use stage's default color
-          const iconColor = isActive ? "orange" : stage.color;
-          const labelColor = isActive ? "orange" : stage.color;
+          // Determine colors based on status
+          let iconColor, labelColor;
+          if (isActive) {
+            iconColor = "orange";
+            labelColor = "orange";
+          } else if (isCompleted) {
+            iconColor = "blue";
+            labelColor = "blue";
+          } else {
+            iconColor = "gray";
+            labelColor = "gray";
+          }
 
           const StageContent = (
             <div className={`timeline-stage ${status}`}>

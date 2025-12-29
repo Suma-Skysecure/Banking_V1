@@ -289,6 +289,12 @@
   background-color: #eff6ff;
 }
 
+.upload-area.dragging {
+  border-color: #3b82f6;
+  background-color: #dbeafe;
+  border-style: solid;
+}
+
 .upload-icon-large {
   width: 64px;
   height: 64px;

@@ -128,7 +128,7 @@ const getRolePermissions = (role) => {
     },
     "Legal Team": {
       dashboard: { view: true, edit: false, approve: false, upload: false },
-      propertySearch: { view: true, edit: false, approve: false, upload: false },
+      propertySearch: { view: false, edit: false, approve: false, upload: false },
       propertyDetails: { view: true, edit: false, approve: false, upload: false },
       businessApproval: { view: true, edit: false, approve: false, upload: false },
       legalWorkflow: { view: true, edit: false, approve: true, upload: false },
