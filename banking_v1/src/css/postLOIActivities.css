@@ -30,16 +30,18 @@
 .status-cards-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 12px;
+  grid-auto-flow: row;
 }
 
 .status-card {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px;
+  gap: 12px;
+  padding: 16px;
   border-radius: 8px;
   background-color: #f9fafb;
+  min-width: 0;
 }
 
 .status-card.yellow {
@@ -57,6 +59,8 @@
 .status-card-icon {
   color: #6b7280;
   flex-shrink: 0;
+  width: 20px;
+  height: 20px;
 }
 
 .status-card-content {
@@ -64,14 +68,20 @@
 }
 
 .status-card-label {
-  font-size: 12px;
+  font-size: 11px;
   color: #6b7280;
   margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .status-card-value {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .status-card-value.orange {
@@ -88,12 +98,26 @@
 
 @media (max-width: 1200px) {
   .status-cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 968px) {
+  .status-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .requirements-cards-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
   .status-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .requirements-cards-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -393,6 +417,17 @@
   background-color: #1d4ed8;
 }
 
+.sign-agreement-button:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sign-agreement-button:disabled:hover {
+  background-color: #e5e7eb;
+}
+
 .already-signed-button {
   display: flex;
   align-items: center;
@@ -600,10 +635,21 @@
   width: 100%;
   justify-content: center;
   margin-top: 20px;
+  transition: all 0.2s;
+}
+
+.complete-agreement-button:not(:disabled) {
+  background-color: #10b981;
+  cursor: pointer;
+}
+
+.complete-agreement-button:not(:disabled):hover {
+  background-color: #059669;
 }
 
 .complete-agreement-button:disabled {
   opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .completion-message {
@@ -644,10 +690,163 @@
   color: #7c3aed;
 }
 
+/* Requirements Cards Grid */
+.requirements-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* Requirement Info Card - Similar to Status Card */
+.requirement-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: #eff6ff;
+  min-width: 0;
+}
+
+.requirement-card-icon {
+  color: #6b7280;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+}
+
+.requirement-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.requirement-card-label {
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Compact Document Checklist */
+.document-checklist-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.document-item-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.document-checkbox-compact {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.document-name-compact {
+  flex: 1;
+  color: #374151;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.document-status-compact {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.document-status-compact.pending {
+  background-color: #fef3c7;
+  color: #f97316;
+}
+
+.document-status-compact.verified {
+  background-color: #d1fae5;
+  color: #10b981;
+}
+
+/* Compact Process Steps */
+.process-steps-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.process-step-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.step-number-compact {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #e5e7eb;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.process-step-compact.active .step-number-compact {
+  background-color: #f97316;
+  color: #ffffff;
+}
+
+.step-text-compact {
+  color: #374151;
+  font-size: 12px;
+  flex: 1;
+}
+
+/* Compact Timeline */
+.timeline-details-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.timeline-item-compact {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.timeline-label-compact {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.timeline-value-compact {
+  color: #111827;
+  font-weight: 600;
+  font-size: 12px;
+}
+
 /* Registration Content Grid */
 .registration-content-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 24px;
   margin-bottom: 24px;
 }
@@ -713,6 +912,17 @@
 
 .browse-files-button:hover {
   background-color: #1d4ed8;
+}
+
+.browse-files-button:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.browse-files-button:disabled:hover {
+  background-color: #e5e7eb;
 }
 
 .upload-requirements-box {
@@ -1156,10 +1366,22 @@
   width: 100%;
   justify-content: center;
   margin-top: 20px;
+  transition: all 0.2s ease;
+}
+
+.complete-registration-button:not(:disabled) {
+  background-color: #10b981;
+  cursor: pointer;
+  opacity: 1;
+}
+
+.complete-registration-button:not(:disabled):hover {
+  background-color: #059669;
 }
 
 .complete-registration-button:disabled {
   opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .completion-message {
@@ -1607,6 +1829,13 @@
   background-color: #ea580c;
 }
 
+.create-vendor-button:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .button-icon {
   width: 20px;
   height: 20px;
@@ -1718,6 +1947,13 @@
   background-color: #059669;
 }
 
+.approve-term-sheet-button:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Finalize Stamp Duty Button */
 .finalize-stamp-duty-button {
   display: flex;
@@ -1812,6 +2048,13 @@
 
 .process-security-deposit-button:hover {
   background-color: #ea580c;
+}
+
+.process-security-deposit-button:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .security-deposit-icon {
@@ -1918,6 +2161,17 @@
 
 .proceed-to-agreement-button:hover {
   background-color: #1d4ed8;
+}
+
+.proceed-to-agreement-button:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.proceed-to-agreement-button:disabled:hover {
+  background-color: #e5e7eb;
 }
 
 /* Task Form */
@@ -2302,6 +2556,15 @@
   border-color: #10b981;
 }
 
+.requirement-checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.requirement-checkbox:disabled:hover {
+  border-color: #d1d5db;
+}
+
 .requirement-text {
   font-size: 14px;
   color: #374151;
@@ -2467,9 +2730,23 @@
   border-color: #10b981;
 }
 
+.project-requirement-checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.project-requirement-checkbox:disabled:hover {
+  border-color: #9ca3af;
+}
+
 .project-requirement-checkbox:checked {
   background-color: #10b981;
   border-color: #10b981;
+}
+
+.project-requirement-checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .project-requirement-text {

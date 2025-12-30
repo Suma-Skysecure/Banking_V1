@@ -1,6 +1,11 @@
 import PropertyDetails from "@/components/PropertyDetails";
+import Providers from "@/components/Providers";
 
 export default function PropertyDetailsPage() {
-  return <PropertyDetails />;
+  return (
+    <Providers>
+      <PropertyDetails />
+    </Providers>
+  );
 }
 

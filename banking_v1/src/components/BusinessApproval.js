@@ -5,16 +5,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
-import WorkflowTimeline from "@/components/WorkflowTimeline";
+import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
-import "@/css/workflowTimeline.css";
 import "@/css/businessApproval.css";
 
 export default function BusinessApproval() {
   const router = useRouter();
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [reviewComments, setReviewComments] = useState("");
+  
+  // All restrictions removed - all users have full access
 
   return (
     <div className="dashboard-container">
@@ -78,9 +80,6 @@ export default function BusinessApproval() {
 
         <main className="dashboard-main">
           <div className="main-content">
-            {/* Workflow Timeline */}
-            <WorkflowTimeline activeStage="Business Approval" />
-            
             <PageHeader
               title="Business Approval"
               subtitle="Review and approve property based on defined business criteria."
@@ -587,6 +586,21 @@ export default function BusinessApproval() {
                     onChange={(e) => setReviewComments(e.target.value)}
                     rows={6}
                   />
+                  {false && (
+                    <div style={{ 
+                      marginTop: "8px", 
+                      padding: "12px", 
+                      backgroundColor: "#fef3c7", 
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      color: "#92400e",
+                      fontWeight: "500"
+                    }}>
+                      {user?.role === "Legal Team" 
+                        ? "Legal Team: View-only access for legal compliance review. Cannot approve or reject properties."
+                        : "View-only access. Only Business/SRBM can approve or reject properties."}
+                    </div>
+                  )}
                 </div>
 
                 <div className="decision-impact-section">

@@ -4,6 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "npm run dev --prefix banking_v1",
+    "build": "npm run build --prefix banking_v1",
+    "start": "npm run start --prefix banking_v1",
+    "lint": "npm run lint --prefix banking_v1",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

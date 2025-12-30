@@ -289,6 +289,12 @@
   background-color: #eff6ff;
 }
 
+.upload-area.dragging {
+  border-color: #3b82f6;
+  background-color: #dbeafe;
+  border-style: solid;
+}
+
 .upload-icon-large {
   width: 64px;
   height: 64px;
@@ -532,6 +538,17 @@
   background-color: #2563eb;
 }
 
+.provide-documents-btn:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.provide-documents-btn:disabled:hover {
+  background-color: #e5e7eb;
+}
+
 .circulate-loi-btn {
   background-color: #f97316;
   color: #ffffff;
@@ -540,6 +557,17 @@
 
 .circulate-loi-btn:hover {
   background-color: #ea580c;
+}
+
+.circulate-loi-btn:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.circulate-loi-btn:disabled:hover {
+  background-color: #e5e7eb;
 }
 
 .button-icon {

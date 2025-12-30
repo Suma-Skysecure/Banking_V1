@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import "@/css/twoFactorAuth.css";
 
 export default function TwoFactorAuth() {
   const router = useRouter();
+  const { login } = useAuth();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputRefs = useRef([]);
 
@@ -53,7 +55,20 @@ export default function TwoFactorAuth() {
     if (otpValue.length === 6) {
       console.log("OTP entered:", otpValue);
       
-      // Redirect to dashboard (no actual OTP validation - static for now)
+      // Get user data from sessionStorage
+      const pendingRole = sessionStorage.getItem("pending_role");
+      const pendingUsername = sessionStorage.getItem("pending_username");
+      
+      if (pendingRole && pendingUsername) {
+        // Login the user using AuthContext
+        login(pendingUsername, "", pendingRole);
+        
+        // Clear sessionStorage
+        sessionStorage.removeItem("pending_role");
+        sessionStorage.removeItem("pending_username");
+      }
+      
+      // Redirect to dashboard
       router.push("/dashboard");
     }
   };
