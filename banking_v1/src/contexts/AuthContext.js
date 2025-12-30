@@ -101,77 +101,29 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Role-based permissions configuration
+// Role-based permissions configuration - All permissions enabled for all roles
 const getRolePermissions = (role) => {
-  const permissions = {
-    "Business/SRBM": {
-      dashboard: { view: true, edit: false, approve: true, upload: false },
-      propertySearch: { view: true, edit: true, approve: true, upload: false },
-      propertyDetails: { view: true, edit: true, approve: true, upload: false },
-      businessApproval: { view: true, edit: true, approve: true, upload: false },
-      legalWorkflow: { view: true, edit: false, approve: false, upload: false },
-      postLOIActivities: { view: true, edit: false, approve: false, upload: false },
-      agreementExecution: { view: true, edit: false, approve: true, upload: false },
-      agreementRegistration: { view: true, edit: false, approve: true, upload: false },
-      projectExecution: { view: true, edit: false, approve: false, upload: false },
-    },
-    "Admin/Ops": {
-      dashboard: { view: true, edit: false, approve: false, upload: true },
-      propertySearch: { view: true, edit: false, approve: false, upload: true },
-      propertyDetails: { view: true, edit: false, approve: false, upload: true },
-      businessApproval: { view: true, edit: false, approve: false, upload: true },
-      legalWorkflow: { view: true, edit: false, approve: false, upload: true },
-      postLOIActivities: { view: true, edit: true, approve: false, upload: true },
-      agreementExecution: { view: true, edit: false, approve: false, upload: true },
-      agreementRegistration: { view: true, edit: false, approve: false, upload: true },
-      projectExecution: { view: true, edit: false, approve: false, upload: true },
-    },
-    "Legal Team": {
-      dashboard: { view: true, edit: false, approve: false, upload: false },
-      propertySearch: { view: false, edit: false, approve: false, upload: false },
-      propertyDetails: { view: true, edit: false, approve: false, upload: false },
-      businessApproval: { view: true, edit: false, approve: false, upload: false },
-      legalWorkflow: { view: true, edit: false, approve: true, upload: false },
-      postLOIActivities: { view: true, edit: false, approve: true, upload: false },
-      agreementExecution: { view: true, edit: false, approve: true, upload: false },
-      agreementRegistration: { view: true, edit: false, approve: false, upload: false },
-      projectExecution: { view: true, edit: false, approve: false, upload: false },
-    },
-    "IT Team": {
-      dashboard: { view: true, edit: false, approve: false, upload: false },
-      propertySearch: { view: true, edit: false, approve: false, upload: false },
-      propertyDetails: { view: true, edit: false, approve: false, upload: false },
-      businessApproval: { view: true, edit: false, approve: false, upload: false },
-      legalWorkflow: { view: true, edit: false, approve: false, upload: false },
-      postLOIActivities: { view: true, edit: false, approve: false, upload: false },
-      agreementExecution: { view: true, edit: false, approve: false, upload: false },
-      agreementRegistration: { view: true, edit: false, approve: false, upload: false },
-      projectExecution: { view: true, edit: false, approve: false, upload: false },
-    },
-    "Accounts": {
-      dashboard: { view: true, edit: false, approve: false, upload: false },
-      propertySearch: { view: true, edit: false, approve: false, upload: false },
-      propertyDetails: { view: true, edit: false, approve: false, upload: false },
-      businessApproval: { view: true, edit: false, approve: false, upload: false },
-      legalWorkflow: { view: true, edit: false, approve: false, upload: false },
-      postLOIActivities: { view: true, edit: false, approve: false, upload: false },
-      agreementExecution: { view: true, edit: false, approve: false, upload: false },
-      agreementRegistration: { view: true, edit: false, approve: false, upload: false },
-      projectExecution: { view: true, edit: false, approve: false, upload: false },
-    },
-    "Project/Facilities": {
-      dashboard: { view: true, edit: false, approve: false, upload: false },
-      propertySearch: { view: true, edit: false, approve: false, upload: false },
-      propertyDetails: { view: true, edit: false, approve: false, upload: false },
-      businessApproval: { view: true, edit: false, approve: false, upload: false },
-      legalWorkflow: { view: true, edit: false, approve: false, upload: false },
-      postLOIActivities: { view: true, edit: true, approve: true, upload: false },
-      agreementExecution: { view: true, edit: false, approve: false, upload: false },
-      agreementRegistration: { view: true, edit: false, approve: false, upload: false },
-      projectExecution: { view: true, edit: true, approve: false, upload: false },
-    },
+  // All pages with all permissions enabled for everyone
+  const allPermissions = {
+    view: true,
+    edit: true,
+    approve: true,
+    upload: true,
+    initiate: true,
   };
 
-  return permissions[role] || {};
+  const permissions = {
+    dashboard: allPermissions,
+    propertySearch: allPermissions,
+    propertyDetails: allPermissions,
+    businessApproval: allPermissions,
+    legalWorkflow: allPermissions,
+    postLOIActivities: allPermissions,
+    agreementExecution: allPermissions,
+    agreementRegistration: allPermissions,
+    projectExecution: allPermissions,
+  };
+
+  return permissions;
 };
 

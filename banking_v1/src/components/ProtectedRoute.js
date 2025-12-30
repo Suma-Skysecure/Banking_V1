@@ -11,10 +11,8 @@ export default function ProtectedRoute({ children, requiredPermission = null, pa
   useEffect(() => {
     if (!loading && !user) {
       router.push("/");
-    } else if (!loading && user && page && !canView(page)) {
-      router.push("/dashboard");
     }
-  }, [user, loading, page, canView, router]);
+  }, [user, loading, router]);
 
   if (loading) {
     return (
@@ -31,23 +29,6 @@ export default function ProtectedRoute({ children, requiredPermission = null, pa
 
   if (!user) {
     return null;
-  }
-
-  if (page && !canView(page)) {
-    return (
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        height: "100vh",
-        flexDirection: "column",
-        gap: "16px"
-      }}>
-        <h2>Access Denied</h2>
-        <p>You don't have permission to view this page.</p>
-        <button onClick={() => router.push("/dashboard")}>Go to Dashboard</button>
-      </div>
-    );
   }
 
   return children;

@@ -641,6 +641,13 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+.review-comments-textarea:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .review-comments-textarea::placeholder {
   color: #9ca3af;
 }
@@ -728,6 +735,19 @@
 
 .decision-button.approve-button:hover {
   background-color: #ea580c;
+}
+
+.decision-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.decision-button.reject-button:disabled:hover {
+  background-color: #ef4444;
+}
+
+.decision-button.approve-button:disabled:hover {
+  background-color: #f97316;
 }
 
 .button-icon {

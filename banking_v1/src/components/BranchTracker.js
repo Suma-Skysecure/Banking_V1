@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
-import WorkflowTimeline from "@/components/WorkflowTimeline";
 import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
@@ -19,21 +18,24 @@ export default function BranchTracker() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleViewDetails = (e, branchId) => {
+  // Map stage names to routes
+  const getStageRoute = (stage) => {
+    const stageRouteMap = {
+      "Property Search": "/property-search",
+      "Business Approval": "/business-approval",
+      "Legal Workflow": "/legal-workflow",
+      "On Hold": null, // No redirect for On Hold
+    };
+    return stageRouteMap[stage] || null;
+  };
+
+  const handleViewDetails = (e, branch) => {
     e.preventDefault();
-    // Debug: Log user and role
-    console.log("User:", user);
-    console.log("User role:", user?.role);
-    
-    // Only redirect to legal workflow if user is Legal Team
-    // Check for exact match or case-insensitive match
-    if (user?.role === "Legal Team" || user?.role?.toLowerCase() === "legal team") {
-      console.log("Redirecting to legal workflow");
-      router.push("/legal-workflow");
-    } else {
-      console.log("Not Legal Team, no redirect");
+    // All restrictions removed - redirect to current stage page for all users
+    const route = getStageRoute(branch.stage);
+    if (route) {
+      router.push(route);
     }
-    // For other roles, do nothing (no redirect)
   };
 
   const branches = [
@@ -268,7 +270,7 @@ export default function BranchTracker() {
                       </td>
                       <td>
                         <button
-                          onClick={(e) => handleViewDetails(e, branch.id)}
+                          onClick={(e) => handleViewDetails(e, branch)}
                           className="view-details-link"
                         >
                           View Details

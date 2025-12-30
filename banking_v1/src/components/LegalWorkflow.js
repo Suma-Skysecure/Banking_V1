@@ -5,18 +5,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
-import WorkflowTimeline from "@/components/WorkflowTimeline";
 import { useAuth } from "@/contexts/AuthContext";
 import PermissionWrapper from "@/components/PermissionWrapper";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
-import "@/css/workflowTimeline.css";
 import "@/css/legalWorkflow.css";
 
 export default function LegalWorkflow() {
   const router = useRouter();
   const { user, canUpload } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  // All restrictions removed - all users have full access
   const [uploadedFiles, setUploadedFiles] = useState([
     {
       id: 1,
@@ -201,9 +201,6 @@ export default function LegalWorkflow() {
 
         <main className="dashboard-main">
           <div className="main-content">
-            {/* Workflow Timeline */}
-            <WorkflowTimeline activeStage="Legal Workflow" />
-            
             <PageHeader
               title="Legal Workflow - LOI Signing"
               subtitle="Formalize the Letter of Intent for the approved property."
@@ -624,7 +621,9 @@ export default function LegalWorkflow() {
                 <h3 className="actions-title">Actions</h3>
               </div>
               <div className="actions-buttons">
-                <button className="action-button provide-documents-btn">
+                <button 
+                  className="action-button provide-documents-btn"
+                >
                   <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="button-icon">
                     <path
                       d="M14 2H2V14H14V2Z"
@@ -655,7 +654,7 @@ export default function LegalWorkflow() {
                   className="action-button circulate-loi-btn"
                   onClick={() => {
                     console.log("Circulating LOI");
-                    router.push("/post-loi-activities");
+                    // Navigation removed
                   }}
                 >
                   <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="button-icon">

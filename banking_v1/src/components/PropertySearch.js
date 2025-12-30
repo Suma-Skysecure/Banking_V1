@@ -5,18 +5,21 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
-import WorkflowTimeline from "@/components/WorkflowTimeline";
+import { useAuth } from "@/contexts/AuthContext";
 import "@/css/pageHeader.css";
 import "@/css/branchTracker.css";
 import "@/css/propertySearch.css";
 
 export default function PropertySearch() {
   const router = useRouter();
+  const { user } = useAuth();
   const [location, setLocation] = useState("");
   const [propertyType, setPropertyType] = useState("all");
   const [priceRange, setPriceRange] = useState("all");
   const [selectedProperties, setSelectedProperties] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  // All restrictions removed - all users have full access
 
   const properties = [
     {
@@ -230,9 +233,6 @@ export default function PropertySearch() {
         {/* Main Content Area */}
         <main className="dashboard-main">
           <div className="main-content">
-            {/* Workflow Timeline */}
-            <WorkflowTimeline activeStage="Property Search" />
-            
             <PageHeader
               title="Property Search"
               subtitle="Search and select properties based on business requirements."
@@ -304,7 +304,10 @@ export default function PropertySearch() {
                         <option value="10m+">₹83.5 Cr+</option>
                       </select>
                     </div>
-                    <button type="submit" className="search-button">
+                    <button 
+                      type="submit" 
+                      className="search-button"
+                    >
                       <svg
                         width="20"
                         height="20"
@@ -348,6 +351,7 @@ export default function PropertySearch() {
                       className="initiate-button"
                       onClick={handleInitiateListing}
                       disabled={selectedProperties.length === 0}
+                      style={selectedProperties.length === 0 ? { opacity: 0.5, cursor: "not-allowed" } : {}}
                     >
                       <svg
                         width="20"
@@ -512,34 +516,69 @@ export default function PropertySearch() {
                             ₹{(property.pricePerSqft * 83.5).toLocaleString('en-IN')}/sq ft
                           </div>
                         </div>
-                        <Link
-                          href="/property-details"
-                          className="view-details-button"
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            className="eye-icon"
+                        {false ? (
+                          <div
+                            className="view-details-button"
+                            style={{ 
+                              opacity: 0.5, 
+                              cursor: "not-allowed",
+                              pointerEvents: "none"
+                            }}
                           >
-                            <path
-                              d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                            <circle
-                              cx="8"
-                              cy="8"
-                              r="2"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                            />
-                          </svg>
-                          View Property Details
-                        </Link>
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 16 16"
+                              fill="none"
+                              className="eye-icon"
+                            >
+                              <path
+                                d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <circle
+                                cx="8"
+                                cy="8"
+                                r="2"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                              />
+                            </svg>
+                            View Property Details
+                          </div>
+                        ) : (
+                          <Link
+                            href="/property-details"
+                            className="view-details-button"
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 16 16"
+                              fill="none"
+                              className="eye-icon"
+                            >
+                              <path
+                                d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <circle
+                                cx="8"
+                                cy="8"
+                                r="2"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                              />
+                            </svg>
+                            View Property Details
+                          </Link>
+                        )}
                       </div>
                     </div>
                   ))}

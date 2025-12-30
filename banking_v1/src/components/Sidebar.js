@@ -19,27 +19,6 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
       <div className="sidebar-logo">PropSys</div>
       <nav className="sidebar-nav">
         {navigationItems.map((item, index) => {
-          // Check if user has permission to view this page
-          const hasAccess = item.page ? canView(item.page) : true;
-          
-          if (!hasAccess) {
-            return (
-              <div
-                key={index}
-                className={`sidebar-nav-item disabled`}
-                style={{ 
-                  opacity: 0.5, 
-                  cursor: "not-allowed",
-                  pointerEvents: "none"
-                }}
-                title="You don't have permission to access this page"
-              >
-                <span className="nav-icon">{item.icon}</span>
-                <span className="nav-text">{item.name}</span>
-              </div>
-            );
-          }
-          
           return (
             <Link
               key={index}
