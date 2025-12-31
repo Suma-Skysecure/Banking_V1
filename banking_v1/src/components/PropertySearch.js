@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
+import ToastNotification from "@/components/ToastNotification";
 import { useAuth } from "@/contexts/AuthContext";
 import "@/css/pageHeader.css";
 import "@/css/branchTracker.css";
@@ -18,8 +19,127 @@ export default function PropertySearch() {
   const [priceRange, setPriceRange] = useState("all");
   const [selectedProperties, setSelectedProperties] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [importedFiles, setImportedFiles] = useState([]);
+  const fileInputRef = useRef(null);
+  const [showNotification, setShowNotification] = useState(false);
   
   // All restrictions removed - all users have full access
+
+  // Get file type from extension
+  const getFileType = (fileName) => {
+    const ext = fileName.split(".").pop().toLowerCase();
+    if (ext === "pdf") return "pdf";
+    if (["doc", "docx"].includes(ext)) return "doc";
+    if (["xls", "xlsx"].includes(ext)) return "xls";
+    if (["ppt", "pptx"].includes(ext)) return "ppt";
+    if (["mhtml"].includes(ext)) return "mhtml";
+    if (["svg"].includes(ext)) return "svg";
+    if (["csv"].includes(ext)) return "csv";
+    if (["jpg", "jpeg", "png"].includes(ext)) return "image";
+    if (["txt"].includes(ext)) return "txt";
+    return "file";
+  };
+
+  // Format file size
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  };
+
+  // Format date
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  // Handle file selection
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    handleFiles(files);
+  };
+
+  // Handle file drop
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
+  };
+
+  // Handle drag over
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  // Handle drag leave
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  // Process files and auto-submit
+  const handleFiles = (files) => {
+    // Limit to 5 files
+    const limitedFiles = files.slice(0, 5);
+    
+    if (files.length > 5) {
+      alert("You can upload up to 5 files at once. Only the first 5 files will be processed.");
+    }
+
+    const newFiles = limitedFiles.map((file) => ({
+      id: Date.now() + Math.random(),
+      name: file.name,
+      size: file.size,
+      date: new Date().toISOString(),
+      type: getFileType(file.name),
+      file: file,
+    }));
+
+    // Auto-submit immediately after processing
+    handleSubmitFiles(newFiles);
+  };
+
+  // Submit files
+  const handleSubmitFiles = (files) => {
+    console.log("Submitting files:", files);
+    // Here you can add your file upload logic (API call, etc.)
+    
+    // Show success message and close modal
+    alert(`${files.length} file(s) uploaded successfully!`);
+    setIsImportModalOpen(false);
+    setIsDragging(false);
+    setImportedFiles([]);
+  };
+
+  // Handle file delete
+  const handleDeleteFile = (fileId) => {
+    setImportedFiles((prev) => prev.filter((file) => file.id !== fileId));
+  };
+
+  // Handle upload area click
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Open import modal
+  const handleImportClick = () => {
+    setIsImportModalOpen(true);
+  };
+
+  // Close import modal
+  const handleCloseModal = () => {
+    setIsImportModalOpen(false);
+    setIsDragging(false);
+  };
 
   const properties = [
     {
@@ -150,13 +270,29 @@ export default function PropertySearch() {
   const handleInitiateListing = () => {
     if (selectedProperties.length > 0) {
       console.log("Initiating listing for properties:", selectedProperties);
-      // Redirect to Business Approval page
-      router.push("/business-approval");
+      
+      // Show success notification for SRBM users
+      if (user?.role === "SRBM") {
+        setShowNotification(true);
+        // Don't redirect automatically - let user see the notification
+        // They can navigate manually if needed
+      } else {
+        // For other roles, redirect immediately
+        router.push("/business-approval");
+      }
     }
   };
 
   return (
-    <div className="dashboard-container">
+    <>
+      <ToastNotification
+        show={showNotification}
+        message="Successfully initiated property for business approval"
+        type="success"
+        onClose={() => setShowNotification(false)}
+        duration={3000}
+      />
+      <div className="dashboard-container">
       {/* Top Header Bar */}
       <header className="dashboard-header">
         <button
@@ -338,12 +474,90 @@ export default function PropertySearch() {
 
               {/* Available Properties Section */}
               <section className="available-properties-section">
-                <div className="section-header-row">
+                <div className="section-header-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div className="section-header">
                     <h2 className="section-title">Available Properties</h2>
                     <p className="section-subtitle">
                       Properties matching your search criteria
                     </p>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, gap: "12px" }}>
+                    <button
+                      onClick={handleImportClick}
+                      style={{
+                        padding: "10px 24px",
+                        backgroundColor: "#f97316",
+                        color: "#ffffff",
+                        border: "none",
+                        borderRadius: "6px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        transition: "background-color 0.2s",
+                      }}
+                      onMouseOver={(e) => (e.target.style.backgroundColor = "#ea580c")}
+                      onMouseOut={(e) => (e.target.style.backgroundColor = "#f97316")}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path
+                          d="M8 2V10M4 6L8 2L12 6"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M2 12V13C2 14.1046 2.89543 15 4 15H12C13.1046 15 14 14.1046 14 13V12"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      Import
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Handle export functionality
+                        console.log("Export clicked");
+                        // You can add export logic here (e.g., export to CSV, Excel, etc.)
+                      }}
+                      style={{
+                        padding: "10px 24px",
+                        backgroundColor: "#3b82f6",
+                        color: "#ffffff",
+                        border: "none",
+                        borderRadius: "6px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        transition: "background-color 0.2s",
+                      }}
+                      onMouseOver={(e) => (e.target.style.backgroundColor = "#2563eb")}
+                      onMouseOut={(e) => (e.target.style.backgroundColor = "#3b82f6")}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path
+                          d="M8 10V2M4 6L8 2L12 6"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M2 12V13C2 14.1046 2.89543 15 4 15H12C13.1046 15 14 14.1046 14 13V12"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      Export
+                    </button>
                   </div>
                   <div className="properties-summary">
                     <span className="properties-count">{properties.length} Properties Found</span>
@@ -588,7 +802,176 @@ export default function PropertySearch() {
           </div>
         </main>
       </div>
+
+      {/* Import Modal */}
+      {isImportModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={handleCloseModal}
+        >
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              borderRadius: "8px",
+              padding: "24px",
+              width: "90%",
+              maxWidth: "600px",
+              maxHeight: "80vh",
+              overflow: "auto",
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2
+              style={{
+                fontSize: "20px",
+                fontWeight: "700",
+                color: "#1e3a8a",
+                margin: "0 0 24px 0",
+                textAlign: "center",
+              }}
+            >
+              Upload Document
+            </h2>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mhtml,.svg,.csv,.jpg,.jpeg,.png,.txt"
+              onChange={handleFileSelect}
+              style={{ display: "none" }}
+            />
+
+            <div
+              onClick={handleUploadClick}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              style={{
+                border: `2px dashed ${isDragging ? "#3b82f6" : "#93c5fd"}`,
+                borderRadius: "8px",
+                padding: "60px 40px",
+                textAlign: "center",
+                cursor: "pointer",
+                backgroundColor: isDragging ? "#eff6ff" : "#ffffff",
+                transition: "all 0.2s",
+                marginBottom: "24px",
+                minHeight: "300px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg
+                width="80"
+                height="80"
+                viewBox="0 0 24 24"
+                fill="none"
+                style={{ margin: "0 auto 20px", color: "#3b82f6" }}
+              >
+                <path
+                  d="M12 4V16M8 8L12 4L16 8"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M4 18H20"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <rect
+                  x="2"
+                  y="18"
+                  width="20"
+                  height="4"
+                  rx="1"
+                  fill="currentColor"
+                  opacity="0.3"
+                />
+              </svg>
+              <div
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  color: "#374151",
+                  marginBottom: "12px",
+                }}
+              >
+                Drag & drop files here
+              </div>
+              <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "24px" }}>
+                Word, Ppt, Excel, PDF, MHTML, SVG. You can upload up to 5 files at once.
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleUploadClick();
+                }}
+                style={{
+                  padding: "10px 24px",
+                  backgroundColor: "#3b82f6",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s",
+                }}
+                onMouseOver={(e) => (e.target.style.backgroundColor = "#2563eb")}
+                onMouseOut={(e) => (e.target.style.backgroundColor = "#3b82f6")}
+              >
+                Browse Files
+              </button>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginTop: "24px",
+              }}
+            >
+              <button
+                onClick={handleCloseModal}
+                style={{
+                  padding: "10px 24px",
+                  backgroundColor: "#f3f4f6",
+                  color: "#374151",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s",
+                }}
+                onMouseOver={(e) => (e.target.style.backgroundColor = "#e5e7eb")}
+                onMouseOut={(e) => (e.target.style.backgroundColor = "#f3f4f6")}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+    </>
   );
 }
 

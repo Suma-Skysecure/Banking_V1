@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import UserProfile from "@/components/UserProfile";
 import "@/css/branchTracker.css";
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
@@ -32,15 +33,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
         })}
       </nav>
       <div className="sidebar-footer">
-        <div className="sidebar-user">
-          <div className="user-avatar">AM</div>
-          <div className="user-info">
-            <div className="user-name">Ana Miller</div>
-            <a href="#" className="user-logout">
-              Logout →
-            </a>
-          </div>
-        </div>
+        <UserProfile variant="sidebar" />
       </div>
     </aside>
   );

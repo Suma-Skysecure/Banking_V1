@@ -6,100 +6,67 @@
  */
 
 export const LOGIN_CREDENTIALS = {
-  // Business/SRBM Role
-  "srbm@kotakbank.com": {
-    username: "srbm@kotakbank.com",
-    password: "SRBM123",
-    role: "Business/SRBM",
-    name: "SRBM User",
-    email: "srbm@kotakbank.com"
-  },
+  // SRBM Role
   "SRBM@Kotakbank.com": {
     username: "SRBM@Kotakbank.com",
     password: "SRBM123",
-    role: "Business/SRBM",
+    role: "SRBM",
     name: "SRBM User",
     email: "SRBM@Kotakbank.com"
   },
 
-  // Admin/Ops Role
-  "admin@kotakbank.com": {
-    username: "admin@kotakbank.com",
-    password: "Admin123",
-    role: "Admin/Ops",
-    name: "Admin User",
-    email: "admin@kotakbank.com"
-  },
-  "Admin@Kotakbank.com": {
-    username: "Admin@Kotakbank.com",
-    password: "Admin123",
-    role: "Admin/Ops",
-    name: "Admin User",
-    email: "Admin@Kotakbank.com"
+  // Business Role
+  "Business@Kotakbank.com": {
+    username: "Business@Kotakbank.com",
+    password: "Business123",
+    role: "Business",
+    name: "Business User",
+    email: "Business@Kotakbank.com"
   },
 
-  // Legal Team Role
-  "legalteam@kotakbank.com": {
-    username: "legalteam@kotakbank.com",
-    password: "Legal123",
-    role: "Legal Team",
-    name: "Legal Team User",
-    email: "legalteam@kotakbank.com"
+  // Site Measure Role
+  "Sitemeasure@Kotakbank.com": {
+    username: "Sitemeasure@Kotakbank.com",
+    password: "Sitemeasure123",
+    role: "Site measurement",
+    name: "Site Measure User",
+    email: "Sitemeasure@Kotakbank.com"
   },
-  "Legalteam@Kotakbank.com": {
-    username: "Legalteam@Kotakbank.com",
-    password: "Legal123",
-    role: "Legal Team",
-    name: "Legal Team User",
-    email: "Legalteam@Kotakbank.com"
+
+  // Legal Due Role
+  "Legaldue@Kotakbank.com": {
+    username: "Legaldue@Kotakbank.com",
+    password: "Legaldue123",
+    role: "Legal due",
+    name: "Legal Due User",
+    email: "Legaldue@Kotakbank.com"
   },
 
   // IT Team Role
-  "it@kotakbank.com": {
-    username: "it@kotakbank.com",
+  "ITteam@Kotakbank.com": {
+    username: "ITteam@Kotakbank.com",
     password: "ITteam123",
-    role: "IT Team",
+    role: "IT team",
     name: "IT Team User",
-    email: "it@kotakbank.com"
-  },
-  "IT@Kotakbank.com": {
-    username: "IT@Kotakbank.com",
-    password: "ITteam123",
-    role: "IT Team",
-    name: "IT Team User",
-    email: "IT@Kotakbank.com"
+    email: "ITteam@Kotakbank.com"
   },
 
-  // Accounts Role
-  "account@kotakbank.com": {
-    username: "account@kotakbank.com",
-    password: "Account123",
-    role: "Accounts",
-    name: "Account User",
-    email: "account@kotakbank.com"
-  },
-  "Account@Kotakbank.com": {
-    username: "Account@Kotakbank.com",
-    password: "Account123",
-    role: "Accounts",
-    name: "Account User",
-    email: "Account@Kotakbank.com"
+  // Agreement Execution Role
+  "Agreementexe@Kotakbank.com": {
+    username: "Agreementexe@Kotakbank.com",
+    password: "Agreementexe123",
+    role: "Agreement execution",
+    name: "Agreement Execution User",
+    email: "Agreementexe@Kotakbank.com"
   },
 
-  // Project/Facilities Role
-  "project@kotakbank.com": {
-    username: "project@kotakbank.com",
-    password: "Project123",
-    role: "Project/Facilities",
-    name: "Project User",
-    email: "project@kotakbank.com"
-  },
-  "Project@Kotakbank.com": {
-    username: "Project@Kotakbank.com",
-    password: "Project123",
-    role: "Project/Facilities",
-    name: "Project User",
-    email: "Project@Kotakbank.com"
+  // Project Execution Role
+  "Projectexe@Kotakbank.com": {
+    username: "Projectexe@Kotakbank.com",
+    password: "Projectexe123",
+    role: "Project execution",
+    name: "Project Execution User",
+    email: "Projectexe@Kotakbank.com"
   }
 };
 
