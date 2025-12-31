@@ -19,7 +19,7 @@ export const ROLE_STAGE_MAPPING = {
   "Project execution": ["Project Execution"],
   
   // Site measurement role - sees stages related to site measurement work
-  "Site measurement": ["Project Execution", "Post-LOI Activities"],
+  "Site measurement": ["Site Measurement", "Project Execution", "Post-LOI Activities"],
   
   // Agreement execution role - sees Agreement Execution related stages
   "Agreement execution": ["Agreement Execution", "Agreement Registration"],

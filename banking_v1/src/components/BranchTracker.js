@@ -34,10 +34,10 @@ const ALL_BRANCHES = [
   {
     id: 3,
     name: "Chicago River North Site",
-    stage: "Project Execution",
-    stageColor: "purple",
-    progress: 80,
-    pendingAction: "green",
+    stage: "Site Measurement",
+    stageColor: "blue",
+    progress: 45,
+    pendingAction: "yellow",
     category: "business",
   },
   {
@@ -86,6 +86,7 @@ export default function BranchTracker() {
       "Business Approval": "/business-approval",
       "Legal Workflow": "/legal-workflow",
       "Project Execution": "/project-execution",
+      "Site Measurement": "/project-execution",
       "Agreement Execution": "/agreement-execution",
       "Agreement Registration": "/agreement-registration",
       "Post-LOI Activities": "/post-loi-activities",
@@ -117,8 +118,8 @@ export default function BranchTracker() {
 
   const getProgressColor = (progress) => {
     if (progress === 100) return "green";
-    if (progress >= 50) return "orange";
-    return "grey";
+    if (progress >= 50) return "yellow";
+    return "yellow";
   };
 
   return (

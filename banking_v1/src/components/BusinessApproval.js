@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
+import DocumentUploadModal from "@/components/DocumentUploadModal";
 import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
@@ -15,6 +16,7 @@ export default function BusinessApproval() {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [reviewComments, setReviewComments] = useState("");
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   
   // All restrictions removed - all users have full access
 
@@ -612,8 +614,13 @@ export default function BusinessApproval() {
                   <button
                     className="decision-button approve-button"
                     onClick={() => {
-                      console.log("Approve property");
-                      router.push("/legal-workflow");
+                      // Only Business role can open upload modal
+                      if (user?.role === "Business" || user?.role === "SRBM") {
+                        setIsUploadModalOpen(true);
+                      } else {
+                        console.log("Approve property");
+                        router.push("/legal-workflow");
+                      }
                     }}
                   >
                     <svg
@@ -639,6 +646,19 @@ export default function BusinessApproval() {
           </div>
         </main>
       </div>
+
+      {/* Document Upload Modal */}
+      {isUploadModalOpen && (
+        <DocumentUploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          onSubmit={(documents) => {
+            console.log("Documents uploaded:", documents);
+            // After documents are uploaded, proceed to legal workflow
+            router.push("/legal-workflow");
+          }}
+        />
+      )}
     </div>
   );
 }
