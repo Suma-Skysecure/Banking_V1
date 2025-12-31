@@ -441,6 +441,147 @@ export default function PropertySearch() {
     }
   };
 
+  // Export selected properties to Excel
+  const handleExportProperties = () => {
+    if (selectedProperties.length === 0) {
+      alert("Please select at least one property to export.");
+      return;
+    }
+
+    // Get all properties (regular + imported)
+    const allProperties = [...properties, ...importedProperties];
+    
+    // Filter selected properties
+    const selectedProps = allProperties.filter(prop => 
+      selectedProperties.includes(prop.id)
+    );
+
+    if (selectedProps.length === 0) {
+      alert("No properties found to export.");
+      return;
+    }
+
+    // Prepare data in the import format
+    const exportData = selectedProps.map(prop => {
+      // Parse address components
+      let addressLine = "";
+      let city = "";
+      let state = "";
+      let country = "";
+      let pincode = "";
+
+      if (prop.address) {
+        const addressParts = prop.address.split(",").map(part => part.trim());
+        addressLine = addressParts[0] || "";
+        
+        if (addressParts.length > 1) {
+          city = addressParts[1] || "";
+        }
+        
+        // Handle state and zip code (format: "FL 33131" or "State, Country, Pincode")
+        if (addressParts.length > 2) {
+          const stateZipPart = addressParts[2];
+          // Try to extract state and zip (e.g., "FL 33131")
+          const stateZipMatch = stateZipPart.match(/^([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/);
+          if (stateZipMatch) {
+            state = stateZipMatch[1];
+            pincode = stateZipMatch[2];
+          } else {
+            // If no zip, just use as state
+            state = stateZipPart;
+          }
+        }
+        
+        if (addressParts.length > 3) {
+          country = addressParts[3] || "";
+        }
+        
+        if (addressParts.length > 4) {
+          pincode = addressParts[4] || pincode;
+        }
+      }
+
+      // For imported properties, use existing data
+      if (prop.isImported) {
+        // For imported properties, price is already in INR (original from Excel)
+        // If priceUSD exists, it means we converted it, so we need to convert back
+        // Otherwise, use the original price directly
+        const priceInINR = prop.price 
+          ? (prop.priceUSD ? prop.priceUSD * 83.5 : prop.price)
+          : "";
+        
+        return {
+          "Property ID": prop.propertyId || prop.id || "",
+          "Property Name": prop.name || "",
+          "Address Line": prop.addressLine || addressLine,
+          "City": prop.city || city,
+          "State": prop.state || state,
+          "Country": prop.country || country,
+          "Pincode": prop.pincode || pincode,
+          "Property Type": prop.type || "",
+          "Total Area (sq ft)": prop.totalArea || (prop.size ? parseFloat(prop.size.replace(/[^0-9.]/g, "")) : ""),
+          "Availability": prop.status || "",
+          "Price (INR)": priceInINR,
+          "Price Per Sq Ft (INR)": prop.pricePerSqft || "",
+          "Floor Level": prop.floorLevel || "",
+          "Parking Spaces": prop.parkingSpaces || "",
+          "Year Built": prop.yearBuilt || "",
+          "Vendor Name": prop.vendorName || "",
+          "Vendor Contact": prop.vendorContact || "",
+          "Vendor Email": prop.vendorEmail || "",
+          "Listing Status": prop.listingStatus || "",
+          "Zoning": prop.zoning || "",
+          "Last Inspection Date": prop.lastInspectionDate || "",
+          "Required Action - Site Inspection": prop.siteInspection || "",
+          "Required Action - Due Diligence": prop.dueDiligence || "",
+        };
+      }
+
+      // For regular properties, convert and format data
+      const totalArea = prop.size ? parseFloat(prop.size.replace(/[^0-9.]/g, "")) : "";
+      const priceInINR = prop.price ? prop.price * 83.5 : "";
+      const pricePerSqftInINR = prop.pricePerSqft ? prop.pricePerSqft * 83.5 : "";
+
+      return {
+        "Property ID": `PROP-${prop.id}`,
+        "Property Name": prop.name || "",
+        "Address Line": addressLine,
+        "City": city,
+        "State": state,
+        "Country": country,
+        "Pincode": pincode,
+        "Property Type": prop.type || "",
+        "Total Area (sq ft)": totalArea,
+        "Availability": prop.status || "",
+        "Price (INR)": priceInINR,
+        "Price Per Sq Ft (INR)": pricePerSqftInINR,
+        "Floor Level": "",
+        "Parking Spaces": "",
+        "Year Built": "",
+        "Vendor Name": "",
+        "Vendor Contact": "",
+        "Vendor Email": "",
+        "Listing Status": "",
+        "Zoning": "",
+        "Last Inspection Date": "",
+        "Required Action - Site Inspection": "",
+        "Required Action - Due Diligence": "",
+      };
+    });
+
+    // Create workbook and worksheet
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Properties");
+
+    // Generate Excel file and download
+    const fileName = `Properties_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+
+    // Show success message
+    alert(`Successfully exported ${selectedProps.length} property/properties to Excel!`);
+  };
+
   return (
     <>
       <ToastNotification
@@ -677,27 +818,33 @@ export default function PropertySearch() {
                       Import
                     </button>
                     <button
-                      onClick={() => {
-                        // Handle export functionality
-                        console.log("Export clicked");
-                        // You can add export logic here (e.g., export to CSV, Excel, etc.)
-                      }}
+                      onClick={handleExportProperties}
+                      disabled={selectedProperties.length === 0}
                       style={{
                         padding: "10px 24px",
-                        backgroundColor: "#3b82f6",
+                        backgroundColor: selectedProperties.length === 0 ? "#9ca3af" : "#3b82f6",
                         color: "#ffffff",
                         border: "none",
                         borderRadius: "6px",
                         fontSize: "14px",
                         fontWeight: "600",
-                        cursor: "pointer",
+                        cursor: selectedProperties.length === 0 ? "not-allowed" : "pointer",
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
                         transition: "background-color 0.2s",
+                        opacity: selectedProperties.length === 0 ? 0.6 : 1,
                       }}
-                      onMouseOver={(e) => (e.target.style.backgroundColor = "#2563eb")}
-                      onMouseOut={(e) => (e.target.style.backgroundColor = "#3b82f6")}
+                      onMouseOver={(e) => {
+                        if (selectedProperties.length > 0) {
+                          e.target.style.backgroundColor = "#2563eb";
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        if (selectedProperties.length > 0) {
+                          e.target.style.backgroundColor = "#3b82f6";
+                        }
+                      }}
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path
