@@ -4,12 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import ToastNotification from "@/components/ToastNotification";
+import { useAuth } from "@/contexts/AuthContext";
 import "@/css/propertyDetails.css";
 import "@/css/branchTracker.css";
 
 export default function PropertyDetails() {
   const router = useRouter();
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showNotification, setShowNotification] = useState(false);
 
   // Property data - in real app, this would come from route params or API
   const property = {
@@ -61,7 +65,15 @@ export default function PropertyDetails() {
   };
 
   return (
-    <div className="dashboard-container">
+    <>
+      <ToastNotification
+        show={showNotification}
+        message="Successfully initiated property for business approval"
+        type="success"
+        onClose={() => setShowNotification(false)}
+        duration={3000}
+      />
+      <div className="dashboard-container">
       {/* Top Header Bar */}
       <header className="dashboard-header">
         <button
@@ -102,26 +114,10 @@ export default function PropertyDetails() {
             </svg>
           </button>
           <div className="header-user-profile">
-            <div className="header-user-avatar">AM</div>
             <div className="header-user-info">
-              <div className="header-user-name">Ana Miller</div>
-              <div className="header-user-email">analyst@pms.com</div>
+              <div className="header-user-name">{user?.role || "User"}</div>
+              <div className="header-user-email">{user?.email || user?.username || ""}</div>
             </div>
-            <svg
-              className="header-user-chevron"
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-            >
-              <path
-                d="M4 6L8 10L12 6"
-                stroke="#6b7280"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
           </div>
         </div>
       </header>
@@ -439,7 +435,16 @@ export default function PropertyDetails() {
                   className="submit-approval-button"
                   onClick={() => {
                     console.log("Submitting property for business approval");
-                    router.push("/business-approval");
+                    
+                    // Show success notification for SRBM users
+                    if (user?.role === "SRBM") {
+                      setShowNotification(true);
+                      // Don't redirect automatically - let user see the notification
+                      // They can navigate manually if needed
+                    } else {
+                      // For other roles, redirect immediately
+                      router.push("/business-approval");
+                    }
                   }}
                 >
                   <svg
@@ -472,6 +477,7 @@ export default function PropertyDetails() {
         </main>
       </div>
     </div>
+    </>
   );
 }
 

@@ -207,12 +207,14 @@
   padding: 16px 20px;
 }
 
+/* Sidebar user styles moved to userProfile.css - keeping for backwards compatibility */
 .sidebar-user {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
+/* Note: User avatar and profile styles are now in userProfile.css */
 .user-avatar {
   width: 40px;
   height: 40px;

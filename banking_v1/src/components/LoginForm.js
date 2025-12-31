@@ -16,12 +16,13 @@ import { validateCredentials, getRoleFromUsername } from "@/config/credentials";
 import "@/css/loginPage.css";
 
 const ROLES = [
-  "Business/SRBM",
-  "Admin/Ops",
-  "Legal Team",
-  "IT Team",
-  "Accounts",
-  "Project/Facilities",
+  "SRBM",
+  "Business",
+  "Site measurement",
+  "Legal due",
+  "IT team",
+  "Agreement execution",
+  "Project execution",
 ];
 
 export default function LoginForm() {

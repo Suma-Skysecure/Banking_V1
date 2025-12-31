@@ -51,26 +51,16 @@ export default function BusinessApproval() {
             </svg>
           </button>
           <div className="header-profile">
-            <div className="profile-avatar">AM</div>
-            <div className="profile-info">
-              <span className="profile-name">Ana Miller</span>
-              <span className="profile-email">analyst@pms.com</span>
+            <div className="profile-avatar">
+              {user?.name ? (user.name.split(" ").length > 1 
+                ? (user.name.split(" ")[0][0] + user.name.split(" ")[1][0]).toUpperCase()
+                : user.name.substring(0, 2).toUpperCase())
+                : "U"}
             </div>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              className="dropdown-chevron"
-            >
-              <path
-                d="M4 6L8 10L12 6"
-                stroke="#6b7280"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <div className="profile-info">
+              <span className="profile-name">{user?.role || "User"}</span>
+              <span className="profile-email">{user?.email || user?.username || ""}</span>
+            </div>
           </div>
         </div>
       </header>
@@ -246,7 +236,7 @@ export default function BusinessApproval() {
               </div>
             </div>
 
-            {/* Approval Status and History Grid */}
+            {/* Approval Status Card */}
             <div className="approval-grid">
               {/* Business Approval Status Card */}
               <div className="approval-status-card">
@@ -345,58 +335,6 @@ export default function BusinessApproval() {
                     <div className="timeline-content">
                       <div className="timeline-title">Business Review</div>
                       <div className="timeline-status">Awaiting approval</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Approval History Card */}
-              <div className="approval-history-card">
-                <div className="card-header">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="card-icon"
-                  >
-                    <path
-                      d="M3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M12 8V12L15 15"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <h3 className="card-title">Approval History</h3>
-                </div>
-                <div className="history-list">
-                  <div className="history-item">
-                    <div className="history-avatar">MC</div>
-                    <div className="history-content">
-                      <div className="history-header">
-                        <span className="history-name">Michael Chen</span>
-                        <span className="history-role">(Regional Manager)</span>
-                        <span className="history-badge approved">Approved</span>
-                      </div>
-                      <div className="history-action">Approved property listing for business review</div>
-                      <div className="history-date">Dec 15, 2024 at 10:45 AM</div>
-                    </div>
-                  </div>
-                  <div className="history-item">
-                    <div className="history-avatar">AM</div>
-                    <div className="history-content">
-                      <div className="history-header">
-                        <span className="history-name">Ana Miller</span>
-                        <span className="history-role">(Property Analyst)</span>
-                        <span className="history-badge submitted">Submitted</span>
-                      </div>
-                      <div className="history-action">Submitted property for business approval</div>
-                      <div className="history-date">Dec 15, 2024 at 10:30 AM</div>
                     </div>
                   </div>
                 </div>
