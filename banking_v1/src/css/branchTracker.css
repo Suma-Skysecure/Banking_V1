@@ -481,7 +481,11 @@
 }
 
 .progress-bar.orange {
-  background-color: #f97316;
+  background-color: #eab308;
+}
+
+.progress-bar.yellow {
+  background-color: #eab308;
 }
 
 .progress-bar.grey {
