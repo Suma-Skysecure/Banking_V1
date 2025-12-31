@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import ToastNotification from "@/components/ToastNotification";
 import { useAuth } from "@/contexts/AuthContext";
+import * as XLSX from "xlsx";
 import "@/css/pageHeader.css";
 import "@/css/branchTracker.css";
 import "@/css/propertySearch.css";
@@ -22,8 +23,22 @@ export default function PropertySearch() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [importedFiles, setImportedFiles] = useState([]);
+  const [importedProperties, setImportedProperties] = useState([]);
   const fileInputRef = useRef(null);
   const [showNotification, setShowNotification] = useState(false);
+  
+  // Load imported properties from localStorage on component mount
+  useEffect(() => {
+    try {
+      const storedProperties = localStorage.getItem("importedProperties");
+      if (storedProperties) {
+        const parsedProperties = JSON.parse(storedProperties);
+        setImportedProperties(parsedProperties);
+      }
+    } catch (error) {
+      console.error("Error loading imported properties from localStorage:", error);
+    }
+  }, []);
   
   // All restrictions removed - all users have full access
 
@@ -86,38 +101,181 @@ export default function PropertySearch() {
     setIsDragging(false);
   };
 
-  // Process files and auto-submit
-  const handleFiles = (files) => {
-    // Limit to 5 files
-    const limitedFiles = files.slice(0, 5);
-    
-    if (files.length > 5) {
-      alert("You can upload up to 5 files at once. Only the first 5 files will be processed.");
-    }
+  // Parse Excel file and extract property data
+  const parseExcelFile = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-    const newFiles = limitedFiles.map((file) => ({
-      id: Date.now() + Math.random(),
-      name: file.name,
-      size: file.size,
-      date: new Date().toISOString(),
-      type: getFileType(file.name),
-      file: file,
-    }));
+          if (jsonData.length < 2) {
+            reject(new Error("Excel file must have at least a header row and one data row"));
+            return;
+          }
 
-    // Auto-submit immediately after processing
-    handleSubmitFiles(newFiles);
+          // Get headers from first row
+          const headers = jsonData[0].map(h => h ? h.toString().trim() : "");
+          
+          // Map headers to expected property fields
+          const headerMap = {
+            "Property ID": "propertyId",
+            "Property Name": "name",
+            "Address Line": "addressLine",
+            "City": "city",
+            "State": "state",
+            "Country": "country",
+            "Pincode": "pincode",
+            "Property Type": "type",
+            "Total Area (sq ft)": "totalArea",
+            "Availability": "status",
+            "Price (INR)": "price",
+            "Price Per Sq Ft (INR)": "pricePerSqft",
+            "Floor Level": "floorLevel",
+            "Parking Spaces": "parkingSpaces",
+            "Year Built": "yearBuilt",
+            "Vendor Name": "vendorName",
+            "Vendor Contact": "vendorContact",
+            "Vendor Email": "vendorEmail",
+            "Listing Status": "listingStatus",
+            "Zoning": "zoning",
+            "Last Inspection Date": "lastInspectionDate",
+            "Required Action - Site Inspection": "siteInspection",
+            "Required Action - Due Diligence": "dueDiligence"
+          };
+
+          // Parse data rows
+          const properties = [];
+          for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (!row || row.every(cell => !cell || cell.toString().trim() === "")) {
+              continue; // Skip empty rows
+            }
+
+            const property = { isImported: true };
+            
+            headers.forEach((header, index) => {
+              const mappedKey = headerMap[header];
+              if (mappedKey && row[index] !== undefined && row[index] !== null) {
+                let value = row[index];
+                
+                // Convert to appropriate types
+                if (mappedKey === "price" || mappedKey === "pricePerSqft") {
+                  value = typeof value === "string" 
+                    ? parseFloat(value.replace(/[^0-9.]/g, "")) 
+                    : parseFloat(value) || 0;
+                } else if (mappedKey === "totalArea") {
+                  value = typeof value === "string" 
+                    ? parseFloat(value.replace(/[^0-9.]/g, "")) 
+                    : parseFloat(value) || 0;
+                } else {
+                  value = value.toString().trim();
+                }
+                
+                property[mappedKey] = value;
+              }
+            });
+
+            // Build full address
+            if (property.addressLine || property.city || property.state) {
+              const addressParts = [
+                property.addressLine,
+                property.city,
+                property.state,
+                property.country,
+                property.pincode
+              ].filter(Boolean);
+              property.address = addressParts.join(", ");
+            }
+
+            // Format total area
+            if (property.totalArea) {
+              property.size = `${property.totalArea.toLocaleString('en-IN')} sq ft`;
+            }
+
+            // Determine status type
+            if (property.status) {
+              property.statusType = property.status.toLowerCase().includes("available now") 
+                ? "available" 
+                : "pending";
+            }
+
+            // Generate a unique ID if not present
+            property.id = property.propertyId || `imported-${Date.now()}-${i}`;
+            
+            // Convert price from INR to USD equivalent (assuming 83.5 conversion rate)
+            if (property.price) {
+              property.priceUSD = property.price / 83.5;
+            }
+
+            properties.push(property);
+          }
+
+          resolve(properties);
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsArrayBuffer(file);
+    });
   };
 
-  // Submit files
+  // Process files and auto-submit
+  const handleFiles = async (files) => {
+    // Filter for Excel files only
+    const excelFiles = files.filter(file => {
+      const ext = file.name.split(".").pop().toLowerCase();
+      return ["xls", "xlsx"].includes(ext);
+    });
+
+    if (excelFiles.length === 0) {
+      alert("Please upload an Excel file (.xls or .xlsx)");
+      return;
+    }
+
+    if (excelFiles.length > 1) {
+      alert("Please upload only one Excel file at a time.");
+      return;
+    }
+
+    try {
+      const file = excelFiles[0];
+      const properties = await parseExcelFile(file);
+      
+      if (properties.length === 0) {
+        alert("No property data found in the Excel file.");
+        return;
+      }
+
+      // Store imported properties
+      setImportedProperties(properties);
+      
+      // Store in localStorage for PropertyDetails access
+      localStorage.setItem("importedProperties", JSON.stringify(properties));
+
+      // Show success message and close modal
+      alert(`Successfully imported ${properties.length} property/properties from Excel!`);
+      setIsImportModalOpen(false);
+      setIsDragging(false);
+      setImportedFiles([]);
+    } catch (error) {
+      console.error("Error parsing Excel file:", error);
+      alert(`Error parsing Excel file: ${error.message}`);
+    }
+  };
+
+  // Submit files (kept for backward compatibility, but Excel parsing is now in handleFiles)
   const handleSubmitFiles = (files) => {
     console.log("Submitting files:", files);
-    // Here you can add your file upload logic (API call, etc.)
-    
-    // Show success message and close modal
-    alert(`${files.length} file(s) uploaded successfully!`);
-    setIsImportModalOpen(false);
-    setIsDragging(false);
-    setImportedFiles([]);
+    // This function is now mainly for non-Excel files
+    // Excel files are handled directly in handleFiles
   };
 
   // Handle file delete
@@ -281,6 +439,147 @@ export default function PropertySearch() {
         router.push("/business-approval");
       }
     }
+  };
+
+  // Export selected properties to Excel
+  const handleExportProperties = () => {
+    if (selectedProperties.length === 0) {
+      alert("Please select at least one property to export.");
+      return;
+    }
+
+    // Get all properties (regular + imported)
+    const allProperties = [...properties, ...importedProperties];
+    
+    // Filter selected properties
+    const selectedProps = allProperties.filter(prop => 
+      selectedProperties.includes(prop.id)
+    );
+
+    if (selectedProps.length === 0) {
+      alert("No properties found to export.");
+      return;
+    }
+
+    // Prepare data in the import format
+    const exportData = selectedProps.map(prop => {
+      // Parse address components
+      let addressLine = "";
+      let city = "";
+      let state = "";
+      let country = "";
+      let pincode = "";
+
+      if (prop.address) {
+        const addressParts = prop.address.split(",").map(part => part.trim());
+        addressLine = addressParts[0] || "";
+        
+        if (addressParts.length > 1) {
+          city = addressParts[1] || "";
+        }
+        
+        // Handle state and zip code (format: "FL 33131" or "State, Country, Pincode")
+        if (addressParts.length > 2) {
+          const stateZipPart = addressParts[2];
+          // Try to extract state and zip (e.g., "FL 33131")
+          const stateZipMatch = stateZipPart.match(/^([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/);
+          if (stateZipMatch) {
+            state = stateZipMatch[1];
+            pincode = stateZipMatch[2];
+          } else {
+            // If no zip, just use as state
+            state = stateZipPart;
+          }
+        }
+        
+        if (addressParts.length > 3) {
+          country = addressParts[3] || "";
+        }
+        
+        if (addressParts.length > 4) {
+          pincode = addressParts[4] || pincode;
+        }
+      }
+
+      // For imported properties, use existing data
+      if (prop.isImported) {
+        // For imported properties, price is already in INR (original from Excel)
+        // If priceUSD exists, it means we converted it, so we need to convert back
+        // Otherwise, use the original price directly
+        const priceInINR = prop.price 
+          ? (prop.priceUSD ? prop.priceUSD * 83.5 : prop.price)
+          : "";
+        
+        return {
+          "Property ID": prop.propertyId || prop.id || "",
+          "Property Name": prop.name || "",
+          "Address Line": prop.addressLine || addressLine,
+          "City": prop.city || city,
+          "State": prop.state || state,
+          "Country": prop.country || country,
+          "Pincode": prop.pincode || pincode,
+          "Property Type": prop.type || "",
+          "Total Area (sq ft)": prop.totalArea || (prop.size ? parseFloat(prop.size.replace(/[^0-9.]/g, "")) : ""),
+          "Availability": prop.status || "",
+          "Price (INR)": priceInINR,
+          "Price Per Sq Ft (INR)": prop.pricePerSqft || "",
+          "Floor Level": prop.floorLevel || "",
+          "Parking Spaces": prop.parkingSpaces || "",
+          "Year Built": prop.yearBuilt || "",
+          "Vendor Name": prop.vendorName || "",
+          "Vendor Contact": prop.vendorContact || "",
+          "Vendor Email": prop.vendorEmail || "",
+          "Listing Status": prop.listingStatus || "",
+          "Zoning": prop.zoning || "",
+          "Last Inspection Date": prop.lastInspectionDate || "",
+          "Required Action - Site Inspection": prop.siteInspection || "",
+          "Required Action - Due Diligence": prop.dueDiligence || "",
+        };
+      }
+
+      // For regular properties, convert and format data
+      const totalArea = prop.size ? parseFloat(prop.size.replace(/[^0-9.]/g, "")) : "";
+      const priceInINR = prop.price ? prop.price * 83.5 : "";
+      const pricePerSqftInINR = prop.pricePerSqft ? prop.pricePerSqft * 83.5 : "";
+
+      return {
+        "Property ID": `PROP-${prop.id}`,
+        "Property Name": prop.name || "",
+        "Address Line": addressLine,
+        "City": city,
+        "State": state,
+        "Country": country,
+        "Pincode": pincode,
+        "Property Type": prop.type || "",
+        "Total Area (sq ft)": totalArea,
+        "Availability": prop.status || "",
+        "Price (INR)": priceInINR,
+        "Price Per Sq Ft (INR)": pricePerSqftInINR,
+        "Floor Level": "",
+        "Parking Spaces": "",
+        "Year Built": "",
+        "Vendor Name": "",
+        "Vendor Contact": "",
+        "Vendor Email": "",
+        "Listing Status": "",
+        "Zoning": "",
+        "Last Inspection Date": "",
+        "Required Action - Site Inspection": "",
+        "Required Action - Due Diligence": "",
+      };
+    });
+
+    // Create workbook and worksheet
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Properties");
+
+    // Generate Excel file and download
+    const fileName = `Properties_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+
+    // Show success message
+    alert(`Successfully exported ${selectedProps.length} property/properties to Excel!`);
   };
 
   return (
@@ -519,27 +818,33 @@ export default function PropertySearch() {
                       Import
                     </button>
                     <button
-                      onClick={() => {
-                        // Handle export functionality
-                        console.log("Export clicked");
-                        // You can add export logic here (e.g., export to CSV, Excel, etc.)
-                      }}
+                      onClick={handleExportProperties}
+                      disabled={selectedProperties.length === 0}
                       style={{
                         padding: "10px 24px",
-                        backgroundColor: "#3b82f6",
+                        backgroundColor: selectedProperties.length === 0 ? "#9ca3af" : "#3b82f6",
                         color: "#ffffff",
                         border: "none",
                         borderRadius: "6px",
                         fontSize: "14px",
                         fontWeight: "600",
-                        cursor: "pointer",
+                        cursor: selectedProperties.length === 0 ? "not-allowed" : "pointer",
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
                         transition: "background-color 0.2s",
+                        opacity: selectedProperties.length === 0 ? 0.6 : 1,
                       }}
-                      onMouseOver={(e) => (e.target.style.backgroundColor = "#2563eb")}
-                      onMouseOut={(e) => (e.target.style.backgroundColor = "#3b82f6")}
+                      onMouseOver={(e) => {
+                        if (selectedProperties.length > 0) {
+                          e.target.style.backgroundColor = "#2563eb";
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        if (selectedProperties.length > 0) {
+                          e.target.style.backgroundColor = "#3b82f6";
+                        }
+                      }}
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path
@@ -560,7 +865,7 @@ export default function PropertySearch() {
                     </button>
                   </div>
                   <div className="properties-summary">
-                    <span className="properties-count">{properties.length} Properties Found</span>
+                    <span className="properties-count">{properties.length + importedProperties.length} Properties Found</span>
                     <button
                       className="initiate-button"
                       onClick={handleInitiateListing}
@@ -595,7 +900,8 @@ export default function PropertySearch() {
                 </div>
 
                 <div className="properties-list">
-                  {properties.map((property) => (
+                  {/* Combine regular properties and imported properties */}
+                  {[...properties, ...importedProperties].map((property) => (
                     <div key={property.id} className="property-card">
                       <div className="property-card-left">
                         <input
@@ -724,10 +1030,16 @@ export default function PropertySearch() {
                         </div>
                       </div>
                       <div className="property-card-right">
-                        <div className="property-pricing">
-                          <div className="property-price">{formatPrice(property.price)}</div>
+                          <div className="property-pricing">
+                          <div className="property-price">
+                            {property.isImported && property.price 
+                              ? formatPrice(property.priceUSD || property.price / 83.5)
+                              : formatPrice(property.price)}
+                          </div>
                           <div className="property-price-per-sqft">
-                            ₹{(property.pricePerSqft * 83.5).toLocaleString('en-IN')}/sq ft
+                            {property.isImported && property.pricePerSqft
+                              ? `₹${property.pricePerSqft.toLocaleString('en-IN')}/sq ft`
+                              : `₹${(property.pricePerSqft * 83.5).toLocaleString('en-IN')}/sq ft`}
                           </div>
                         </div>
                         {false ? (
@@ -765,8 +1077,16 @@ export default function PropertySearch() {
                           </div>
                         ) : (
                           <Link
-                            href="/property-details"
+                            href={`/property-details?propertyId=${property.id}&isImported=${property.isImported ? 'true' : 'false'}`}
                             className="view-details-button"
+                            onClick={() => {
+                              // Store the selected property data in localStorage for PropertyDetails
+                              if (property.isImported) {
+                                localStorage.setItem("selectedImportedProperty", JSON.stringify(property));
+                              } else {
+                                localStorage.removeItem("selectedImportedProperty");
+                              }
+                            }}
                           >
                             <svg
                               width="16"
@@ -848,8 +1168,7 @@ export default function PropertySearch() {
             <input
               ref={fileInputRef}
               type="file"
-              multiple
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mhtml,.svg,.csv,.jpg,.jpeg,.png,.txt"
+              accept=".xls,.xlsx"
               onChange={handleFileSelect}
               style={{ display: "none" }}
             />
@@ -916,7 +1235,7 @@ export default function PropertySearch() {
                 Drag & drop files here
               </div>
               <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "24px" }}>
-                Word, Ppt, Excel, PDF, MHTML, SVG. You can upload up to 5 files at once.
+                Upload Excel files (.xls, .xlsx) with property data
               </div>
               <button
                 onClick={(e) => {
