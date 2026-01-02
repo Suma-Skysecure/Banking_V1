@@ -1,14 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
+import { useAuth } from "@/contexts/AuthContext";
+import "@/css/branchTracker.css";
+import "@/css/pageHeader.css";
+import "@/css/businessApproval.css";
 
 export default function LegalFlow() {
   const router = useRouter();
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const fileInputRef = useRef(null);
+  const multipleFileInputRef = useRef(null);
 
   // ===== LOI STATE =====
   const [loi, setLoi] = useState({
@@ -48,6 +55,10 @@ export default function LegalFlow() {
   const [documents, setDocuments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [lastActionMessage, setLastActionMessage] = useState("");
+
+  // ===== FILE UPLOAD STATE =====
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   // ===== PDF MODAL STATE =====
   const [showPdfModal, setShowPdfModal] = useState(false);
@@ -114,7 +125,127 @@ export default function LegalFlow() {
   // Check if LOI exists (workflow enabled)
   const isWorkflowEnabled = loi && loi.loiNumber;
 
-  // LOI Handlers - Fixed to ensure they work
+  // Get file type extension
+  const getFileExtension = (fileName) => {
+    if (!fileName) return "FILE";
+    const ext = fileName.split(".").pop().toUpperCase();
+    return ext || "FILE";
+  };
+
+  // Format file size
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  };
+
+  // Check for duplicate files
+  const isDuplicateFile = (newFile) => {
+    return uploadedFiles.some(
+      (existingFile) =>
+        existingFile.name === newFile.name &&
+        existingFile.size === newFile.size &&
+        existingFile.lastModified === newFile.lastModified
+    );
+  };
+
+  // Validate and process files
+  const processFiles = (fileList) => {
+    const newFiles = Array.from(fileList);
+    const validFiles = [];
+    const duplicates = [];
+
+    newFiles.forEach((file) => {
+      // Check for duplicates
+      if (isDuplicateFile(file)) {
+        duplicates.push(file.name);
+        return;
+      }
+
+      // Validate file size (10MB max - optional)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        alert(`File "${file.name}" exceeds 10MB limit. Please upload a smaller file.`);
+        return;
+      }
+
+      validFiles.push({
+        id: Date.now() + Math.random(), // Unique ID
+        file: file,
+        name: file.name,
+        size: file.size,
+        progress: 100, // Set to 100 immediately for simplicity
+      });
+    });
+
+    if (duplicates.length > 0) {
+      alert(`The following files are already uploaded: ${duplicates.join(", ")}`);
+    }
+
+    if (validFiles.length > 0) {
+      setUploadedFiles((prev) => [...prev, ...validFiles]);
+    }
+  };
+
+  // Handle file selection from input
+  const handleMultipleFileSelect = (e) => {
+    const selectedFiles = e.target.files;
+    if (selectedFiles && selectedFiles.length > 0) {
+      processFiles(selectedFiles);
+    }
+    // Reset input to allow selecting same file again
+    if (multipleFileInputRef.current) {
+      multipleFileInputRef.current.value = "";
+    }
+  };
+
+  // Handle drag and drop
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles && droppedFiles.length > 0) {
+      processFiles(droppedFiles);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  // Handle browse button click
+  const handleBrowseClick = () => {
+    multipleFileInputRef.current?.click();
+  };
+
+  // Remove file from list
+  const handleRemoveFile = (fileId) => {
+    setUploadedFiles((prev) => prev.filter((fileObj) => fileObj.id !== fileId));
+  };
+
+  // Check if submit is enabled (at least 3 files uploaded)
+  const isSubmitEnabled = uploadedFiles.length >= 3;
+
+  // Handle submit
+  const handleSubmit = () => {
+    if (!isSubmitEnabled) {
+      alert("Please upload at least 3 documents before proceeding.");
+      return;
+    }
+    console.log("Submitting documents:", uploadedFiles);
+    // Handle submission logic here
+    alert(`Successfully submitted ${uploadedFiles.length} document(s)!`);
+  };
+
+  // LOI Handlers
   const handleViewLOI = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -438,10 +569,17 @@ export default function LegalFlow() {
 
           {/* Profile Section */}
           <div className="header-profile">
-            <div className="profile-avatar">AM</div>
-            <div>
-              <div className="profile-name">Ana Miller</div>
-              <div className="profile-email">analyst@pms.com</div>
+
+
+            <div className="profile-avatar">
+              {user?.name ? (user.name.split(" ").length > 1 
+                ? (user.name.split(" ")[0][0] + user.name.split(" ")[1][0]).toUpperCase()
+                : user.name.substring(0, 2).toUpperCase())
+                : "U"}
+            </div>
+            <div className="profile-info">
+              <span className="profile-name">{user?.role || "User"}</span>
+              <span className="profile-email">{user?.email || user?.username || ""}</span>
             </div>
           </div>
         </div>
@@ -452,6 +590,7 @@ export default function LegalFlow() {
 
         {/* ================= MAIN ================= */}
         <main className="dashboard-main">
+
           <PageHeader
             title="Legal Clearance Activities"
             subtitle="Review legal requirements, track documents, and finalize agreements"
@@ -1111,6 +1250,7 @@ export default function LegalFlow() {
                 </div>
               )}
 
+
               {/* DOCUMENT TABLE SECTION (Available after decision) */}
               {currentStep !== "decision" && (
                 <div className="card">
@@ -1207,6 +1347,7 @@ export default function LegalFlow() {
           )}
         </main>
       </div>
+
 
       {/* ================= PDF MODAL ================= */}
       {showPdfModal && (

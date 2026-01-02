@@ -16,13 +16,15 @@ import { validateCredentials, getRoleFromUsername } from "@/config/credentials";
 import "@/css/loginPage.css";
 
 const ROLES = [
-  "Business/SRBM",
-  "Admin/Ops",
-  "Legal Team",
-  "IT Team",
-  "Accounts",
+  "SRBM",
+  "Business",
+  "Site measurement",
+  "Legal due",
+  "IT team",
+  "Agreement execution",
   "BRT",
   "Project/Facilities",
+
 ];
 
 export default function LoginForm() {
@@ -56,8 +58,8 @@ export default function LoginForm() {
       return;
     }
     
-    // Validate that selected role matches the role from credentials
-    if (role !== userData.role) {
+    // Validate that selected role matches the role from credentials (case-insensitive)
+    if (role.toLowerCase().trim() !== userData.role.toLowerCase().trim()) {
       setErrorMessage(`Role mismatch. The email "${username}" is associated with "${userData.role}" role. Please select the correct role.`);
       return;
     }
@@ -78,8 +80,15 @@ export default function LoginForm() {
     
     if (value) {
       const autoRole = getRoleFromUsername(value);
-      if (autoRole && !role) {
-        setRole(autoRole);
+      if (autoRole) {
+        // Find matching role in ROLES array (case-insensitive)
+        const matchingRole = ROLES.find(r => r.toLowerCase() === autoRole.toLowerCase());
+        if (matchingRole) {
+          setRole(matchingRole);
+        } else {
+          // If exact match not found, set the role from credentials anyway
+          setRole(autoRole);
+        }
       }
     }
   };

@@ -207,12 +207,14 @@
   padding: 16px 20px;
 }
 
+/* Sidebar user styles moved to userProfile.css - keeping for backwards compatibility */
 .sidebar-user {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
+/* Note: User avatar and profile styles are now in userProfile.css */
 .user-avatar {
   width: 40px;
   height: 40px;
@@ -479,7 +481,11 @@
 }
 
 .progress-bar.orange {
-  background-color: #f97316;
+  background-color: #eab308;
+}
+
+.progress-bar.yellow {
+  background-color: #eab308;
 }
 
 .progress-bar.grey {

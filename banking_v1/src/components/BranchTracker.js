@@ -1,12 +1,100 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
+import DashboardTable from "@/components/DashboardTable";
+import UserProfile from "@/components/UserProfile";
 import { useAuth } from "@/contexts/AuthContext";
+import { filterBranchesByRole } from "@/config/roleStageMapping";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
+
+// All available branches - in production, this would come from an API
+const ALL_BRANCHES = [
+  {
+    id: 1,
+    name: "Downtown Manhattan Branch",
+    stage: "Legal Workflow",
+    stageColor: "blue",
+    progress: 45,
+    pendingAction: "red",
+    category: "business",
+  },
+  {
+    id: 2,
+    name: "Beverly Hills Boutique",
+    stage: "Completed",
+    stageColor: "green",
+    progress: 100,
+    pendingAction: "green",
+    category: "retail",
+  },
+  {
+    id: 3,
+    name: "Chicago River North Site",
+    stage: "Site Measurement",
+    stageColor: "blue",
+    progress: 45,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 4,
+    name: "Miami South Beach Location",
+    stage: "Business Approval",
+    stageColor: "yellow",
+    progress: 65,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 5,
+    name: "Seattle Waterfront Project",
+    stage: "On Hold",
+    stageColor: "grey",
+    progress: 20,
+    pendingAction: "grey",
+    category: "commercial",
+  },
+  {
+    id: 6,
+    name: "New York Financial District",
+    stage: "Property Search",
+    stageColor: "orange",
+    progress: 30,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 7,
+    name: "Dallas Metroplex Branch",
+    stage: "Layout Design",
+    stageColor: "blue",
+    progress: 50,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 8,
+    name: "Houston Energy District",
+    stage: "TSA (Stamp duty)",
+    stageColor: "blue",
+    progress: 50,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 9,
+    name: "Atlanta Business Center",
+    stage: "TSA (Security Deposit)",
+    stageColor: "blue",
+    progress: 50,
+    pendingAction: "yellow",
+    category: "business",
+  },
+];
 
 export default function BranchTracker() {
   const router = useRouter();
@@ -18,73 +106,50 @@ export default function BranchTracker() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Map stage names to routes
+  // Map stage names to routes - static mapping for optimal performance
   const getStageRoute = (stage) => {
     const stageRouteMap = {
       "Property Search": "/property-search",
       "Business Approval": "/business-approval",
       "Legal Workflow": "/legal-workflow",
+      "Project Execution": "/project-execution",
+      "Site Measurement": "/post-loi-activities",
+      "Agreement Execution": "/agreement-execution",
+      "Agreement Registration": "/agreement-registration",
+      "Post-LOI Activities": "/post-loi-activities",
+      "Layout Design": "/post-loi-layout-design",
+      "TSA (Stamp duty)": "/term-sheet-approval",
+      "TSA (Security Deposit)": "/security-deposit-payment",
       "On Hold": null, // No redirect for On Hold
+      "Completed": null, // No redirect for Completed
     };
     return stageRouteMap[stage] || null;
   };
 
   const handleViewDetails = (e, branch) => {
     e.preventDefault();
-    // All restrictions removed - redirect to current stage page for all users
+    // Get the route based on the branch stage
     const route = getStageRoute(branch.stage);
     if (route) {
       router.push(route);
     }
   };
 
-  const branches = [
-    {
-      id: 1,
-      name: "Downtown Manhattan Branch",
-      stage: "Legal Workflow",
-      stageColor: "blue",
-      progress: 45,
-      pendingAction: "red",
-    },
-    {
-      id: 2,
-      name: "Beverly Hills Boutique",
-      stage: "Completed",
-      stageColor: "green",
-      progress: 100,
-      pendingAction: "green",
-    },
-    {
-      id: 3,
-      name: "Chicago River North Site",
-      stage: "Project Execution",
-      stageColor: "purple",
-      progress: 80,
-      pendingAction: "green",
-    },
-    {
-      id: 4,
-      name: "Miami South Beach Location",
-      stage: "Business Approval",
-      stageColor: "yellow",
-      progress: 65,
-      pendingAction: "yellow",
-    },
-    {
-      id: 5,
-      name: "Seattle Waterfront Project",
-      stage: "On Hold",
-      stageColor: "grey",
-      progress: 20,
-      pendingAction: "grey",
-    },
-  ];
+  // Filter branches based on user role using role-to-stage mapping
+  // Each role will only see branches in stages assigned to them
+  // Optimized with useMemo to prevent unnecessary re-filtering
+  const branches = useMemo(() => {
+    if (!user?.role) {
+      // If no user role, return empty array (don't show all branches)
+      return [];
+    }
+    return filterBranchesByRole(ALL_BRANCHES, user.role);
+  }, [user?.role]);
 
   const getProgressColor = (progress) => {
     if (progress === 100) return "green";
-    if (progress >= 50) return "orange";
-    return "grey";
+    if (progress >= 50) return "yellow";
+    return "yellow";
   };
 
   return (
@@ -153,9 +218,7 @@ export default function BranchTracker() {
               />
             </svg>
           </button>
-          <div className="header-profile">
-            <div className="profile-avatar">AW</div>
-          </div>
+          <UserProfile variant="header" showLogout={false} />
         </div>
       </header>
 
@@ -231,61 +294,17 @@ export default function BranchTracker() {
               </div>
             </div>
 
-            {/* Branch Table */}
-            <div className="table-container">
-              <table className="branch-table">
-                <thead>
-                  <tr>
-                    <th>BRANCH NAME</th>
-                    <th>CURRENT STAGE</th>
-                    <th>OVERALL PROGRESS</th>
-                    <th>PENDING ACTION</th>
-                    <th>ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {branches.map((branch) => (
-                    <tr key={branch.id}>
-                      <td className="branch-name">{branch.name}</td>
-                      <td>
-                        <span className={`stage-badge ${branch.stageColor}`}>
-                          {branch.stage}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="progress-container">
-                          <div className="progress-bar-wrapper">
-                            <div
-                              className={`progress-bar ${getProgressColor(branch.progress)}`}
-                              style={{ width: `${branch.progress}%` }}
-                            ></div>
-                          </div>
-                          <span className="progress-text">{branch.progress}%</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div
-                          className={`action-dot ${branch.pendingAction}`}
-                        ></div>
-                      </td>
-                      <td>
-                        <button
-                          onClick={(e) => handleViewDetails(e, branch)}
-                          className="view-details-link"
-                        >
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {/* Branch Table - Reusable Component */}
+            <DashboardTable 
+              branches={branches}
+              onViewDetails={handleViewDetails}
+              getProgressColor={getProgressColor}
+            />
 
             {/* Pagination */}
             <div className="pagination-container">
               <div className="pagination-info">
-                Showing 1 to 5 of 25 entries
+                Showing 1 to {Math.min(branches.length, 5)} of {branches.length} entries
               </div>
               <div className="pagination-controls">
                 <button

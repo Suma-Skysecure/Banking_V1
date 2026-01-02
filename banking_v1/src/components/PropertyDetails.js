@@ -1,18 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import ToastNotification from "@/components/ToastNotification";
+import { useAuth } from "@/contexts/AuthContext";
 import "@/css/propertyDetails.css";
 import "@/css/branchTracker.css";
 
 export default function PropertyDetails() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showNotification, setShowNotification] = useState(false);
+  const [property, setProperty] = useState(null);
 
-  // Property data - in real app, this would come from route params or API
-  const property = {
+  // Default property data - fallback if no imported data
+  const defaultProperty = {
     id: "PROP-MIA-2024-002",
     name: "Downtown Arts Plaza",
     address: "1450 Biscayne Boulevard, Miami, FL 33132",
@@ -33,24 +39,123 @@ export default function PropertyDetails() {
     lastInspection: "December 10, 2024",
   };
 
-  const requiredActions = [
-    {
-      id: 1,
-      title: "Site Inspection",
-      description: "Schedule and complete physical site inspection with technical team (Available after business approval).",
-      icon: "magnify",
-      available: false,
-    },
-    {
-      id: 2,
-      title: "Due Diligence Review",
-      description: "Complete comprehensive due diligence assessment including financial and structural review (Available after business approval).",
-      icon: "document",
-      available: false,
-    },
-  ];
+  // Load property data from localStorage or use default
+  useEffect(() => {
+    const isImported = searchParams?.get("isImported") === "true";
+    const propertyId = searchParams?.get("propertyId");
+
+    if (isImported && propertyId) {
+      try {
+        const importedPropertyData = localStorage.getItem("selectedImportedProperty");
+        if (importedPropertyData) {
+          const importedProperty = JSON.parse(importedPropertyData);
+          
+          // Format the imported property data to match the expected structure
+          const formattedProperty = {
+            id: importedProperty.propertyId || importedProperty.id,
+            name: importedProperty.name || "",
+            address: importedProperty.address || "",
+            status: importedProperty.status || "Available",
+            statusType: importedProperty.statusType || "pending",
+            // Price from Excel is in INR, convert to USD equivalent for consistency
+            price: importedProperty.priceUSD || (importedProperty.price ? importedProperty.price / 83.5 : 0),
+            // Price per sqft from Excel is already in INR
+            pricePerSqft: importedProperty.pricePerSqft || 0,
+            type: importedProperty.type || "",
+            totalArea: importedProperty.size || `${importedProperty.totalArea || 0} sq ft`,
+            floorLevel: importedProperty.floorLevel || "",
+            parkingSpaces: importedProperty.parkingSpaces || "",
+            yearBuilt: importedProperty.yearBuilt || "",
+            vendorName: importedProperty.vendorName || "",
+            vendorContact: importedProperty.vendorContact || "",
+            vendorEmail: importedProperty.vendorEmail || "",
+            listingStatus: importedProperty.listingStatus || "",
+            zoning: importedProperty.zoning || "",
+            lastInspection: importedProperty.lastInspectionDate 
+              ? new Date(importedProperty.lastInspectionDate).toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "",
+            siteInspection: importedProperty.siteInspection || "",
+            dueDiligence: importedProperty.dueDiligence || "",
+            isImported: true,
+          };
+          
+          setProperty(formattedProperty);
+          return;
+        }
+      } catch (error) {
+        console.error("Error parsing imported property data:", error);
+      }
+    }
+
+    // Use default property if no imported data
+    setProperty(defaultProperty);
+  }, [searchParams]);
+
+  // Get required actions based on property data
+  const getRequiredActions = () => {
+    if (!property) return [];
+    
+    const actions = [];
+    
+    // Site Inspection
+    if (property.siteInspection || property.isImported) {
+      actions.push({
+        id: 1,
+        title: "Site Inspection",
+        description: property.siteInspection 
+          ? property.siteInspection 
+          : "Schedule and complete physical site inspection with technical team (Available after business approval).",
+        icon: "magnify",
+        available: false,
+      });
+    }
+    
+    // Due Diligence
+    if (property.dueDiligence || property.isImported) {
+      actions.push({
+        id: 2,
+        title: "Due Diligence Review",
+        description: property.dueDiligence 
+          ? property.dueDiligence 
+          : "Complete comprehensive due diligence assessment including financial and structural review (Available after business approval).",
+        icon: "document",
+        available: false,
+      });
+    }
+    
+    // Default actions if no specific actions from Excel
+    if (actions.length === 0) {
+      actions.push(
+        {
+          id: 1,
+          title: "Site Inspection",
+          description: "Schedule and complete physical site inspection with technical team (Available after business approval).",
+          icon: "magnify",
+          available: false,
+        },
+        {
+          id: 2,
+          title: "Due Diligence Review",
+          description: "Complete comprehensive due diligence assessment including financial and structural review (Available after business approval).",
+          icon: "document",
+          available: false,
+        }
+      );
+    }
+    
+    return actions;
+  };
+
+  const requiredActions = getRequiredActions();
 
   const formatPrice = (price) => {
+    if (!price && price !== 0) return "₹0";
+    // For imported properties, price is stored as USD equivalent, so convert to INR
+    // For regular properties, price is already in USD, so convert to INR
     const inrPrice = price * 83.5;
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -60,8 +165,25 @@ export default function PropertyDetails() {
     }).format(inrPrice);
   };
 
+  // Show loading state if property is not loaded yet
+  if (!property) {
+    return (
+      <div className="dashboard-container">
+        <div style={{ padding: "40px", textAlign: "center" }}>Loading property details...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="dashboard-container">
+    <>
+      <ToastNotification
+        show={showNotification}
+        message="Successfully initiated property for business approval"
+        type="success"
+        onClose={() => setShowNotification(false)}
+        duration={3000}
+      />
+      <div className="dashboard-container">
       {/* Top Header Bar */}
       <header className="dashboard-header">
         <button
@@ -102,26 +224,10 @@ export default function PropertyDetails() {
             </svg>
           </button>
           <div className="header-user-profile">
-            <div className="header-user-avatar">AM</div>
             <div className="header-user-info">
-              <div className="header-user-name">Ana Miller</div>
-              <div className="header-user-email">analyst@pms.com</div>
+              <div className="header-user-name">{user?.role || "User"}</div>
+              <div className="header-user-email">{user?.email || user?.username || ""}</div>
             </div>
-            <svg
-              className="header-user-chevron"
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-            >
-              <path
-                d="M4 6L8 10L12 6"
-                stroke="#6b7280"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
           </div>
         </div>
       </header>
@@ -233,7 +339,9 @@ export default function PropertyDetails() {
               <div className="property-overview-right">
                 <div className="property-price-large">{formatPrice(property.price)}</div>
                 <div className="property-price-per-sqft-large">
-                  ₹{(property.pricePerSqft * 83.5).toLocaleString('en-IN')} per sq ft
+                  {property.isImported && property.pricePerSqft
+                    ? `₹${property.pricePerSqft.toLocaleString('en-IN')} per sq ft`
+                    : `₹${(property.pricePerSqft * 83.5).toLocaleString('en-IN')} per sq ft`}
                 </div>
               </div>
             </div>
@@ -439,7 +547,16 @@ export default function PropertyDetails() {
                   className="submit-approval-button"
                   onClick={() => {
                     console.log("Submitting property for business approval");
-                    router.push("/business-approval");
+                    
+                    // Show success notification for SRBM users
+                    if (user?.role === "SRBM") {
+                      setShowNotification(true);
+                      // Don't redirect automatically - let user see the notification
+                      // They can navigate manually if needed
+                    } else {
+                      // For other roles, redirect immediately
+                      router.push("/business-approval");
+                    }
                   }}
                 >
                   <svg
@@ -472,6 +589,7 @@ export default function PropertyDetails() {
         </main>
       </div>
     </div>
+    </>
   );
 }
 
