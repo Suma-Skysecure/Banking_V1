@@ -21,6 +21,7 @@ const ROLES = [
   "Legal Team",
   "IT Team",
   "Accounts",
+  "BRT",
   "Project/Facilities",
 ];
 
