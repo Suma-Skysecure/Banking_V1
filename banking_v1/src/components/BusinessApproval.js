@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
-import DocumentUploadModal from "@/components/DocumentUploadModal";
 import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
@@ -16,7 +15,6 @@ export default function BusinessApproval() {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [reviewComments, setReviewComments] = useState("");
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   
   // All restrictions removed - all users have full access
 
@@ -456,11 +454,10 @@ export default function BusinessApproval() {
               <div className="decision-right-column">
                 <div className="submission-details-card">
                   <div className="history-item">
-                    <div className="history-avatar">AM</div>
+                    <div className="history-avatar">S</div>
                     <div className="history-content">
                       <div className="history-header">
-                        <span className="history-name">Ana Miller</span>
-                        <span className="history-role">(Property Analyst)</span>
+                        <span className="history-name">SRBM</span>
                         <span className="history-badge submitted">Submitted</span>
                       </div>
                       <div className="history-action">Submitted property for business approval</div>
@@ -614,13 +611,8 @@ export default function BusinessApproval() {
                   <button
                     className="decision-button approve-button"
                     onClick={() => {
-                      // Only Business role can open upload modal
-                      if (user?.role === "Business" || user?.role === "SRBM") {
-                        setIsUploadModalOpen(true);
-                      } else {
-                        console.log("Approve property");
-                        router.push("/legal-workflow");
-                      }
+                      console.log("Approve property");
+                      router.push("/legal-workflow");
                     }}
                   >
                     <svg
@@ -646,19 +638,6 @@ export default function BusinessApproval() {
           </div>
         </main>
       </div>
-
-      {/* Document Upload Modal */}
-      {isUploadModalOpen && (
-        <DocumentUploadModal
-          isOpen={isUploadModalOpen}
-          onClose={() => setIsUploadModalOpen(false)}
-          onSubmit={(documents) => {
-            console.log("Documents uploaded:", documents);
-            // After documents are uploaded, proceed to legal workflow
-            router.push("/legal-workflow");
-          }}
-        />
-      )}
     </div>
   );
 }

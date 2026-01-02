@@ -67,6 +67,15 @@ export const LOGIN_CREDENTIALS = {
     role: "Project execution",
     name: "Project Execution User",
     email: "Projectexe@Kotakbank.com"
+  },
+
+  // Vendor Role
+  "Vendor@Kotakbank.com": {
+    username: "Vendor@Kotakbank.com",
+    password: "Vendor123",
+    role: "Vendor",
+    name: "Vendor User",
+    email: "Vendor@Kotakbank.com"
   }
 };
 

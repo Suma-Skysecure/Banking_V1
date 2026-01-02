@@ -86,7 +86,7 @@ export default function BranchTracker() {
       "Business Approval": "/business-approval",
       "Legal Workflow": "/legal-workflow",
       "Project Execution": "/project-execution",
-      "Site Measurement": "/project-execution",
+      "Site Measurement": "/post-loi-activities",
       "Agreement Execution": "/agreement-execution",
       "Agreement Registration": "/agreement-registration",
       "Post-LOI Activities": "/post-loi-activities",
@@ -98,8 +98,8 @@ export default function BranchTracker() {
 
   const handleViewDetails = (e, branch) => {
     e.preventDefault();
-    // Redirect to current stage page based on branch stage
-    const route = getStageRoute(branch?.stage);
+    // Get the route based on the branch stage
+    const route = getStageRoute(branch.stage);
     if (route) {
       router.push(route);
     }

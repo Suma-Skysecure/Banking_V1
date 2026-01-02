@@ -6,122 +6,161 @@ import "@/css/documentUploadModal.css";
 /**
  * Document Upload Modal Component
  * 
- * Modal for uploading 3 documents before approving property
+ * Modal for uploading multiple documents (minimum 3) before approving property
  * @param {Object} props
  * @param {boolean} props.isOpen - Whether modal is open
  * @param {Function} props.onClose - Function to close modal
- * @param {Function} props.onSubmit - Function called when all documents are uploaded and submitted
+ * @param {Function} props.onSubmit - Function called when documents are uploaded and submitted
  */
 export default function DocumentUploadModal({ isOpen, onClose, onSubmit }) {
-  const [documents, setDocuments] = useState([
-    { id: 1, file: null, name: null, progress: 0 },
-    { id: 2, file: null, name: null, progress: 0 },
-    { id: 3, file: null, name: null, progress: 0 },
-  ]);
-  const [isDragging, setIsDragging] = useState(null);
-  const fileInputRefs = {
-    1: useRef(null),
-    2: useRef(null),
-    3: useRef(null),
-  };
+  const [files, setFiles] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
 
   if (!isOpen) return null;
 
-  // Handle file selection for specific document slot
-  const handleFileSelect = (docId, e) => {
-    const file = e.target.files[0];
-    if (file) {
-      handleFileUpload(docId, file);
+  // Format file size
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  };
+
+  // Get file type extension
+  const getFileExtension = (fileName) => {
+    if (!fileName) return "FILE";
+    const ext = fileName.split(".").pop().toUpperCase();
+    return ext || "FILE";
+  };
+
+  // Check for duplicate files
+  const isDuplicateFile = (newFile) => {
+    return files.some(
+      (existingFile) =>
+        existingFile.name === newFile.name &&
+        existingFile.size === newFile.size &&
+        existingFile.lastModified === newFile.lastModified
+    );
+  };
+
+  // Validate and process files
+  const processFiles = (fileList) => {
+    const newFiles = Array.from(fileList);
+    const validFiles = [];
+    const duplicates = [];
+
+    newFiles.forEach((file) => {
+      // Check for duplicates
+      if (isDuplicateFile(file)) {
+        duplicates.push(file.name);
+        return;
+      }
+
+      // Validate file size (10MB max - optional, can be removed if not needed)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        alert(`File "${file.name}" exceeds 10MB limit. Please upload a smaller file.`);
+        return;
+      }
+
+      validFiles.push({
+        id: Date.now() + Math.random(), // Unique ID
+        file: file,
+        name: file.name,
+        size: file.size,
+        progress: 0,
+      });
+    });
+
+    if (duplicates.length > 0) {
+      alert(`The following files are already uploaded: ${duplicates.join(", ")}`);
+    }
+
+    if (validFiles.length > 0) {
+      setFiles((prev) => [...prev, ...validFiles]);
+      // Simulate upload progress for new files
+      validFiles.forEach((fileObj) => {
+        simulateUploadProgress(fileObj.id);
+      });
     }
   };
 
-  // Handle file upload for a specific slot
-  const handleFileUpload = (docId, file) => {
-    // Validate file type - Only Excel files allowed
-    const fileExtension = file.name.split(".").pop().toLowerCase();
-    const validExtensions = ["xls", "xlsx"];
-
-    if (!validExtensions.includes(fileExtension)) {
-      alert(`Invalid file type. Please upload Excel files (.xls or .xlsx) only.`);
-      return;
+  // Handle file selection from input
+  const handleFileSelect = (e) => {
+    const selectedFiles = e.target.files;
+    if (selectedFiles && selectedFiles.length > 0) {
+      processFiles(selectedFiles);
     }
-
-    // Validate file size (10MB max)
-    const maxSize = 10 * 1024 * 1024;
-    if (file.size > maxSize) {
-      alert(`File size exceeds 10MB limit. Please upload a smaller file.`);
-      return;
+    // Reset input to allow selecting same file again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
+  };
 
-    // Start with 0 progress and simulate upload
-    setDocuments(prev => 
-      prev.map(doc => 
-        doc.id === docId 
-          ? { ...doc, file, name: file.name, progress: 0 }
-          : doc
-      )
-    );
+  // Handle drag and drop
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles && droppedFiles.length > 0) {
+      processFiles(droppedFiles);
+    }
+  };
 
-    // Simulate upload progress
-    simulateUploadProgress(docId);
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  // Handle browse button click
+  const handleBrowseClick = () => {
+    fileInputRef.current?.click();
   };
 
   // Simulate upload progress
-  const simulateUploadProgress = (docId) => {
+  const simulateUploadProgress = (fileId) => {
     let progress = 0;
     const interval = setInterval(() => {
       progress += 10;
-      setDocuments(prev => 
-        prev.map(doc => 
-          doc.id === docId 
-            ? { ...doc, progress: Math.min(progress, 100) }
-            : doc
+      setFiles((prev) =>
+        prev.map((fileObj) =>
+          fileObj.id === fileId
+            ? { ...fileObj, progress: Math.min(progress, 100) }
+            : fileObj
         )
       );
-      
+
       if (progress >= 100) {
         clearInterval(interval);
       }
     }, 100);
   };
 
-  // Handle drag and drop
-  const handleDrop = (docId, e) => {
-    e.preventDefault();
-    setIsDragging(null);
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleFileUpload(docId, file);
-    }
+  // Remove file from list
+  const handleRemoveFile = (fileId) => {
+    setFiles((prev) => prev.filter((fileObj) => fileObj.id !== fileId));
   };
 
-  const handleDragOver = (docId, e) => {
-    e.preventDefault();
-    setIsDragging(docId);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(null);
-  };
-
-  // Handle browse button click
-  const handleBrowseClick = (docId) => {
-    fileInputRefs[docId].current?.click();
-  };
-
-  // Check if all documents are uploaded and ready
-  const isSubmitEnabled = documents.every(doc => doc.file !== null && doc.progress === 100);
+  // Check if submit is enabled (at least 3 files uploaded and completed)
+  const isSubmitEnabled =
+    files.length >= 3 && files.every((fileObj) => fileObj.progress === 100);
 
   // Handle submit
   const handleSubmit = () => {
-    // Check if all documents are uploaded
     if (!isSubmitEnabled) {
-      alert("Please upload all 3 documents before proceeding.");
+      alert("Please upload at least 3 documents before proceeding.");
       return;
     }
 
     if (onSubmit) {
-      onSubmit(documents);
+      onSubmit(files);
     }
     handleClose();
   };
@@ -129,22 +168,14 @@ export default function DocumentUploadModal({ isOpen, onClose, onSubmit }) {
   // Handle close
   const handleClose = () => {
     // Reset state
-    setDocuments([
-      { id: 1, file: null, name: null, progress: 0 },
-      { id: 2, file: null, name: null, progress: 0 },
-      { id: 3, file: null, name: null, progress: 0 },
-    ]);
-    setIsDragging(null);
+    setFiles([]);
+    setIsDragging(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     if (onClose) {
       onClose();
     }
-  };
-
-  // Get file type icon - Excel format
-  const getFileType = (fileName) => {
-    if (!fileName) return "XLS";
-    const ext = fileName.split(".").pop().toUpperCase();
-    return ext === "XLSX" ? "XLS" : ext;
   };
 
   return (
@@ -166,122 +197,171 @@ export default function DocumentUploadModal({ isOpen, onClose, onSubmit }) {
 
         <div className="modal-content">
           <div className="upload-section">
-            <h3 className="upload-section-title">UPLOAD FILE</h3>
-            
-            {/* Document Upload Slots */}
-            {documents.map((doc) => (
-              <div key={doc.id} className="document-slot">
-                <input
-                  ref={fileInputRefs[doc.id]}
-                  type="file"
-                  accept=".xls,.xlsx"
-                  onChange={(e) => handleFileSelect(doc.id, e)}
-                  style={{ display: "none" }}
-                />
+            <h3 className="upload-section-title">UPLOAD FILES</h3>
 
-                {!doc.file ? (
-                  // Upload Area (Before Upload) - Gray placeholder
-                  <div
-                    className={`upload-area ${isDragging === doc.id ? "dragging" : ""}`}
-                    onDrop={(e) => handleDrop(doc.id, e)}
-                    onDragOver={(e) => handleDragOver(doc.id, e)}
-                    onDragLeave={handleDragLeave}
-                    onClick={() => handleBrowseClick(doc.id)}
-                  >
-                    <div className="upload-icon-large">
-                      <svg width="50" height="50" viewBox="0 0 100 100" fill="none">
-                        <defs>
-                          <linearGradient id={`gradient-${doc.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#9ca3af" />
-                            <stop offset="100%" stopColor="#6b7280" />
-                          </linearGradient>
-                        </defs>
-                        <rect
-                          x="10"
-                          y="10"
-                          width="80"
-                          height="80"
-                          rx="8"
-                          fill={`url(#gradient-${doc.id})`}
-                        />
-                        <text
-                          x="50"
-                          y="60"
-                          fontSize="24"
-                          fontWeight="bold"
-                          fill="white"
-                          textAnchor="middle"
-                        >
-                          XLS
-                        </text>
-                      </svg>
-                    </div>
-                    <div className="drag-drop-text">Drag & Drop</div>
-                    <div className="or-text">or</div>
-                    <button className="browse-btn" onClick={(e) => { e.stopPropagation(); handleBrowseClick(doc.id); }}>
-                      Browse
-                    </button>
-                    <div className="document-label gray-text">Document {doc.id}</div>
+            {/* Single Upload Area */}
+            <div className="single-upload-container">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={handleFileSelect}
+                style={{ display: "none" }}
+              />
+
+              <div
+                className={`upload-area ${isDragging ? "dragging" : ""}`}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={handleBrowseClick}
+              >
+                <div className="upload-icon-large">
+                  <svg width="60" height="60" viewBox="0 0 100 100" fill="none">
+                    <defs>
+                      <linearGradient id="upload-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#9ca3af" />
+                        <stop offset="100%" stopColor="#6b7280" />
+                      </linearGradient>
+                    </defs>
+                    <rect
+                      x="10"
+                      y="10"
+                      width="80"
+                      height="80"
+                      rx="8"
+                      fill="url(#upload-gradient)"
+                    />
+                    <text
+                      x="50"
+                      y="60"
+                      fontSize="20"
+                      fontWeight="bold"
+                      fill="white"
+                      textAnchor="middle"
+                    >
+                      FILE
+                    </text>
+                  </svg>
+                </div>
+                <div className="drag-drop-text">Drag & Drop files here</div>
+                <div className="or-text">or</div>
+                <button
+                  className="browse-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleBrowseClick();
+                  }}
+                >
+                  Browse
+                </button>
+                <div className="upload-hint">
+                  Select multiple files (Ctrl/Cmd + Click) or drag and drop
+                </div>
+              </div>
+
+              {/* File List */}
+              {files.length > 0 && (
+                <div className="files-list-container">
+                  <div className="files-list-header">
+                    <span className="files-count">
+                      {files.length} file{files.length !== 1 ? "s" : ""} uploaded
+                    </span>
                   </div>
-                ) : (
-                  // Uploaded File Display (After Upload) - Blue filled line
-                  <div className="uploaded-file-item">
-                    <div className="file-icon-container">
-                      <svg width="36" height="36" viewBox="0 0 100 100" fill="none">
-                        <defs>
-                          <linearGradient id={`gradient-uploaded-${doc.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#3b82f6" />
-                            <stop offset="100%" stopColor="#60a5fa" />
-                          </linearGradient>
-                        </defs>
-                        <rect
-                          x="10"
-                          y="10"
-                          width="80"
-                          height="80"
-                          rx="8"
-                          fill={`url(#gradient-uploaded-${doc.id})`}
-                        />
-                        <text
-                          x="50"
-                          y="60"
-                          fontSize="20"
-                          fontWeight="bold"
-                          fill="white"
-                          textAnchor="middle"
+                  <div className="files-list">
+                    {files.map((fileObj) => (
+                      <div key={fileObj.id} className="uploaded-file-item">
+                        <div className="file-icon-container">
+                          <svg width="36" height="36" viewBox="0 0 100 100" fill="none">
+                            <defs>
+                              <linearGradient
+                                id={`gradient-${fileObj.id}`}
+                                x1="0%"
+                                y1="0%"
+                                x2="100%"
+                                y2="100%"
+                              >
+                                <stop offset="0%" stopColor="#3b82f6" />
+                                <stop offset="100%" stopColor="#60a5fa" />
+                              </linearGradient>
+                            </defs>
+                            <rect
+                              x="10"
+                              y="10"
+                              width="80"
+                              height="80"
+                              rx="8"
+                              fill={`url(#gradient-${fileObj.id})`}
+                            />
+                            <text
+                              x="50"
+                              y="60"
+                              fontSize="16"
+                              fontWeight="bold"
+                              fill="white"
+                              textAnchor="middle"
+                            >
+                              {getFileExtension(fileObj.name)}
+                            </text>
+                          </svg>
+                        </div>
+                        <div className="file-info">
+                          <div className="file-name">{fileObj.name}</div>
+                          <div className="file-size">{formatFileSize(fileObj.size)}</div>
+                          {fileObj.progress < 100 && (
+                            <div className="upload-progress-container">
+                              <div
+                                className="upload-progress-bar"
+                                style={{ width: `${fileObj.progress}%` }}
+                              ></div>
+                            </div>
+                          )}
+                          {fileObj.progress === 100 && (
+                            <div className="file-status">
+                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                                <circle
+                                  cx="10"
+                                  cy="10"
+                                  r="9"
+                                  stroke="#10b981"
+                                  strokeWidth="2"
+                                  fill="#ecfdf5"
+                                />
+                                <path
+                                  d="M6 10L9 13L14 7"
+                                  stroke="#10b981"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                              Uploaded
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          className="remove-file-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveFile(fileObj.id);
+                          }}
+                          title="Remove file"
                         >
-                          {getFileType(doc.name)}
-                        </text>
-                      </svg>
-                    </div>
-                    <div className="file-info">
-                      <div className="file-name">{doc.name}</div>
-                      <div className="upload-progress-container">
-                        <div 
-                          className="upload-progress-bar" 
-                          style={{ width: `${doc.progress}%` }}
-                        ></div>
-                      </div>
-                      {doc.progress === 100 && (
-                        <div className="file-status">
                           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                            <circle cx="10" cy="10" r="9" stroke="#10b981" strokeWidth="2" fill="#ecfdf5" />
                             <path
-                              d="M6 10L9 13L14 7"
-                              stroke="#10b981"
+                              d="M15 5L5 15M5 5L15 15"
+                              stroke="currentColor"
                               strokeWidth="2"
                               strokeLinecap="round"
-                              strokeLinejoin="round"
                             />
                           </svg>
-                          Uploaded
-                        </div>
-                      )}
-                    </div>
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
-            ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -289,8 +369,8 @@ export default function DocumentUploadModal({ isOpen, onClose, onSubmit }) {
           <button className="cancel-btn" onClick={handleClose}>
             Cancel
           </button>
-          <button 
-            className="submit-btn" 
+          <button
+            className="submit-btn"
             onClick={handleSubmit}
             disabled={!isSubmitEnabled}
           >
@@ -301,4 +381,3 @@ export default function DocumentUploadModal({ isOpen, onClose, onSubmit }) {
     </div>
   );
 }
-
