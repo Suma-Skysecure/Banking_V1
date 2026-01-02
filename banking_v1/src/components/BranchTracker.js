@@ -14,6 +14,15 @@ import "@/css/pageHeader.css";
 // All available branches - in production, this would come from an API
 const ALL_BRANCHES = [
   {
+    id: 10,
+    name: "Phoenix Tech Hub",
+    stage: "Site Measurement",
+    stageColor: "blue",
+    progress: 50,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
     id: 1,
     name: "Downtown Manhattan Branch",
     stage: "Legal Workflow",

@@ -19,7 +19,7 @@ export const ROLE_STAGE_MAPPING = {
   "Project execution": ["Project Execution"],
   
   // Site measurement role - sees stages related to site measurement work
-  "Site measurement": ["Layout Design", "TSA (Stamp duty)", "TSA (Security Deposit)"],
+  "Site measurement": ["Site Measurement", "Layout Design", "TSA (Stamp duty)", "TSA (Security Deposit)"],
   
   // Agreement execution role - sees Agreement Execution related stages
   "Agreement execution": ["Agreement Execution", "Agreement Registration"],
