@@ -67,6 +67,33 @@ const ALL_BRANCHES = [
     pendingAction: "yellow",
     category: "business",
   },
+  {
+    id: 7,
+    name: "Dallas Metroplex Branch",
+    stage: "Layout Design",
+    stageColor: "blue",
+    progress: 50,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 8,
+    name: "Houston Energy District",
+    stage: "TSA (Stamp duty)",
+    stageColor: "blue",
+    progress: 50,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 9,
+    name: "Atlanta Business Center",
+    stage: "TSA (Security Deposit)",
+    stageColor: "blue",
+    progress: 50,
+    pendingAction: "yellow",
+    category: "business",
+  },
 ];
 
 export default function BranchTracker() {
@@ -90,6 +117,9 @@ export default function BranchTracker() {
       "Agreement Execution": "/agreement-execution",
       "Agreement Registration": "/agreement-registration",
       "Post-LOI Activities": "/post-loi-activities",
+      "Layout Design": "/post-loi-layout-design",
+      "TSA (Stamp duty)": "/term-sheet-approval",
+      "TSA (Security Deposit)": "/security-deposit-payment",
       "On Hold": null, // No redirect for On Hold
       "Completed": null, // No redirect for Completed
     };
