@@ -24,6 +24,7 @@ const ROLES = [
   "Agreement execution",
   "Project execution",
   "Vendor",
+  "Account",
 ];
 
 export default function LoginForm() {
