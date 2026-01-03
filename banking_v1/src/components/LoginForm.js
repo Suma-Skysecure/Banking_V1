@@ -22,9 +22,9 @@ const ROLES = [
   "Legal due",
   "IT team",
   "Agreement execution",
-  "BRT",
-  "Project/Facilities",
-
+  "Project execution",
+  "Vendor",
+  "Account",
 ];
 
 export default function LoginForm() {

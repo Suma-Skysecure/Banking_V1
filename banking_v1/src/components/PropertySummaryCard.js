@@ -11,6 +11,7 @@
  * @param {string|number} props.propertyValue - Property value (formatted string or number)
  * @param {string} props.badgeText - Badge text (e.g., "Pending Payment Approval")
  * @param {string} props.badgeIcon - Badge icon type ("clock" | "star" | "check")
+ * @param {string} props.badgeType - Badge type ("pending" | "completed" | "available")
  * @param {string} props.rightLabel - Label below the value (e.g., "LOI Circulated on...")
  * @param {boolean} props.showValue - Whether to show property value section
  * @param {string} props.mapPinColor - Color for map pin icon (default: "#ef4444")
@@ -22,10 +23,34 @@ export default function PropertySummaryCard({
   propertyValue = "₹48,43,00,000",
   badgeText = "Pending Payment Approval",
   badgeIcon = "clock",
+  badgeType = "pending",
   rightLabel = "",
   showValue = true,
   mapPinColor = "#ef4444",
 }) {
+  const getBadgeStyle = () => {
+    switch (badgeType) {
+      case "completed":
+        return {
+          backgroundColor: "#d1fae5",
+          color: "#065f46",
+          border: "1px solid #86efac",
+        };
+      case "available":
+        return {
+          backgroundColor: "#d1fae5",
+          color: "#065f46",
+          border: "1px solid #86efac",
+        };
+      case "pending":
+      default:
+        return {
+          backgroundColor: "#dbeafe",
+          color: "#1e40af",
+          border: "1px solid #93c5fd",
+        };
+    }
+  };
   const getBadgeIcon = () => {
     switch (badgeIcon) {
       case "clock":
@@ -99,11 +124,9 @@ export default function PropertySummaryCard({
         </div>
         <div className="property-status-section" style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "12px", marginTop: "12px" }}>
           <div
-            className="property-status-tag pending"
+            className={`property-status-tag ${badgeType}`}
             style={{
-              backgroundColor: "#dbeafe",
-              color: "#1e40af",
-              border: "1px solid #93c5fd",
+              ...getBadgeStyle(),
               display: "inline-flex",
               alignItems: "center",
               gap: "6px",

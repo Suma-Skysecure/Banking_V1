@@ -19,13 +19,19 @@ export const ROLE_STAGE_MAPPING = {
   "Project execution": ["Project Execution"],
   
   // Site measurement role - sees stages related to site measurement work
-  "Site measurement": ["Layout Design", "TSA (Stamp duty)", "TSA (Security Deposit)"],
+  "Site measurement": ["Site Measurement", "Layout Design", "TSA (Stamp duty)", "TSA (Security Deposit)"],
   
   // Agreement execution role - sees Agreement Execution related stages
   "Agreement execution": ["Agreement Execution", "Agreement Registration"],
   
   // IT team role - sees multiple stages for infrastructure aspects
   "IT team": ["Property Search", "Business Approval", "Legal Workflow", "Project Execution", "Agreement Execution"],
+  
+  // Vendor role - sees Vendor stage
+  "Vendor": ["Vendor"],
+  
+  // Account role - sees Budget approval and Stampduty approval stages
+  "Account": ["Budget approval", "Stampduty approval"],
 };
 
 /**

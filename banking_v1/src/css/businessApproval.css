@@ -115,7 +115,7 @@
 
 /* Business Details Summary Card */
 .business-details-card {
-  background-color: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 24px;

@@ -7,14 +7,18 @@ import PropertySummaryCard from "@/components/PropertySummaryCard";
 import SiteMeasurementDetails from "@/components/SiteMeasurementDetails";
 import LayoutDesignSection from "@/components/LayoutDesignSection";
 import LayoutDesignApproval from "@/components/LayoutDesignApproval";
+import ToastNotification from "@/components/ToastNotification";
 import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/postLOIActivities.css";
+import "@/css/businessApproval.css";
 
 export default function PostLOIActivities() {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
 
   return (
     <div className="dashboard-container">
@@ -218,14 +222,175 @@ export default function PostLOIActivities() {
             {/* Site Measurement Details */}
             <SiteMeasurementDetails />
 
-            {/* Layout Design Section */}
-            <LayoutDesignSection />
+            {/* Layout Design Approval Section */}
+            <div className="business-details-card" style={{ marginBottom: "24px" }}>
+              <div className="card-header">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  className="card-icon"
+                >
+                  <path
+                    d="M3 4C3 3.44772 3.44772 3 4 3H16C16.5523 3 17 3.44772 17 4V16C17 16.5523 16.5523 17 16 17H4C3.44772 17 3 16.5523 3 16V4Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M7 8L10 11L13 8"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <h3 className="card-title">Layout Design Approval</h3>
+              </div>
+              <div style={{ padding: "20px" }}>
+                <div className="decision-actions">
+                  <button
+                    className="decision-button reject-button"
+                    onClick={() => {
+                      console.log("Reject Layout Design");
+                    }}
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      className="button-icon"
+                    >
+                      <path
+                        d="M5 5L15 15M15 5L5 15"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    Reject
+                  </button>
+                  <button
+                    className="decision-button approve-button"
+                    onClick={() => {
+                      console.log("Approve Layout Design");
+                      setNotificationMessage("Successfully moved for Layout design");
+                      setShowNotification(true);
+                    }}
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      className="button-icon"
+                    >
+                      <path
+                        d="M16.7071 5.29289C17.0976 5.68342 17.0976 6.31658 16.7071 6.70711L8.70711 14.7071C8.31658 15.0976 7.68342 15.0976 7.29289 14.7071L3.29289 10.7071C2.90237 10.3166 2.90237 9.68342 3.29289 9.29289C3.68342 8.90237 4.31658 8.90237 4.70711 9.29289L8 12.5858L15.2929 5.29289C15.6834 4.90237 16.3166 4.90237 16.7071 5.29289Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                    Approve
+                  </button>
+                </div>
+              </div>
+            </div>
 
-            {/* Layout Design Approval */}
-            <LayoutDesignApproval />
+            {/* Term Sheet Approval Section */}
+            <div className="business-details-card" style={{ marginBottom: "24px" }}>
+              <div className="card-header">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  className="card-icon"
+                >
+                  <path
+                    d="M4 4C4 3.44772 4.44772 3 5 3H15C15.5523 3 16 3.44772 16 4V16C16 16.5523 15.5523 17 15 17H5C4.44772 17 4 16.5523 4 16V4Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M7 7H13M7 10H13M7 13H11"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <h3 className="card-title">Term Sheet Approval</h3>
+              </div>
+              <div style={{ padding: "20px" }}>
+                <div className="decision-actions">
+                  <button
+                    className="decision-button reject-button"
+                    onClick={() => {
+                      console.log("Reject Term Sheet");
+                    }}
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      className="button-icon"
+                    >
+                      <path
+                        d="M5 5L15 15M15 5L5 15"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    Reject
+                  </button>
+                  <button
+                    className="decision-button approve-button"
+                    onClick={() => {
+                      console.log("Approve Term Sheet");
+                      setNotificationMessage("Successfully moved for term sheet");
+                      setShowNotification(true);
+                    }}
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      className="button-icon"
+                    >
+                      <path
+                        d="M16.7071 5.29289C17.0976 5.68342 17.0976 6.31658 16.7071 6.70711L8.70711 14.7071C8.31658 15.0976 7.68342 15.0976 7.29289 14.7071L3.29289 10.7071C2.90237 10.3166 2.90237 9.68342 3.29289 9.29289C3.68342 8.90237 4.31658 8.90237 4.70711 9.29289L8 12.5858L15.2929 5.29289C15.6834 4.90237 16.3166 4.90237 16.7071 5.29289Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                    Approve
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Layout Design Section - Hidden for Site measurement role */}
+            {user?.role !== "Site measurement" && <LayoutDesignSection />}
+
+            {/* Layout Design Approval - Hidden for Site measurement role */}
+            {user?.role !== "Site measurement" && <LayoutDesignApproval />}
           </div>
         </main>
       </div>
+
+      {/* Toast Notification */}
+      <ToastNotification
+        show={showNotification}
+        message={notificationMessage}
+        type="success"
+        onClose={() => setShowNotification(false)}
+      />
     </div>
   );
 }
