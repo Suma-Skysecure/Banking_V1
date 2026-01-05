@@ -7,8 +7,9 @@
  * @param {Array} branches - Array of branch objects to display
  * @param {Function} onViewDetails - Callback function when "View Details" is clicked
  * @param {Function} getProgressColor - Function to get progress bar color
+ * @param {string} viewDetailsText - Custom text for the view details link (default: "View Details")
  */
-export default function DashboardTable({ branches, onViewDetails, getProgressColor }) {
+export default function DashboardTable({ branches, onViewDetails, getProgressColor, viewDetailsText = "View Details" }) {
   if (!branches || branches.length === 0) {
     return (
       <div className="table-container">
@@ -61,7 +62,7 @@ export default function DashboardTable({ branches, onViewDetails, getProgressCol
                   onClick={(e) => onViewDetails(e, branch)}
                   className="view-details-link"
                 >
-                  View Details
+                  {viewDetailsText}
                 </button>
               </td>
             </tr>

@@ -42,6 +42,14 @@ export const LOGIN_CREDENTIALS = {
     email: "Legaldue@Kotakbank.com"
   },
 
+  "BRT@Kotakbank.com": {
+    username: "BRT@Kotakbank.com",
+    password: "BRT123",
+    role: "BRT",
+    name: "BRT User",
+    email: "BRT@Kotakbank.com"
+  },
+
   // IT Team Role
   "ITteam@Kotakbank.com": {
     username: "ITteam@Kotakbank.com",

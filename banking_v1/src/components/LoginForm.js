@@ -21,6 +21,7 @@ const ROLES = [
   "Site measurement",
   "Legal due",
   "IT team",
+  "BRT",
   "Agreement execution",
   "Project execution",
   "Vendor",
