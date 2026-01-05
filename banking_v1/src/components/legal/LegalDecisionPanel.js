@@ -48,9 +48,66 @@ export default function LegalDecisionPanel({
 
   const handleUploadSubmit = (uploadedFiles) => {
     console.log("Legal documents uploaded:", uploadedFiles);
+    
+    // Convert uploaded files to the format expected by LegalDocumentsView
+    const formattedDocuments = uploadedFiles.map((fileObj, index) => {
+      const file = fileObj.file || fileObj;
+      return {
+        id: fileObj.id || `doc-${Date.now()}-${index}`,
+        name: fileObj.name || file.name?.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " "),
+        fileName: file.name || fileObj.fileName,
+        uploadDate: new Date().toISOString().split('T')[0],
+        size: file.size || fileObj.size || 0,
+        type: file.type || fileObj.type || "application/pdf",
+        status: "Verified",
+        data: fileObj.data || null // Base64 data if available
+      };
+    });
+
+    // Get existing documents from localStorage
+    const existingDocuments = JSON.parse(localStorage.getItem("uploadedLegalDocuments") || "[]");
+    
+    // Merge new documents with existing ones (avoid duplicates)
+    const allDocuments = [...existingDocuments];
+    formattedDocuments.forEach(newDoc => {
+      const exists = allDocuments.some(existing => existing.id === newDoc.id || existing.fileName === newDoc.fileName);
+      if (!exists) {
+        allDocuments.push(newDoc);
+      }
+    });
+
+    // Save to localStorage
+    localStorage.setItem("uploadedLegalDocuments", JSON.stringify(allDocuments));
+    
+    // Trigger a custom event to notify LegalDocumentsView to refresh
+    window.dispatchEvent(new CustomEvent('legalDocumentsUpdated'));
+
     setIsUploadModalOpen(false);
     if (onShowToast) {
-      onShowToast("Legal documents uploaded successfully", "success");
+      onShowToast(`Successfully uploaded ${uploadedFiles.length} legal document(s)`, "success");
+    }
+  };
+
+  const handleViewDocuments = () => {
+    // Scroll to the Legal Documents section
+    const legalDocumentsSection = document.querySelector('[data-section="legal-documents"]');
+    
+    if (legalDocumentsSection) {
+      legalDocumentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Add a slight highlight effect
+      legalDocumentsSection.style.transition = 'box-shadow 0.3s';
+      legalDocumentsSection.style.boxShadow = '0 0 0 3px rgba(30, 58, 138, 0.3)';
+      setTimeout(() => {
+        legalDocumentsSection.style.boxShadow = '';
+      }, 2000);
+    } else {
+      // Fallback: scroll to any element with "Legal Documents" text
+      const elements = Array.from(document.querySelectorAll('*')).filter(el => 
+        el.textContent && el.textContent.includes('Legal Documents')
+      );
+      if (elements.length > 0) {
+        elements[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
   };
 
@@ -224,67 +281,117 @@ export default function LegalDecisionPanel({
                 Upload legal documents and final agreements for submission
               </p>
             </div>
-            <button
-              onClick={handleUploadDocuments}
-              disabled={isFinalized}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                padding: "14px 28px",
-                backgroundColor: "#1e3a8a",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: "15px",
-                fontWeight: "600",
-                cursor: isFinalized ? "not-allowed" : "pointer",
-                opacity: isFinalized ? 0.6 : 1,
-                transition: "all 0.2s",
-                boxShadow: isFinalized ? "none" : "0 2px 4px rgba(30, 58, 138, 0.2)",
-                width: "100%",
-                justifyContent: "center"
-              }}
-              onMouseEnter={(e) => {
-                if (!isFinalized) {
-                  e.target.style.backgroundColor = "#1e40af";
-                  e.target.style.boxShadow = "0 4px 8px rgba(30, 58, 138, 0.3)";
+            <div style={{ display: "flex", gap: "12px", width: "100%" }}>
+              <button
+                onClick={handleUploadDocuments}
+                disabled={isFinalized}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "14px 28px",
+                  backgroundColor: "#1e3a8a",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "15px",
+                  fontWeight: "600",
+                  cursor: isFinalized ? "not-allowed" : "pointer",
+                  opacity: isFinalized ? 0.6 : 1,
+                  transition: "all 0.2s",
+                  boxShadow: isFinalized ? "none" : "0 2px 4px rgba(30, 58, 138, 0.2)",
+                  flex: 1,
+                  justifyContent: "center"
+                }}
+                onMouseEnter={(e) => {
+                  if (!isFinalized) {
+                    e.target.style.backgroundColor = "#1e40af";
+                    e.target.style.boxShadow = "0 4px 8px rgba(30, 58, 138, 0.3)";
+                    e.target.style.transform = "translateY(-1px)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isFinalized) {
+                    e.target.style.backgroundColor = "#1e3a8a";
+                    e.target.style.boxShadow = "0 2px 4px rgba(30, 58, 138, 0.2)";
+                    e.target.style.transform = "translateY(0)";
+                  }
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M7 10L12 15L17 10"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M12 15V3"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Upload Legal Documents
+              </button>
+              <button
+                onClick={handleViewDocuments}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "14px 28px",
+                  backgroundColor: "#10b981",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "15px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  boxShadow: "0 2px 4px rgba(16, 185, 129, 0.2)",
+                  flex: 1,
+                  justifyContent: "center"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#059669";
+                  e.target.style.boxShadow = "0 4px 8px rgba(16, 185, 129, 0.3)";
                   e.target.style.transform = "translateY(-1px)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isFinalized) {
-                  e.target.style.backgroundColor = "#1e3a8a";
-                  e.target.style.boxShadow = "0 2px 4px rgba(30, 58, 138, 0.2)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#10b981";
+                  e.target.style.boxShadow = "0 2px 4px rgba(16, 185, 129, 0.2)";
                   e.target.style.transform = "translateY(0)";
-                }
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M7 10L12 15L17 10"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M12 15V3"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Upload Legal Documents
-            </button>
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                </svg>
+                View Documents
+              </button>
+            </div>
           </div>
         )}
       </div>
