@@ -28,6 +28,13 @@ export default function SecurityDepositPayment() {
     }).format(amount * 83.5);
   };
 
+  // Check if user is Vendor role to show Vendor Creation instead
+  const isVendorRole = user?.role === "Vendor";
+  const pageTitle = isVendorRole ? "Vendor Creation" : "Term Sheet Approval";
+  const pageSubtitle = isVendorRole 
+    ? "Create and manage vendor information" 
+    : "Review and approve term sheet payments for property acquisition";
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
@@ -81,8 +88,8 @@ export default function SecurityDepositPayment() {
         <main className="dashboard-main">
           <div className="main-content">
             <PageHeader
-              title="Term Sheet Approval"
-              subtitle="Review and approve term sheet payments for property acquisition"
+              title={pageTitle}
+              subtitle={pageSubtitle}
             />
 
             {/* Property Summary Card */}
@@ -357,4 +364,3 @@ export default function SecurityDepositPayment() {
     </div>
   );
 }
-
