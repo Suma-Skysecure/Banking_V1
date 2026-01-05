@@ -26,6 +26,12 @@ export const ROLE_STAGE_MAPPING = {
   
   // IT team role - sees multiple stages for infrastructure aspects
   "IT team": ["Property Search", "Business Approval", "Legal Workflow", "Project Execution", "Agreement Execution"],
+  
+  // Vendor role - sees Vendor stage
+  "Vendor": ["Vendor"],
+  
+  // Account role - sees Budget approval and Stampduty approval stages
+  "Account": ["Budget approval", "Stampduty approval"],
 };
 
 /**
@@ -74,4 +80,5 @@ export const filterBranchesByRole = (branches, role) => {
   const allowedStagesSet = new Set(allowedStages);
   return branches.filter(branch => branch?.stage && allowedStagesSet.has(branch.stage));
 };
+
 
