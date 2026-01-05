@@ -12,8 +12,8 @@ export const ROLE_STAGE_MAPPING = {
   // SRBM role - sees only Property Search stage (initiates property search, not approval)
   "SRBM": ["Property Search"],
   
-  // Legal due role - sees only Legal Workflow stage
-  "Legal due": ["Legal Workflow"],
+  // Legal due role - sees only Legal Clearance stage
+  "Legal due": ["Legal Clearance"],
   
   // Project execution role - sees Project Execution related stages
   "Project execution": [
@@ -88,4 +88,5 @@ export const filterBranchesByRole = (branches, role) => {
   const allowedStagesSet = new Set(allowedStages);
   return branches.filter(branch => branch?.stage && allowedStagesSet.has(branch.stage));
 };
+
 

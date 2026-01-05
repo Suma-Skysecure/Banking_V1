@@ -72,7 +72,7 @@ export const LOGIN_CREDENTIALS = {
   "Projectexe@Kotakbank.com": {
     username: "Projectexe@Kotakbank.com",
     password: "Projectexe123",
-    role: "Project execution",
+    role: "Project/Facilities",
     name: "Project Execution User",
     email: "Projectexe@Kotakbank.com"
 

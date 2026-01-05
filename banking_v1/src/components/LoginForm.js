@@ -69,8 +69,8 @@ export default function LoginForm() {
       return;
     }
     
-    // Validate that selected role matches the role from credentials
-    if (role !== userData.role) {
+    // Validate that selected role matches the role from credentials (case-insensitive)
+    if (role.toLowerCase().trim() !== userData.role.toLowerCase().trim()) {
       setErrorMessage(`Role mismatch. The email "${username}" is associated with "${userData.role}" role. Please select the correct role.`);
       return;
     }

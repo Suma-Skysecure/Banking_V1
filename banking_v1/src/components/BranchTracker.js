@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
@@ -25,7 +25,7 @@ const ALL_BRANCHES = [
   {
     id: 1,
     name: "Downtown Manhattan Branch",
-    stage: "Legal Workflow",
+    stage: "Legal Clearance",
     stageColor: "blue",
     progress: 45,
     pendingAction: "red",
@@ -285,13 +285,16 @@ export default function BranchTracker() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Map stage names to routes - static mapping for optimal performance
-  const getStageRoute = (stage) => {
+  const getStageRoute = useCallback((stage) => {
     const stageRouteMap = {
       "Property Search": "/property-search",
       "Business Approval": "/business-approval",
       "Legal Workflow": "/legal-workflow",
+      "Legal Clearance": "/legal-due",
       "Project Execution": "/project-execution",
       "Security guard deployment": "/legal-verification",
       "PO to material vendor for Bought out Items": "/project-execution",
@@ -315,7 +318,15 @@ export default function BranchTracker() {
       "Completed": null, // No redirect for Completed
     };
     return stageRouteMap[stage] || null;
-  };
+  }, []);
+
+  const handleDelete = useCallback((branch) => {
+    if (window.confirm(`Are you sure you want to delete "${branch.name}"?`)) {
+      // In a real app, this would call an API
+      alert(`Branch "${branch.name}" deleted successfully.`);
+      // For demo, we could remove from local state, but since it's static, just show alert
+    }
+  }, []);
 
   const handleViewDetails = (e, branch) => {
     e.preventDefault();
@@ -334,14 +345,39 @@ export default function BranchTracker() {
       // If no user role, return empty array (don't show all branches)
       return [];
     }
-    return filterBranchesByRole(ALL_BRANCHES, user.role);
-  }, [user?.role]);
 
-  const getProgressColor = (progress) => {
+    let filteredBranches = ALL_BRANCHES;
+
+    // For IT team, show only branches pending IT assessment
+    if (user.role === "IT team") {
+      // Branches that need IT assessment - those not completed and in relevant stages
+      filteredBranches = ALL_BRANCHES.filter(branch =>
+        branch.stage !== "Completed" &&
+        branch.stage !== "On Hold" &&
+        ["Property Search", "Business Approval", "Legal Workflow", "Project Execution", "Agreement Execution"].includes(branch.stage)
+      );
+    } else {
+      filteredBranches = filterBranchesByRole(ALL_BRANCHES, user.role);
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filteredBranches = filteredBranches.filter(branch =>
+        branch.name.toLowerCase().includes(query) ||
+        branch.stage.toLowerCase().includes(query) ||
+        branch.category?.toLowerCase().includes(query)
+      );
+    }
+
+    return filteredBranches;
+  }, [user?.role, searchQuery]);
+
+  const getProgressColor = useCallback((progress) => {
     if (progress === 100) return "green";
     if (progress >= 50) return "yellow";
     return "yellow";
-  };
+  }, []);
 
   return (
     <div className="dashboard-container">
@@ -353,7 +389,7 @@ export default function BranchTracker() {
         {/* Main Content Area */}
         <main className="dashboard-main">
           <div className="main-content">
-            <h1 className="page-title">Branch Tracker</h1>
+            <h1 className="page-title">{user?.role === "IT team" ? "IT Feasibility" : "Branch Tracker"}</h1>
 
             {/* Filters and Controls */}
             <div className="controls-bar">
@@ -410,20 +446,24 @@ export default function BranchTracker() {
                 >
                   Kanban
                 </button>
-                <button 
-                  className="add-branch-btn"
-                  onClick={() => setIsModalOpen(true)}
-                >
-                  <span>+</span> Add New Branch
-                </button>
+                {user?.role !== "IT team" && (
+                  <button
+                    className="add-branch-btn"
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    <span>+</span> Add New Branch
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Branch Table - Reusable Component */}
-            <DashboardTable 
+            <DashboardTable
               branches={branches}
               onViewDetails={handleViewDetails}
               getProgressColor={getProgressColor}
+              user={user}
+              onDelete={handleDelete}
             />
 
             {/* Pagination */}
@@ -472,7 +512,7 @@ export default function BranchTracker() {
 
       {/* Create New Branch Modal */}
       {isModalOpen && (
-        <CreateBranchModal 
+        <CreateBranchModal
           onClose={() => setIsModalOpen(false)}
         />
       )}

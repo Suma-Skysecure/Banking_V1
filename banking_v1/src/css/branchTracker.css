@@ -55,27 +55,59 @@
   position: relative;
   display: flex;
   align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #ffffff;
+  overflow: hidden;
 }
 
 .search-icon {
   position: absolute;
   left: 12px;
   pointer-events: none;
+  z-index: 1;
 }
 
 .header-search-input {
   padding: 8px 12px 8px 36px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border: none;
   font-size: 14px;
-  width: 300px;
-  background-color: #ffffff;
+  width: 250px;
+  background-color: transparent;
   outline: none;
+  flex: 1;
 }
 
 .header-search-input:focus {
+  outline: none;
+}
+
+.header-search:focus-within {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-radius: 0 4px 4px 0;
+  margin-left: auto;
+}
+
+.search-btn:hover {
+  background: #2563eb;
+}
+
+.search-btn:focus {
+  outline: none;
+  background: #2563eb;
 }
 
 .header-actions {
@@ -98,6 +130,95 @@
 
 .header-icon-btn:hover {
   background-color: #e5e7eb;
+}
+
+.notification-btn {
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 20px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  width: 320px;
+  z-index: 1000;
+  margin-top: 8px;
+}
+
+.notification-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.notification-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.notification-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s;
+}
+
+.notification-item:hover {
+  background-color: #f9fafb;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-icon {
+  font-size: 16px;
+  margin-right: 12px;
+  margin-top: 2px;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.notification-time {
+  font-size: 12px;
+  color: #6b7280;
 }
 
 .header-profile {
@@ -420,6 +541,22 @@
   color: #111827;
 }
 
+.branch-name-cell {
+  max-width: 250px;
+}
+
+.branch-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.branch-category {
+  font-size: 12px;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
 /* Stage Badge */
 .stage-badge {
   display: inline-block;
@@ -540,6 +677,164 @@
 .view-details-link:hover {
   color: #2563eb;
   text-decoration: underline;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-btn:hover {
+  background-color: #fee2e2;
+}
+
+/* Badges */
+.stage-badge,
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stage-badge.blue {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.stage-badge.green {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.stage-badge.yellow {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.stage-badge.grey {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.stage-badge.orange {
+  background-color: #fed7aa;
+  color: #9a3412;
+}
+
+.status-badge.Pending {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-badge.In Progress {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.Completed {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+/* Progress Bars */
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-fill.green {
+  background-color: #10b981;
+}
+
+.progress-fill.yellow {
+  background-color: #f59e0b;
+}
+
+.progress-fill.red {
+  background-color: #ef4444;
+}
+
+.progress-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  min-width: 35px;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.action-btn {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background-color: #ffffff;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.view-btn {
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.view-btn:hover {
+  background-color: #eff6ff;
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.delete-btn {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.delete-btn:hover {
+  background-color: #fef2f2;
+  border-color: #dc2626;
+  color: #dc2626;
 }
 
 /* Pagination */
