@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import DashboardTable from "@/components/DashboardTable";
 import UserProfile from "@/components/UserProfile";
+import ITFeasibilityAssessment from "@/components/ITFeasibilityAssessment";
 import { useAuth } from "@/contexts/AuthContext";
 import { filterBranchesByRole } from "@/config/roleStageMapping";
 import "@/css/branchTracker.css";
@@ -347,8 +348,11 @@ export default function BranchTracker() {
 
         {/* Main Content Area */}
         <main className="dashboard-main">
-          <div className="main-content">
-            <h1 className="page-title">Branch Tracker</h1>
+          {user?.role === "IT team" ? (
+            <ITFeasibilityAssessment />
+          ) : (
+            <div className="main-content">
+              <h1 className="page-title">Branch Tracker</h1>
 
             {/* Filters and Controls */}
             <div className="controls-bar">
@@ -462,6 +466,7 @@ export default function BranchTracker() {
               </div>
             </div>
           </div>
+        )}
         </main>
       </div>
 
