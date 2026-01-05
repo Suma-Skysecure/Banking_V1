@@ -10,15 +10,15 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  const baseNavigationItems = [
-    { name: "Dashboard", icon: "🌐", href: "/dashboard", page: "dashboard" },
+  const navigationItems = [
+    {
+      name: "Dashboard",
+      icon: "🌐",
+      href: user?.role === "IT team" ? "/it/assessment-dashboard" : "/dashboard",
+      page: user?.role === "IT team" ? "itAssessment" : "dashboard"
+    },
     { name: "Property Search", icon: "🔍", href: "/property-search", page: "propertySearch" },
   ];
-
-  // Add IT Assessment Dashboard for IT users
-  const navigationItems = user?.role === "IT team" 
-    ? [...baseNavigationItems, { name: "IT Assessment", icon: "🖥️", href: "/it/assessment-dashboard", page: "itAssessment" }]
-    : baseNavigationItems;
 
   return (
     <aside className={`dashboard-sidebar ${sidebarOpen ? "open" : "closed"}`}>
