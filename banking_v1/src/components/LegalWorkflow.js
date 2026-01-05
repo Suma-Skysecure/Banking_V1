@@ -132,14 +132,50 @@ export default function LegalWorkflow() {
   const isSubmitEnabled = uploadedFiles.length >= 3;
 
   // Handle submit
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isSubmitEnabled) {
       alert("Please upload at least 3 documents before proceeding.");
       return;
     }
     console.log("Submitting documents:", uploadedFiles);
-    // Handle submission logic here
-    alert(`Successfully submitted ${uploadedFiles.length} document(s)!`);
+    
+    // Convert all files to base64 and store in localStorage
+    try {
+      const documentsToStore = [];
+      
+      // Process each file
+      for (const fileObj of uploadedFiles) {
+        const file = fileObj.file;
+        const fileData = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            resolve({
+              id: fileObj.id,
+              name: file.name,
+              fileName: file.name,
+              size: file.size,
+              type: file.type,
+              uploadDate: new Date().toISOString(),
+              data: event.target.result, // base64 string
+              status: "Verified",
+            });
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        
+        documentsToStore.push(fileData);
+      }
+      
+      // Store all documents in localStorage
+      localStorage.setItem("uploadedLegalDocuments", JSON.stringify(documentsToStore));
+      
+      // Show success message
+      alert(`Successfully submitted ${uploadedFiles.length} document(s)! The documents are now available in the Legal Due page.`);
+    } catch (error) {
+      console.error("Error processing files:", error);
+      alert("Error processing files. Please try again.");
+    }
   };
 
   return (
@@ -624,8 +660,28 @@ export default function LegalWorkflow() {
                     const file = e.target.files[0];
                     if (file) {
                       console.log("File selected:", file.name);
-                      // Handle file upload here
-                      alert(`File "${file.name}" selected. Upload functionality can be implemented here.`);
+                      
+                      // Read file as base64 and store in localStorage
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const fileData = {
+                          name: file.name,
+                          size: file.size,
+                          type: file.type,
+                          uploadDate: new Date().toISOString(),
+                          data: event.target.result, // base64 string
+                        };
+                        
+                        // Store in localStorage
+                        localStorage.setItem("uploadedSignedLOI", JSON.stringify(fileData));
+                        
+                        // Show success message
+                        alert(`File "${file.name}" uploaded successfully! The document is now available in Post-LOI Activities and Legal Due pages.`);
+                      };
+                      reader.onerror = () => {
+                        alert("Error reading file. Please try again.");
+                      };
+                      reader.readAsDataURL(file);
                     }
                   }}
                   style={{ display: "none" }}
