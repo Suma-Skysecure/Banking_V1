@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import DashboardTable from "@/components/DashboardTable";
-import UserProfile from "@/components/UserProfile";
-import ITFeasibilityAssessment from "@/components/ITFeasibilityAssessment";
+import DashboardHeader from "@/components/DashboardHeader";
 import { useAuth } from "@/contexts/AuthContext";
 import { filterBranchesByRole } from "@/config/roleStageMapping";
 import "@/css/branchTracker.css";
@@ -152,7 +151,7 @@ const ALL_BRANCHES = [
   {
     id: 16,
     name: "Nashville Financial Center",
-    stage: "Legal Clearance",
+    stage: "Legal Workflow",
     stageColor: "blue",
     progress: 48,
     pendingAction: "red",
@@ -173,15 +172,6 @@ const ALL_BRANCHES = [
     stage: "Layout Design",
     stageColor: "blue",
     progress: 55,
-    pendingAction: "yellow",
-    category: "business",
-  },
-  {
-    id: 19,
-    name: "Indianapolis Metro Branch",
-    stage: "Project Execution",
-    stageColor: "blue",
-    progress: 40,
     pendingAction: "yellow",
     category: "business",
   },
@@ -214,10 +204,73 @@ const ALL_BRANCHES = [
   },
   {
     id: 23,
-    name: "Legal Clearance Test Branch",
-    stage: "Legal Clearance",
+    name: "Detroit Commercial Center",
+    stage: "Agreement to Account",
+    stageColor: "blue",
+    progress: 85,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 24,
+    name: "Seattle Tech Park",
+    stage: "Security guard deployment",
+    stageColor: "blue",
+    progress: 45,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 25,
+    name: "Phoenix Industrial Hub",
+    stage: "PO to material vendor for Bought out Items",
+    stageColor: "blue",
+    progress: 60,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 26,
+    name: "Denver Business Plaza",
+    stage: "Drawings to fit-out vendor",
+    stageColor: "blue",
+    progress: 55,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 27,
+    name: "Portland Commerce Center",
+    stage: "PO to fit-out vendor",
     stageColor: "blue",
     progress: 50,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 28,
+    name: "San Diego Office Complex",
+    stage: "Site Update",
+    stageColor: "blue",
+    progress: 70,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 29,
+    name: "Las Vegas Financial District",
+    stage: "Application for telephone connection",
+    stageColor: "blue",
+    progress: 40,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 30,
+    name: "Chicago Business Center",
+    stage: "Advance to fit_out Vendor",
+    stageColor: "blue",
+    progress: 65,
     pendingAction: "yellow",
     category: "business",
   },
@@ -243,17 +296,24 @@ export default function BranchTracker() {
       "Legal Workflow": "/legal-workflow",
       "Legal Clearance": "/legal-due",
       "Project Execution": "/project-execution",
+      "Security guard deployment": "/legal-verification",
+      "PO to material vendor for Bought out Items": "/project-execution",
+      "Drawings to fit-out vendor": "/fit-out-vendor-process",
+      "PO to fit-out vendor": "/fit-out-vendor-po",
+      "Site Update": "/project-execution",
+      "Application for telephone connection": "/telephonic-connection-setup",
       "Site Measurement": "/post-loi-activities",
       "Agreement Execution": "/agreement-execution",
       "Agreement Registration": "/agreement-registration",
+      "Agreement to Account": "/pim-update-rent-release",
+      "Advance to fit_out Vendor": "/accounts-review-process-orders",
       "Post-LOI Activities": "/post-loi-activities",
       "Layout Design": "/post-loi-layout-design",
       "TSA (Stamp duty)": "/term-sheet-approval",
       "TSA (Security Deposit)": "/security-deposit-payment",
-      "Vendor": "/security-deposit-payment",
+      "Vendor": "/vendor-creation",
       "Budget approval": "/budget-approval",
       "Stampduty approval": "/stamp-duty-payment-approval",
-      
       "On Hold": null, // No redirect for On Hold
       "Completed": null, // No redirect for Completed
     };
@@ -321,126 +381,7 @@ export default function BranchTracker() {
 
   return (
     <div className="dashboard-container">
-      {/* Top Header Bar */}
-      <header className="dashboard-header">
-        <button
-          className="header-hamburger"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          aria-label="Toggle sidebar"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            className="hamburger-icon"
-          >
-            <path
-              d="M3 5H17M3 10H17M3 15H17"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
-        <div className="header-search">
-          <svg
-            className="search-icon"
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-          >
-            <path
-              d="M11.5 10.5L15 14M13 7C13 10.3137 10.3137 13 7 13C3.68629 13 1 10.3137 1 7C1 3.68629 3.68629 1 7 1C10.3137 1 13 3.68629 13 7Z"
-              stroke="#6b7280"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search branch..."
-            className="header-search-input"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button
-            className="search-btn"
-            onClick={() => {
-              // Search is already real-time, but this could trigger additional search logic if needed
-              console.log('Search button clicked with query:', searchQuery);
-            }}
-            title="Search branches"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M11.5 10.5L15 14M13 7C13 10.3137 10.3137 13 7 13C3.68629 13 1 10.3137 1 7C1 3.68629 3.68629 1 7 1C10.3137 1 13 3.68629 13 7Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
-        </div>
-        <div className="header-actions">
-          <button className="header-icon-btn">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M10 2C10.5523 2 11 2.44772 11 3V4H15C15.5523 4 16 4.44772 16 5C16 5.55228 15.5523 6 15 6H5C4.44772 6 4 5.55228 4 5C4 4.44772 4.44772 4 5 4H9V3C9 2.44772 9.44772 2 10 2Z"
-                fill="#6b7280"
-              />
-              <path
-                d="M5 8H15L14.4 15.2C14.3 16.8 13 18 11.4 18H8.6C7 18 5.7 16.8 5.6 15.2L5 8Z"
-                fill="#6b7280"
-              />
-            </svg>
-          </button>
-          <button className="header-icon-btn">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M10 2L12.5 7.5L18.5 8.5L14 12.5L15 18.5L10 15.5L5 18.5L6 12.5L1.5 8.5L7.5 7.5L10 2Z"
-                fill="#6b7280"
-              />
-            </svg>
-          </button>
-          <button className="header-icon-btn notification-btn" onClick={() => setShowNotifications(!showNotifications)}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M10 2C7.79 2 6 3.79 6 6V10C6 11.1 5.1 12 4 12H3C2.45 12 2 12.45 2 13C2 13.55 2.45 14 3 14H17C17.55 14 18 13.55 18 13C18 12.45 17.55 12 17 12H16C14.9 12 14 11.1 14 10V6C14 3.79 12.21 2 10 2Z" fill="#6b7280" />
-              <path d="M10 18C11.1 18 12 17.1 12 16H8C8 17.1 8.9 18 10 18Z" fill="#6b7280" />
-            </svg>
-            <span className="notification-badge">3</span>
-          </button>
-          <UserProfile variant="header" showLogout={false} />
-        </div>
-
-        {/* Notification Dropdown */}
-        {showNotifications && (
-          <div className="notification-dropdown">
-            <div className="notification-header">
-              <h4>Notifications</h4>
-            </div>
-            <div className="notification-list">
-              <div className="notification-item" onClick={() => { setShowNotifications(false); router.push('/it/assessment/1'); }}>
-                <div className="notification-icon">🔔</div>
-                <div className="notification-content">
-                  <div className="notification-title">New branch pending IT Feasibility</div>
-                  <div className="notification-time">2 hours ago</div>
-                </div>
-              </div>
-              <div className="notification-item" onClick={() => { setShowNotifications(false); router.push('/it/assessment/2'); }}>
-                <div className="notification-icon">✅</div>
-                <div className="notification-content">
-                  <div className="notification-title">IT assessment approved</div>
-                  <div className="notification-time">1 day ago</div>
-                </div>
-              </div>
-              <div className="notification-item" onClick={() => { setShowNotifications(false); router.push('/it/assessment/3'); }}>
-                <div className="notification-icon">❌</div>
-                <div className="notification-content">
-                  <div className="notification-title">IT assessment marked not feasible</div>
-                  <div className="notification-time">3 days ago</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </header>
+      <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="dashboard-content-wrapper">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />

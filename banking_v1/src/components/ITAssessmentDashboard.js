@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
-import UserProfile from "@/components/UserProfile";
+import DashboardHeader from "@/components/DashboardHeader";
 import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
@@ -144,15 +144,7 @@ export default function ITAssessmentDashboard() {
 
   return (
     <div className="dashboard-container">
-      <header className="dashboard-header">
-        <button
-          className="header-hamburger"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          ☰
-        </button>
-        <UserProfile variant="header" />
-      </header>
+      <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="dashboard-content-wrapper">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
