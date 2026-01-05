@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
+import DashboardHeader from "@/components/DashboardHeader";
 import PropertySummaryCard from "@/components/PropertySummaryCard";
 import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
@@ -50,73 +51,7 @@ export default function LegalVerification() {
 
   return (
     <div className="dashboard-container">
-      <header className="dashboard-header">
-        <button
-          className="header-hamburger"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          aria-label="Toggle sidebar"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="hamburger-icon">
-            <path d="M3 5H17M3 10H17M3 15H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
-        <div className="header-search">
-          <input
-            type="text"
-            placeholder="Search branch..."
-            className="header-search-input"
-          />
-        </div>
-        <div className="header-actions">
-          <button className="header-icon-btn">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M10 2C11.1046 2 12 2.89543 12 4C12 5.10457 11.1046 6 10 6C8.89543 6 8 5.10457 8 4C8 2.89543 8.89543 2 10 2Z"
-                fill="#6b7280"
-              />
-              <path
-                d="M4 8C4 6.89543 6.68629 6 10 6C13.3137 6 16 6.89543 16 8V12C16 13.1046 13.3137 14 10 14C6.68629 14 4 13.1046 4 12V8Z"
-                fill="#6b7280"
-              />
-              <path
-                d="M7 14V15C7 16.6569 8.34315 18 10 18C11.6569 18 13 16.6569 13 15V14"
-                stroke="#6b7280"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-          <div className="header-profile" style={{ cursor: "pointer" }}>
-            <div className="profile-avatar" style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, #8b5cf6, #ec4899)",
-              color: "#ffffff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: "600",
-              fontSize: "16px"
-            }}>
-              JW
-            </div>
-            <div className="profile-info">
-              <span className="profile-name">James Wilson</span>
-              <span className="profile-email">legal@pms.com</span>
-            </div>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginLeft: "8px" }}>
-              <path
-                d="M4 6L8 10L12 6"
-                stroke="#6b7280"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="dashboard-content-wrapper">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />

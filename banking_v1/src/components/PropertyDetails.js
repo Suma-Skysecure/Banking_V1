@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import DashboardHeader from "@/components/DashboardHeader";
 import ToastNotification from "@/components/ToastNotification";
 import { useAuth } from "@/contexts/AuthContext";
 import "@/css/propertyDetails.css";
@@ -184,53 +185,7 @@ export default function PropertyDetails() {
         duration={3000}
       />
       <div className="dashboard-container">
-      {/* Top Header Bar */}
-      <header className="dashboard-header">
-        <button
-          className="header-hamburger"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          aria-label="Toggle sidebar"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            className="hamburger-icon"
-          >
-            <path
-              d="M3 5H17M3 10H17M3 15H17"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
-        <div className="header-logo">
-          <div className="logo-text">PMS</div>
-          <div className="logo-subtext">Property Management</div>
-        </div>
-        <div className="header-actions">
-          <button className="header-icon-btn">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M10 2C10.5523 2 11 2.44772 11 3V4H15C15.5523 4 16 4.44772 16 5C16 5.55228 15.5523 6 15 6H5C4.44772 6 4 5.55228 4 5C4 4.44772 4.44772 4 5 4H9V3C9 2.44772 9.44772 2 10 2Z"
-                fill="#6b7280"
-              />
-              <path
-                d="M5 8H15L14.4 15.2C14.3 16.8 13 18 11.4 18H8.6C7 18 5.7 16.8 5.6 15.2L5 8Z"
-                fill="#6b7280"
-              />
-            </svg>
-          </button>
-          <div className="header-user-profile">
-            <div className="header-user-info">
-              <div className="header-user-name">{user?.role || "User"}</div>
-              <div className="header-user-email">{user?.email || user?.username || ""}</div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="dashboard-content-wrapper">
         {/* Left Sidebar */}
