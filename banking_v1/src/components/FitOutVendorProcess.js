@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
+import ProjectExecutionProgress from "@/components/ProjectExecutionProgress";
 import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
@@ -11,6 +13,7 @@ import "@/css/agreementExecution.css";
 import "@/css/businessApproval.css";
 
 export default function FitOutVendorProcess() {
+  const router = useRouter();
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [tentativeDeliveryDate, setTentativeDeliveryDate] = useState("2026-02-16");
@@ -201,304 +204,7 @@ export default function FitOutVendorProcess() {
             </div>
 
             {/* Project Execution Progress Section */}
-            <div style={{
-              backgroundColor: "#ffffff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-              padding: "24px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-              marginTop: "24px"
-            }}>
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                marginBottom: "20px"
-              }}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M2 16L6 12L10 16L18 8"
-                    stroke="#1e3a8a"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M12 8H18V14"
-                    stroke="#1e3a8a"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <h3 style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "#111827",
-                  margin: 0
-                }}>
-                  Project Execution Progress
-                </h3>
-              </div>
-
-              <div style={{ marginBottom: "24px" }}>
-                <div style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "8px"
-                }}>
-                  <span style={{
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    color: "#111827"
-                  }}>
-                    Overall Progress
-                  </span>
-                  <span style={{
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    color: "#f97316"
-                  }}>
-                    0% Complete
-                  </span>
-                </div>
-                <div style={{
-                  width: "100%",
-                  height: "8px",
-                  backgroundColor: "#e5e7eb",
-                  borderRadius: "4px",
-                  overflow: "hidden"
-                }}>
-                  <div style={{
-                    width: "0%",
-                    height: "100%",
-                    backgroundColor: "#f97316",
-                    transition: "width 0.3s"
-                  }}></div>
-                </div>
-              </div>
-
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(5, 1fr)",
-                gap: "16px"
-              }}>
-                {/* Security Deployment Card */}
-                <div style={{
-                  backgroundColor: "#fef2f2",
-                  border: "1px solid #fecaca",
-                  borderRadius: "8px",
-                  padding: "16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center"
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: "8px" }}>
-                    <path
-                      d="M12 2L6 5V11C6 15 9 18 12 19C15 18 18 15 18 11V5L12 2Z"
-                      stroke="#dc2626"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div style={{
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    color: "#dc2626",
-                    marginTop: "4px"
-                  }}>
-                    Security Deployment
-                  </div>
-                  <div style={{
-                    fontSize: "11px",
-                    color: "#991b1b",
-                    marginTop: "4px"
-                  }}>
-                    Pending
-                  </div>
-                </div>
-
-                {/* Material Vendor Card */}
-                <div style={{
-                  backgroundColor: "#fef2f2",
-                  border: "1px solid #fecaca",
-                  borderRadius: "8px",
-                  padding: "16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center"
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: "8px" }}>
-                    <path
-                      d="M8 12L12 16L16 12"
-                      stroke="#dc2626"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M12 2V16"
-                      stroke="#dc2626"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div style={{
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    color: "#dc2626",
-                    marginTop: "4px"
-                  }}>
-                    Material Vendor
-                  </div>
-                  <div style={{
-                    fontSize: "11px",
-                    color: "#991b1b",
-                    marginTop: "4px"
-                  }}>
-                    Pending
-                  </div>
-                </div>
-
-                {/* Fit Out Vendor Process Card - Highlighted */}
-                <div style={{
-                  backgroundColor: "#fff7ed",
-                  border: "2px solid #f97316",
-                  borderRadius: "8px",
-                  padding: "16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  boxShadow: "0 2px 8px rgba(249, 115, 22, 0.2)"
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: "8px" }}>
-                    <path
-                      d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15"
-                      stroke="#f97316"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5V5"
-                      stroke="#f97316"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M9 12H15M9 16H15"
-                      stroke="#f97316"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div style={{
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    color: "#f97316",
-                    marginTop: "4px"
-                  }}>
-                    Fit Out Vendor Process
-                  </div>
-                  <div style={{
-                    fontSize: "11px",
-                    color: "#c2410c",
-                    marginTop: "4px"
-                  }}>
-                    Pending
-                  </div>
-                </div>
-
-                {/* Fit Out Vendor PO Card */}
-                <div style={{
-                  backgroundColor: "#fef2f2",
-                  border: "1px solid #fecaca",
-                  borderRadius: "8px",
-                  padding: "16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center"
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: "8px" }}>
-                    <path
-                      d="M9 12H15M9 16H15M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15"
-                      stroke="#dc2626"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div style={{
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    color: "#dc2626",
-                    marginTop: "4px"
-                  }}>
-                    Fit Out Vendor PO
-                  </div>
-                  <div style={{
-                    fontSize: "11px",
-                    color: "#991b1b",
-                    marginTop: "4px"
-                  }}>
-                    Pending
-                  </div>
-                </div>
-
-                {/* Telephonic Connection Card */}
-                <div style={{
-                  backgroundColor: "#fef2f2",
-                  border: "1px solid #fecaca",
-                  borderRadius: "8px",
-                  padding: "16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center"
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: "8px" }}>
-                    <path
-                      d="M22 16.92V19.92C22 20.88 21.12 21.76 20.16 21.76C9.6 21.76 1.24 13.4 1.24 2.84C1.24 1.88 2.12 1 3.08 1H6.08"
-                      stroke="#dc2626"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M21.84 1.84L18.64 5.04M21.84 1.84L18.64 5.04M21.84 1.84L18.64 5.04"
-                      stroke="#dc2626"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div style={{
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    color: "#dc2626",
-                    marginTop: "4px"
-                  }}>
-                    Telephonic Connection
-                  </div>
-                  <div style={{
-                    fontSize: "11px",
-                    color: "#991b1b",
-                    marginTop: "4px"
-                  }}>
-                    Pending
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ProjectExecutionProgress activeStage="Drawings to fit-out vendor" />
 
             {/* Fit Out Vendor Process Section */}
             <div style={{
@@ -809,7 +515,8 @@ export default function FitOutVendorProcess() {
                 <button
                   onClick={() => {
                     if (drawingsUploaded) {
-                      setDrawingsSent(true);
+                      // Redirect to Delivery Team Portal
+                      router.push("/delivery-team-portal");
                     } else {
                       // If drawings not uploaded, upload them first
                       setDrawingsUploaded(true);

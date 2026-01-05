@@ -60,6 +60,14 @@ export const LOGIN_CREDENTIALS = {
     email: "Agreementexe@Kotakbank.com"
   },
 
+  "BRT@Kotakbank.com": {
+    username: "BRT@Kotakbank.com",
+    password: "BRT123",
+    role: "BRT",
+    name: "BRT User",
+    email: "BRT@Kotakbank.com"
+  },
+  
   // Project Execution Role
   "Projectexe@Kotakbank.com": {
     username: "Projectexe@Kotakbank.com",
@@ -67,6 +75,7 @@ export const LOGIN_CREDENTIALS = {
     role: "Project execution",
     name: "Project Execution User",
     email: "Projectexe@Kotakbank.com"
+
   },
 
   // Vendor Role
@@ -135,4 +144,3 @@ export const getRoleFromUsername = (username) => {
   
   return creds ? creds.role : null;
 };
-

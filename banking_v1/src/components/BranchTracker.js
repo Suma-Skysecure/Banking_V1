@@ -176,15 +176,6 @@ const ALL_BRANCHES = [
     category: "business",
   },
   {
-    id: 19,
-    name: "Indianapolis Metro Branch",
-    stage: "Project Execution",
-    stageColor: "blue",
-    progress: 40,
-    pendingAction: "yellow",
-    category: "business",
-  },
-  {
     id: 20,
     name: "Kansas City Office Complex",
     stage: "Agreement Execution",
@@ -317,7 +308,7 @@ export default function BranchTracker() {
       "Layout Design": "/post-loi-layout-design",
       "TSA (Stamp duty)": "/term-sheet-approval",
       "TSA (Security Deposit)": "/security-deposit-payment",
-      "Vendor": "/security-deposit-payment",
+      "Vendor": "/vendor-creation",
       "Budget approval": "/budget-approval",
       "Stampduty approval": "/stamp-duty-payment-approval",
       "On Hold": null, // No redirect for On Hold
