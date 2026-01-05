@@ -113,6 +113,7 @@ export default function ITFeasibilityChecklist({ branchId }) {
   const [submittedBy, setSubmittedBy] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [uploadedLOI, setUploadedLOI] = useState(null);
 
   /* ===================== LOAD ===================== */
 
@@ -135,6 +136,18 @@ export default function ITFeasibilityChecklist({ branchId }) {
     setSubmittedAt(saved.submittedAt || null);
     setSubmittedBy(saved.submittedBy || "");
   }, [branchId]);
+
+  // Load uploaded LOI document from localStorage
+  useEffect(() => {
+    const storedLOI = localStorage.getItem("uploadedSignedLOI");
+    if (storedLOI) {
+      try {
+        setUploadedLOI(JSON.parse(storedLOI));
+      } catch (error) {
+        console.error("Error parsing stored LOI:", error);
+      }
+    }
+  }, []);
 
   /* ===================== HELPERS ===================== */
 
@@ -168,6 +181,46 @@ export default function ITFeasibilityChecklist({ branchId }) {
     : submitted
       ? "Submitted (65%)"
       : "Draft";
+
+  // Format file size
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { 
+      year: "numeric", 
+      month: "short", 
+      day: "numeric" 
+    });
+  };
+
+  // Handle view document
+  const handleViewDocument = () => {
+    if (uploadedLOI && uploadedLOI.data) {
+      // Open the document in a new window
+      const newWindow = window.open();
+      if (newWindow) {
+        newWindow.document.write(`
+          <html>
+            <head><title>${uploadedLOI.name}</title></head>
+            <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh;">
+              <iframe src="${uploadedLOI.data}" style="width:100%; height:100%; border:none;"></iframe>
+            </body>
+          </html>
+        `);
+      }
+    } else {
+      // Fallback to original modal behavior
+      setShowDocumentModal(true);
+    }
+  };
 
   /* ===================== DASHBOARD ===================== */
 
@@ -347,33 +400,41 @@ export default function ITFeasibilityChecklist({ branchId }) {
       </div>
       <div style={card}>
         <h3>LOI Document</h3>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "15px", border: "1px solid #e0e0e0", borderRadius: "8px", backgroundColor: "#f9fafb" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-            <div style={{ width: "40px", height: "40px", backgroundColor: "#ffebee", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#f44336" }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
+        {uploadedLOI ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "15px", border: "1px solid #e0e0e0", borderRadius: "8px", backgroundColor: "#f9fafb" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+              <div style={{ width: "40px", height: "40px", backgroundColor: "#ffebee", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#f44336" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontWeight: "600", color: "#333", marginBottom: "4px" }}>{uploadedLOI.name}</div>
+                <div style={{ fontSize: "12px", color: "#666" }}>
+                  Uploaded on {formatDate(uploadedLOI.uploadDate)} • {formatFileSize(uploadedLOI.size)}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleViewDocument}
+              style={{ padding: "8px 16px", backgroundColor: "#1e40af", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", fontWeight: "500" }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
               </svg>
-            </div>
-            <div>
-              <div style={{ fontWeight: "600", color: "#333", marginBottom: "4px" }}>LOI_{branchName.replace(/\s+/g, '_')}_2024.pdf</div>
-              <div style={{ fontSize: "12px", color: "#666" }}>Uploaded on Dec 18, 2024 • 2.4 MB</div>
-            </div>
+              View Document
+            </button>
           </div>
-          <button
-            onClick={() => setShowDocumentModal(true)}
-            style={{ padding: "8px 16px", backgroundColor: "#1e40af", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", fontWeight: "500" }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-            View Document
-          </button>
-        </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px", border: "1px solid #e0e0e0", borderRadius: "8px", backgroundColor: "#f9fafb", color: "#666", fontSize: "14px", textAlign: "center" }}>
+            No LOI document uploaded yet. Please upload a signed LOI document from the Legal Workflow page.
+          </div>
+        )}
       </div>
 
       {/* SECTIONS */}
