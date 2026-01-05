@@ -3,88 +3,136 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
-/* ===================== CHECKLIST ===================== */
+/* ===================== IT FEASIBILITY CHECKLIST ===================== */
 
 const SECTIONS = [
   {
     id: "network",
     title: "Network & Connectivity *",
+    mandatory: true,
     items: [
-      "LAN / WAN cabling completed",
-      "Primary Internet available",
-      "Backup Internet available",
-      "Firewall configured",
+      "LAN cabling completed and tested",
+      "WAN connectivity provisioned",
+      "Primary Internet link available",
+      "Secondary / backup Internet link available",
+      "Router installed and configured",
+      "Network switches installed",
+      "Firewall configured and tested",
+      "Network security rules approved",
     ],
   },
   {
     id: "hardware",
-    title: "Hardware & Power *",
+    title: "Hardware & Infrastructure *",
+    mandatory: true,
     items: [
-      "Workstations provisioned",
-      "Server / data room ready",
-      "UPS installed",
-      "Cooling & ventilation adequate",
+      "User workstations provisioned",
+      "Printers and peripherals installed",
+      "Server hardware available",
+      "Server rack / cabinet installed",
+      "Data room identified and secured",
+      "Hardware inventory validated",
+    ],
+  },
+  {
+    id: "power",
+    title: "Power & Utilities *",
+    mandatory: true,
+    items: [
+      "Dedicated power lines available",
+      "UPS installed and tested",
+      "UPS backup duration validated",
+      "Generator / DG backup available",
+      "Power redundancy confirmed",
+      "Electrical safety compliance verified",
+      "Cooling and ventilation adequate",
     ],
   },
   {
     id: "software",
-    title: "Software & Security *",
+    title: "Software & Applications *",
+    mandatory: true,
     items: [
-      "Operating system licensed",
-      "Core application compatible",
-      "Antivirus installed",
-      "Access control configured",
+      "Operating systems licensed",
+      "Core banking / business applications compatible",
+      "Application dependencies identified",
+      "Middleware / runtime installed",
+      "Software version compatibility verified",
+    ],
+  },
+  {
+    id: "security",
+    title: "Security & Compliance *",
+    mandatory: true,
+    items: [
+      "Antivirus / endpoint security installed",
+      "Patch management enabled",
+      "Role-based access control defined",
+      "User authentication mechanism configured",
+      "CCTV coverage available",
+      "Access control systems installed",
+      "IT security policies approved",
     ],
   },
   {
     id: "dr",
     title: "Business Continuity & DR",
+    mandatory: false,
     items: [
-      "Backup strategy defined",
-      "Backup tested",
-      "Disaster recovery plan available",
+      "Backup strategy documented",
+      "Backup frequency defined",
+      "Backup restoration tested",
+      "Disaster recovery site identified",
+      "DR process documented",
+    ],
+  },
+  {
+    id: "compliance",
+    title: "Regulatory & Audit Readiness",
+    mandatory: false,
+    items: [
+      "Regulatory IT guidelines reviewed",
+      "Audit requirements identified",
+      "Data retention policies defined",
+      "Compliance sign-off obtained",
     ],
   },
 ];
 
 /* ===================== COMPONENT ===================== */
 
-export default function ITFeasibilityAssessment({ params }) {
+export default function ITFeasibilityChecklist({ branchId }) {
   const { user } = useAuth();
-
-  // ✅ SAFE branchId
-  const branchId = params?.branchId ?? null;
 
   const [branchName, setBranchName] = useState("");
   const [data, setData] = useState({});
-  const [overallComment, setOverallComment] = useState("");
+  const [overallRemarks, setOverallRemarks] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [sentToBRT, setSentToBRT] = useState(false);
 
-  /* ===================== LOAD (CLIENT ONLY) ===================== */
+  /* ===================== LOAD (CLIENT SAFE) ===================== */
 
   useEffect(() => {
     if (!branchId) return;
 
-    // ✅ localStorage ONLY inside useEffect
-    const assessment = JSON.parse(
-      window.localStorage.getItem(`itAssessment_${branchId}`) || "{}"
+    const branchMap = JSON.parse(
+      localStorage.getItem("branchMap") || "{}"
     );
 
-    const branchMap = JSON.parse(
-      window.localStorage.getItem("branchMap") || "{}"
+    const saved = JSON.parse(
+      localStorage.getItem(`itAssessment_${branchId}`) || "{}"
     );
 
     setBranchName(branchMap[branchId] || `Branch ${branchId}`);
-    setData(assessment.data || {});
-    setOverallComment(assessment.overallComment || "");
-    setSubmitted(Boolean(assessment.submitted));
-    setSentToBRT(Boolean(assessment.sentToBRT));
+    setData(saved.data || {});
+    setOverallRemarks(saved.overallRemarks || "");
+    setSubmitted(Boolean(saved.submitted));
+    setSentToBRT(Boolean(saved.sentToBRT));
   }, [branchId]);
 
   /* ===================== HELPERS ===================== */
 
-  const updateField = (sectionId, field, value) => {
+  const updateSection = (sectionId, field, value) => {
     setData((prev) => ({
       ...prev,
       [sectionId]: {
@@ -101,30 +149,31 @@ export default function ITFeasibilityAssessment({ params }) {
     );
   }, [data]);
 
-  const hasChecklist = Object.values(data).some(
-    (sec) => sec?.checks && Object.values(sec.checks).some(Boolean)
+  const mandatoryCompleted = SECTIONS.filter(s => s.mandatory).every(
+    (s) =>
+      data[s.id]?.checks &&
+      Object.values(data[s.id].checks).some(Boolean)
   );
 
-  const canSubmit = hasChecklist && overallComment.trim() !== "";
+  const canSubmit =
+    mandatoryCompleted && overallRemarks.trim() !== "";
 
-  /* ===================== DASHBOARD SYNC ===================== */
+  /* ===================== DASHBOARD UPDATE ===================== */
 
   const updateDashboard = (status, progress) => {
-    const all = JSON.parse(
-      window.localStorage.getItem("itStatuses") || "{}"
-    );
+    const all = JSON.parse(localStorage.getItem("itStatuses") || "{}");
     all[branchId] = { status, progress };
-    window.localStorage.setItem("itStatuses", JSON.stringify(all));
+    localStorage.setItem("itStatuses", JSON.stringify(all));
   };
 
   /* ===================== ACTIONS ===================== */
 
   const handleSubmit = () => {
-    window.localStorage.setItem(
+    localStorage.setItem(
       `itAssessment_${branchId}`,
       JSON.stringify({
         data,
-        overallComment,
+        overallRemarks,
         submitted: true,
         sentToBRT: false,
         submittedBy: user?.username || "IT User",
@@ -139,13 +188,13 @@ export default function ITFeasibilityAssessment({ params }) {
 
   const handleSendToBRT = () => {
     const saved = JSON.parse(
-      window.localStorage.getItem(`itAssessment_${branchId}`) || "{}"
+      localStorage.getItem(`itAssessment_${branchId}`) || "{}"
     );
 
     saved.sentToBRT = true;
     saved.sentToBRTAt = new Date().toISOString();
 
-    window.localStorage.setItem(
+    localStorage.setItem(
       `itAssessment_${branchId}`,
       JSON.stringify(saved)
     );
@@ -157,21 +206,12 @@ export default function ITFeasibilityAssessment({ params }) {
 
   /* ===================== UI ===================== */
 
-  if (!branchId) {
-    return <p style={{ padding: 24 }}>Invalid Branch</p>;
-  }
+  if (!branchId) return <p style={{ padding: 24 }}>Invalid Branch</p>;
 
   return (
-    <div style={page}>
-      <div style={header}>
-        <div>
-          <h1>IT Feasibility Assessment</h1>
-          <p>
-            Branch: <b>{branchName}</b>
-          </p>
-        </div>
-        {submitted && <span style={badge}>Submitted</span>}
-      </div>
+    <div style={{ maxWidth: 1100, margin: "auto", padding: 24 }}>
+      <h1>IT Feasibility Assessment</h1>
+      <p><b>Branch:</b> {branchName}</p>
 
       {SECTIONS.map((section) => (
         <div key={section.id} style={card}>
@@ -183,7 +223,7 @@ export default function ITFeasibilityAssessment({ params }) {
                 type="checkbox"
                 checked={data?.[section.id]?.checks?.[item] || false}
                 onChange={(e) =>
-                  updateField(section.id, "checks", {
+                  updateSection(section.id, "checks", {
                     ...(data?.[section.id]?.checks || {}),
                     [item]: e.target.checked,
                   })
@@ -197,7 +237,7 @@ export default function ITFeasibilityAssessment({ params }) {
             placeholder="Section comments / risks"
             value={data?.[section.id]?.comment || ""}
             onChange={(e) =>
-              updateField(section.id, "comment", e.target.value)
+              updateSection(section.id, "comment", e.target.value)
             }
             style={textarea}
           />
@@ -207,7 +247,7 @@ export default function ITFeasibilityAssessment({ params }) {
             placeholder="Estimated budget ₹"
             value={data?.[section.id]?.budget || ""}
             onChange={(e) =>
-              updateField(section.id, "budget", e.target.value)
+              updateSection(section.id, "budget", e.target.value)
             }
             style={input}
           />
@@ -215,15 +255,13 @@ export default function ITFeasibilityAssessment({ params }) {
       ))}
 
       <div style={card}>
-        <h3>
-          Overall IT Remarks <span style={{ color: "red" }}>*</span>
-        </h3>
+        <h3>Overall IT Remarks *</h3>
         <textarea
-          value={overallComment}
-          onChange={(e) => setOverallComment(e.target.value)}
+          value={overallRemarks}
+          onChange={(e) => setOverallRemarks(e.target.value)}
           style={textarea}
         />
-        <h4>Total Budget: ₹ {totalBudget.toLocaleString()}</h4>
+        <h4>Total Estimated Budget: ₹ {totalBudget.toLocaleString()}</h4>
       </div>
 
       <div style={{ textAlign: "right" }}>
@@ -254,21 +292,6 @@ export default function ITFeasibilityAssessment({ params }) {
 }
 
 /* ===================== STYLES ===================== */
-
-const page = { maxWidth: 1100, margin: "auto", padding: 24 };
-
-const header = {
-  display: "flex",
-  justifyContent: "space-between",
-  marginBottom: 20,
-};
-
-const badge = {
-  background: "#e3f2fd",
-  color: "#1976d2",
-  padding: "6px 12px",
-  borderRadius: 14,
-};
 
 const card = {
   background: "#fff",
