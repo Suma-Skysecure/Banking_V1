@@ -62,7 +62,7 @@ export default function ITAssessmentPage() {
 
         <button
           className="back-btn"
-          onClick={() => router.push("/it/assessment-dashboard")}
+          onClick={() => router.push("/dashboard")}
         >
           ← Back to Dashboard
         </button>

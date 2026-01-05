@@ -126,7 +126,7 @@ export default function ITAssessmentView({ branchId }) {
     const totalItems = assessmentItems.length;
     const approvedItems = Object.values(approvals).filter(Boolean).length;
     const isFullyApproved = approvedItems === totalItems;
-    
+
     // Here you could save the approvals to localStorage or send to server
     const approvalData = {
       branchId: parseInt(branchId),
@@ -148,22 +148,22 @@ export default function ITAssessmentView({ branchId }) {
     }
 
     localStorage.setItem('itApprovals', JSON.stringify(approvalsList));
-    
+
     // Show appropriate notification
     if (isFullyApproved) {
       alert("BRT Approved: IT Assessment has been approved!");
     } else {
       alert("BRT Rejected: IT Assessment requires revisions!");
     }
-    
+
     setIsApproved(true);
-    router.push('/it/assessment-dashboard');
+    router.push('/dashboard');
   };
 
   const handleBack = () => {
     // Force refresh dashboard data before navigation
     localStorage.setItem('forceDashboardRefresh', Date.now().toString());
-    router.push('/it/assessment-dashboard');
+    router.push('/dashboard');
     // Trigger refresh after navigation
     setTimeout(() => {
       window.dispatchEvent(new Event('focus'));
@@ -198,7 +198,7 @@ export default function ITAssessmentView({ branchId }) {
       <div style={{ marginBottom: '30px' }}>
         <button
           onClick={() => {
-            router.push('/it/assessment-dashboard');
+            router.push('/dashboard');
             // Trigger refresh after navigation
             setTimeout(() => {
               window.dispatchEvent(new Event('focus'));
@@ -247,7 +247,7 @@ export default function ITAssessmentView({ branchId }) {
               const approvedItems = Object.values(approvals).filter(Boolean).length;
               const isFullyApproved = approvedItems === totalItems;
               const isPartiallyApproved = approvedItems > 0 && approvedItems < totalItems;
-              
+
               if (isFullyApproved) {
                 return <span style={{ color: '#4caf50', fontWeight: 'bold', fontSize: '16px' }}>✓ BRT Approved</span>;
               } else if (isPartiallyApproved) {
@@ -349,12 +349,12 @@ export default function ITAssessmentView({ branchId }) {
         <button
           onClick={handleSubmitApprovals}
           disabled={Object.keys(approvals).length === 0}
-          style={{ 
-            padding: '10px 20px', 
-            backgroundColor: Object.keys(approvals).length === 0 ? '#ccc' : '#1976d2', 
-            color: '#fff', 
-            border: 'none', 
-            borderRadius: '4px', 
+          style={{
+            padding: '10px 20px',
+            backgroundColor: Object.keys(approvals).length === 0 ? '#ccc' : '#1976d2',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
             cursor: Object.keys(approvals).length === 0 ? 'not-allowed' : 'pointer',
             fontWeight: 'bold'
           }}

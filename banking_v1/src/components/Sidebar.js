@@ -14,8 +14,8 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     {
       name: "Dashboard",
       icon: "🌐",
-      href: user?.role === "IT team" ? "/it/assessment-dashboard" : "/dashboard",
-      page: user?.role === "IT team" ? "itAssessment" : "dashboard"
+      href: "/dashboard",
+      page: "dashboard"
     },
     { name: "Property Search", icon: "🔍", href: "/property-search", page: "propertySearch" },
   ];

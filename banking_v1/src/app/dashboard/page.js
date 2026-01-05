@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import Providers from "@/components/Providers";
 
-const BranchTracker = dynamic(() => import("@/components/BranchTracker"), {
+const ITAssessmentDashboard = dynamic(() => import("@/components/ITAssessmentDashboard"), {
   ssr: false,
   loading: () => <div>Loading...</div>
 });
@@ -11,7 +11,7 @@ const BranchTracker = dynamic(() => import("@/components/BranchTracker"), {
 export default function DashboardPage() {
   return (
     <Providers>
-      <BranchTracker />
+      <ITAssessmentDashboard />
     </Providers>
   );
 }
