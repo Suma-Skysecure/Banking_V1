@@ -5,12 +5,8 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import DashboardTable from "@/components/DashboardTable";
-<<<<<<< HEAD
 import UserProfile from "@/components/UserProfile";
 import NotificationDropdown from "@/components/NotificationDropdown";
-=======
-import DashboardHeader from "@/components/DashboardHeader";
->>>>>>> 271c475d40527afb6c6438579f940b3b4f58ff86
 import { useAuth } from "@/contexts/AuthContext";
 import { filterBranchesByRole } from "@/config/roleStageMapping";
 import "@/css/branchTracker.css";
@@ -386,7 +382,6 @@ export default function BranchTracker() {
 
   return (
     <div className="dashboard-container">
-<<<<<<< HEAD
       {/* Top Header Bar */}
       <header className="dashboard-header">
         <button
@@ -435,9 +430,6 @@ export default function BranchTracker() {
           <UserProfile variant="header" showLogout={false} />
         </div>
       </header>
-=======
-      <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
->>>>>>> 271c475d40527afb6c6438579f940b3b4f58ff86
 
       <div className="dashboard-content-wrapper">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -518,8 +510,6 @@ export default function BranchTracker() {
               branches={branches}
               onViewDetails={handleViewDetails}
               getProgressColor={getProgressColor}
-              user={user}
-              onDelete={handleDelete}
             />
 
             {/* Pagination */}
