@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import DashboardTable from "@/components/DashboardTable";
 import UserProfile from "@/components/UserProfile";
+import ITFeasibilityAssessment from "@/components/ITFeasibilityAssessment";
 import { useAuth } from "@/contexts/AuthContext";
 import { filterBranchesByRole } from "@/config/roleStageMapping";
 import "@/css/branchTracker.css";
@@ -222,9 +223,11 @@ export default function BranchTracker() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Map stage names to routes - static mapping for optimal performance
-  const getStageRoute = (stage) => {
+  const getStageRoute = useCallback((stage) => {
     const stageRouteMap = {
       "Property Search": "/property-search",
       "Business Approval": "/business-approval",
@@ -244,7 +247,15 @@ export default function BranchTracker() {
       "Completed": null, // No redirect for Completed
     };
     return stageRouteMap[stage] || null;
-  };
+  }, []);
+
+  const handleDelete = useCallback((branch) => {
+    if (window.confirm(`Are you sure you want to delete "${branch.name}"?`)) {
+      // In a real app, this would call an API
+      alert(`Branch "${branch.name}" deleted successfully.`);
+      // For demo, we could remove from local state, but since it's static, just show alert
+    }
+  }, []);
 
   const handleViewDetails = (e, branch) => {
     e.preventDefault();
@@ -263,14 +274,39 @@ export default function BranchTracker() {
       // If no user role, return empty array (don't show all branches)
       return [];
     }
-    return filterBranchesByRole(ALL_BRANCHES, user.role);
-  }, [user?.role]);
 
-  const getProgressColor = (progress) => {
+    let filteredBranches = ALL_BRANCHES;
+
+    // For IT team, show only branches pending IT assessment
+    if (user.role === "IT team") {
+      // Branches that need IT assessment - those not completed and in relevant stages
+      filteredBranches = ALL_BRANCHES.filter(branch =>
+        branch.stage !== "Completed" &&
+        branch.stage !== "On Hold" &&
+        ["Property Search", "Business Approval", "Legal Workflow", "Project Execution", "Agreement Execution"].includes(branch.stage)
+      );
+    } else {
+      filteredBranches = filterBranchesByRole(ALL_BRANCHES, user.role);
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filteredBranches = filteredBranches.filter(branch =>
+        branch.name.toLowerCase().includes(query) ||
+        branch.stage.toLowerCase().includes(query) ||
+        branch.category?.toLowerCase().includes(query)
+      );
+    }
+
+    return filteredBranches;
+  }, [user?.role, searchQuery]);
+
+  const getProgressColor = useCallback((progress) => {
     if (progress === 100) return "green";
     if (progress >= 50) return "yellow";
     return "yellow";
-  };
+  }, []);
 
   return (
     <div className="dashboard-container">
@@ -315,7 +351,21 @@ export default function BranchTracker() {
             type="text"
             placeholder="Search branch..."
             className="header-search-input"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
+          <button
+            className="search-btn"
+            onClick={() => {
+              // Search is already real-time, but this could trigger additional search logic if needed
+              console.log('Search button clicked with query:', searchQuery);
+            }}
+            title="Search branches"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M11.5 10.5L15 14M13 7C13 10.3137 10.3137 13 7 13C3.68629 13 1 10.3137 1 7C1 3.68629 3.68629 1 7 1C10.3137 1 13 3.68629 13 7Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
         </div>
         <div className="header-actions">
           <button className="header-icon-btn">
@@ -338,8 +388,47 @@ export default function BranchTracker() {
               />
             </svg>
           </button>
+          <button className="header-icon-btn notification-btn" onClick={() => setShowNotifications(!showNotifications)}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M10 2C7.79 2 6 3.79 6 6V10C6 11.1 5.1 12 4 12H3C2.45 12 2 12.45 2 13C2 13.55 2.45 14 3 14H17C17.55 14 18 13.55 18 13C18 12.45 17.55 12 17 12H16C14.9 12 14 11.1 14 10V6C14 3.79 12.21 2 10 2Z" fill="#6b7280" />
+              <path d="M10 18C11.1 18 12 17.1 12 16H8C8 17.1 8.9 18 10 18Z" fill="#6b7280" />
+            </svg>
+            <span className="notification-badge">3</span>
+          </button>
           <UserProfile variant="header" showLogout={false} />
         </div>
+
+        {/* Notification Dropdown */}
+        {showNotifications && (
+          <div className="notification-dropdown">
+            <div className="notification-header">
+              <h4>Notifications</h4>
+            </div>
+            <div className="notification-list">
+              <div className="notification-item" onClick={() => { setShowNotifications(false); router.push('/it/assessment/1'); }}>
+                <div className="notification-icon">🔔</div>
+                <div className="notification-content">
+                  <div className="notification-title">New branch pending IT Feasibility</div>
+                  <div className="notification-time">2 hours ago</div>
+                </div>
+              </div>
+              <div className="notification-item" onClick={() => { setShowNotifications(false); router.push('/it/assessment/2'); }}>
+                <div className="notification-icon">✅</div>
+                <div className="notification-content">
+                  <div className="notification-title">IT assessment approved</div>
+                  <div className="notification-time">1 day ago</div>
+                </div>
+              </div>
+              <div className="notification-item" onClick={() => { setShowNotifications(false); router.push('/it/assessment/3'); }}>
+                <div className="notification-icon">❌</div>
+                <div className="notification-content">
+                  <div className="notification-title">IT assessment marked not feasible</div>
+                  <div className="notification-time">3 days ago</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       <div className="dashboard-content-wrapper">
@@ -348,7 +437,7 @@ export default function BranchTracker() {
         {/* Main Content Area */}
         <main className="dashboard-main">
           <div className="main-content">
-            <h1 className="page-title">Branch Tracker</h1>
+            <h1 className="page-title">{user?.role === "IT team" ? "IT Feasibility" : "Branch Tracker"}</h1>
 
             {/* Filters and Controls */}
             <div className="controls-bar">
@@ -405,20 +494,24 @@ export default function BranchTracker() {
                 >
                   Kanban
                 </button>
-                <button 
-                  className="add-branch-btn"
-                  onClick={() => setIsModalOpen(true)}
-                >
-                  <span>+</span> Add New Branch
-                </button>
+                {user?.role !== "IT team" && (
+                  <button
+                    className="add-branch-btn"
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    <span>+</span> Add New Branch
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Branch Table - Reusable Component */}
-            <DashboardTable 
+            <DashboardTable
               branches={branches}
               onViewDetails={handleViewDetails}
               getProgressColor={getProgressColor}
+              user={user}
+              onDelete={handleDelete}
             />
 
             {/* Pagination */}
@@ -467,7 +560,7 @@ export default function BranchTracker() {
 
       {/* Create New Branch Modal */}
       {isModalOpen && (
-        <CreateBranchModal 
+        <CreateBranchModal
           onClose={() => setIsModalOpen(false)}
         />
       )}

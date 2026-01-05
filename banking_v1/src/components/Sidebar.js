@@ -8,10 +8,15 @@ import "@/css/branchTracker.css";
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const pathname = usePathname();
-  const { canView } = useAuth();
+  const { user } = useAuth();
 
   const navigationItems = [
-    { name: "Dashboard", icon: "🌐", href: "/dashboard", page: "dashboard" },
+    {
+      name: "Dashboard",
+      icon: "🌐",
+      href: "/dashboard",
+      page: "dashboard"
+    },
     { name: "Property Search", icon: "🔍", href: "/property-search", page: "propertySearch" },
   ];
 

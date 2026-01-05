@@ -122,6 +122,8 @@ const getRolePermissions = (role) => {
     agreementExecution: allPermissions,
     agreementRegistration: allPermissions,
     projectExecution: allPermissions,
+    // IT Assessment pages - only for IT role
+    itAssessment: role === "IT team" ? allPermissions : { view: false, edit: false, approve: false, upload: false, initiate: false },
   };
 
   return permissions;
