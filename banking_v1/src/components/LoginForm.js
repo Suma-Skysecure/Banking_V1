@@ -10,7 +10,7 @@
  * No content is editable, as this is just for authentication.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { validateCredentials, getRoleFromUsername } from "@/config/credentials";
 import "@/css/loginPage.css";
@@ -34,6 +34,17 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Auto-select role when username changes (only if role is empty)
+  useEffect(() => {
+    if (username.trim() && !role) {
+      const autoRole = getRoleFromUsername(username.trim());
+      if (autoRole) {
+        setRole(autoRole);
+        setErrorMessage(""); // Clear error when role is auto-selected
+      }
+    }
+  }, [username, role]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -73,25 +84,11 @@ export default function LoginForm() {
     router.push("/two-factor");
   };
   
-  // Auto-fill role when username changes (if credentials exist)
+  // Handle username change
   const handleUsernameChange = (e) => {
-    const value = e.target.value.trim();
+    const value = e.target.value;
     setUsername(value);
     setErrorMessage(""); // Clear error when username changes
-    
-    if (value) {
-      const autoRole = getRoleFromUsername(value);
-      if (autoRole) {
-        // Find matching role in ROLES array (case-insensitive)
-        const matchingRole = ROLES.find(r => r.toLowerCase() === autoRole.toLowerCase());
-        if (matchingRole) {
-          setRole(matchingRole);
-        } else {
-          // If exact match not found, set the role from credentials anyway
-          setRole(autoRole);
-        }
-      }
-    }
   };
   
   // Clear error when role changes

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
+import DashboardHeader from "@/components/DashboardHeader";
 import PropertySummaryCard from "@/components/PropertySummaryCard";
 import SiteMeasurementDetails from "@/components/SiteMeasurementDetails";
 import LayoutDesignSection from "@/components/LayoutDesignSection";
@@ -19,53 +20,62 @@ export default function PostLOIActivities() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
+  const [uploadedLOI, setUploadedLOI] = useState(null);
+
+  // Load uploaded LOI document from localStorage
+  useEffect(() => {
+    const storedLOI = localStorage.getItem("uploadedSignedLOI");
+    if (storedLOI) {
+      try {
+        setUploadedLOI(JSON.parse(storedLOI));
+      } catch (error) {
+        console.error("Error parsing stored LOI:", error);
+      }
+    }
+  }, []);
+
+  // Format file size
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { 
+      year: "numeric", 
+      month: "short", 
+      day: "numeric" 
+    });
+  };
+
+  // Handle view document
+  const handleViewDocument = () => {
+    if (uploadedLOI && uploadedLOI.data) {
+      // Open the document in a new window
+      const newWindow = window.open();
+      if (newWindow) {
+        newWindow.document.write(`
+          <html>
+            <head><title>${uploadedLOI.name}</title></head>
+            <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh;">
+              <iframe src="${uploadedLOI.data}" style="width:100%; height:100%; border:none;"></iframe>
+            </body>
+          </html>
+        `);
+      }
+    } else {
+      console.log("View document");
+    }
+  };
 
   return (
     <div className="dashboard-container">
-      <header className="dashboard-header">
-        <button
-          className="header-hamburger"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          aria-label="Toggle sidebar"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="hamburger-icon">
-            <path d="M3 5H17M3 10H17M3 15H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
-        <div className="header-search">
-          <input
-            type="text"
-            placeholder="Search branch..."
-            className="header-search-input"
-          />
-        </div>
-        <div className="header-actions">
-          <button className="header-icon-btn">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M10 2C10.5523 2 11 2.44772 11 3V4H15C15.5523 4 16 4.44772 16 5C16 5.55228 15.5523 6 15 6H5C4.44772 6 4 5.55228 4 5C4 4.44772 4.44772 4 5 4H9V3C9 2.44772 9.44772 2 10 2Z"
-                fill="#6b7280"
-              />
-              <path
-                d="M5 8H15L14.4 15.2C14.3 16.8 13 18 11.4 18H8.6C7 18 5.7 16.8 5.6 15.2L5 8Z"
-                fill="#6b7280"
-              />
-            </svg>
-          </button>
-          <div className="header-profile">
-            <div className="profile-avatar">
-              {user?.name ? (user.name.split(" ").length > 1 
-                ? (user.name.split(" ")[0][0] + user.name.split(" ")[1][0]).toUpperCase()
-                : user.name.substring(0, 2).toUpperCase())
-                : "U"}
-            </div>
-            <div className="profile-info">
-              <span className="profile-name">{user?.role || "User"}</span>
-              <span className="profile-email">{user?.email || user?.username || ""}</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="dashboard-content-wrapper">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -122,100 +132,113 @@ export default function PostLOIActivities() {
                 <h3 className="card-title">LOI Document</h3>
               </div>
               <div style={{ padding: "20px" }}>
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "16px",
-                  backgroundColor: "#f9fafb",
-                  borderRadius: "8px",
-                  border: "1px solid #e5e7eb"
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
-                    <div style={{
-                      width: "40px",
-                      height: "40px",
-                      backgroundColor: "#fee2e2",
-                      borderRadius: "6px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0
-                    }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                {uploadedLOI ? (
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "16px",
+                    backgroundColor: "#f9fafb",
+                    borderRadius: "8px",
+                    border: "1px solid #e5e7eb"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
+                      <div style={{
+                        width: "40px",
+                        height: "40px",
+                        backgroundColor: "#fee2e2",
+                        borderRadius: "6px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0
+                      }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
+                            stroke="#ef4444"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M14 2V8H20"
+                            stroke="#ef4444"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M16 13H8M16 17H8M10 9H8"
+                            stroke="#ef4444"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "14px", fontWeight: "600", color: "#111827", marginBottom: "4px" }}>
+                          {uploadedLOI.name}
+                        </div>
+                        <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                          Uploaded on {formatDate(uploadedLOI.uploadDate)} • {formatFileSize(uploadedLOI.size)}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "10px 20px",
+                        backgroundColor: "#1e3a8a",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "6px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        transition: "background-color 0.2s",
+                        flexShrink: 0
+                      }}
+                      onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
+                      onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
+                      onClick={handleViewDocument}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path
-                          d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
-                          stroke="#ef4444"
-                          strokeWidth="2"
+                          d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
-                        <path
-                          d="M14 2V8H20"
-                          stroke="#ef4444"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M16 13H8M16 17H8M10 9H8"
-                          stroke="#ef4444"
-                          strokeWidth="2"
-                          strokeLinecap="round"
+                        <circle
+                          cx="8"
+                          cy="8"
+                          r="2"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
                         />
                       </svg>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "14px", fontWeight: "600", color: "#111827", marginBottom: "4px" }}>
-                        LOI_Downtown_Arts_Plaza_2024.pdf
-                      </div>
-                      <div style={{ fontSize: "12px", color: "#6b7280" }}>
-                        Uploaded on Dec 18, 2024 • 2.4 MB
-                      </div>
-                    </div>
+                      View Document
+                    </button>
                   </div>
-                  <button
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "10px 20px",
-                      backgroundColor: "#1e3a8a",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      transition: "background-color 0.2s",
-                      flexShrink: 0
-                    }}
-                    onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
-                    onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
-                    onClick={() => {
-                      console.log("View document");
-                      // Handle document view logic here
-                    }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <circle
-                        cx="8"
-                        cy="8"
-                        r="2"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                      />
-                    </svg>
-                    View Document
-                  </button>
-                </div>
+                ) : (
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "40px 20px",
+                    backgroundColor: "#f9fafb",
+                    borderRadius: "8px",
+                    border: "1px solid #e5e7eb",
+                    color: "#6b7280",
+                    fontSize: "14px"
+                  }}>
+                    No LOI document uploaded yet. Please upload a signed LOI document from the Legal Workflow page.
+                  </div>
+                )}
               </div>
             </div>
 

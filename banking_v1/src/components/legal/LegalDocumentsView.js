@@ -1,87 +1,118 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 /**
  * LegalDocumentsView Component
  * 
  * Displays legal documents in a card interface with view and download options
  */
 export default function LegalDocumentsView() {
-  // Sample legal documents data
-  const legalDocuments = [
-    {
-      id: 1,
-      name: "Owner ID",
-      fileName: "Owner_ID_Verification_2024.pdf",
-      uploadedDate: "Dec 15, 2024",
-      fileSize: "1.2 MB",
-      status: "Verified",
-    },
-    {
-      id: 2,
-      name: "Property Tax Receipt",
-      fileName: "Property_Tax_Receipt_2024.pdf",
-      uploadedDate: "Dec 16, 2024",
-      fileSize: "856 KB",
-      status: "Verified",
-    },
-    {
-      id: 3,
-      name: "Sales Deed",
-      fileName: "Sales_Deed_Downtown_Arts_Plaza.pdf",
-      uploadedDate: "Dec 17, 2024",
-      fileSize: "3.5 MB",
-      status: "Verified",
-    },
-    {
-      id: 4,
-      name: "Encumbrance Certificate",
-      fileName: "Encumbrance_Certificate_2024.pdf",
-      uploadedDate: "Dec 18, 2024",
-      fileSize: "2.1 MB",
-      status: "Verified",
-    },
-    {
-      id: 5,
-      name: "Title Deed",
-      fileName: "Title_Deed_Downtown_Arts_Plaza.pdf",
-      uploadedDate: "Dec 18, 2024",
-      fileSize: "4.2 MB",
-      status: "Verified",
-    },
-  ];
+  const [legalDocuments, setLegalDocuments] = useState([]);
+
+  // Load uploaded legal documents from localStorage
+  useEffect(() => {
+    const storedDocuments = localStorage.getItem("uploadedLegalDocuments");
+    if (storedDocuments) {
+      try {
+        const parsed = JSON.parse(storedDocuments);
+        setLegalDocuments(parsed);
+      } catch (error) {
+        console.error("Error parsing stored legal documents:", error);
+      }
+    }
+  }, []);
+
+  // Format file size
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { 
+      year: "numeric", 
+      month: "short", 
+      day: "numeric" 
+    });
+  };
 
   const handleViewDocument = (document) => {
-    console.log("Viewing document:", document);
-    // In production, this would open the document in a new tab or PDF viewer
-    window.open(`/api/documents/${document.id}`, "_blank");
+    if (document.data) {
+      // Open the document in a new window
+      const newWindow = window.open();
+      if (newWindow) {
+        newWindow.document.write(`
+          <html>
+            <head><title>${document.fileName}</title></head>
+            <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh;">
+              <iframe src="${document.data}" style="width:100%; height:100%; border:none;"></iframe>
+            </body>
+          </html>
+        `);
+      }
+    } else {
+      // Fallback to original behavior
+      console.log("Viewing document:", document);
+      window.open(`/api/documents/${document.id}`, "_blank");
+    }
   };
 
   const handleDownloadDocument = (doc) => {
-    console.log("Downloading document:", doc);
-    // Create a dummy PDF blob for download (in production, this would fetch from API)
-    const blob = new Blob([`${doc.name} Content`], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = doc.fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (doc.data) {
+      // Convert base64 to blob and download
+      const byteCharacters = atob(doc.data.split(',')[1]);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: doc.type || "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = doc.fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } else {
+      // Fallback to original behavior
+      console.log("Downloading document:", doc);
+      const blob = new Blob([`${doc.name} Content`], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = doc.fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   };
 
-  const getDocumentIcon = (documentName) => {
+  const getDocumentIcon = (documentName, fileName) => {
     // Different icon colors for different document types
-    if (documentName.includes("ID")) {
+    const nameToCheck = (documentName || fileName || "").toLowerCase();
+    if (nameToCheck.includes("id") || nameToCheck.includes("identity")) {
       return "#3b82f6"; // Blue for ID
-    } else if (documentName.includes("Tax")) {
+    } else if (nameToCheck.includes("tax")) {
       return "#10b981"; // Green for Tax
-    } else if (documentName.includes("Deed")) {
+    } else if (nameToCheck.includes("deed")) {
       return "#f59e0b"; // Orange for Deed
-    } else if (documentName.includes("Encumbrance")) {
+    } else if (nameToCheck.includes("encumbrance")) {
       return "#8b5cf6"; // Purple for Encumbrance
-    } else if (documentName.includes("Title")) {
+    } else if (nameToCheck.includes("title")) {
       return "#ef4444"; // Red for Title
+    } else if (nameToCheck.includes("pdf")) {
+      return "#ef4444"; // Red for PDF
+    } else if (nameToCheck.includes("doc")) {
+      return "#3b82f6"; // Blue for DOC
     }
     return "#6b7280"; // Default gray
   };
@@ -114,13 +145,30 @@ export default function LegalDocumentsView() {
         <h3 className="card-title">Legal Documents</h3>
       </div>
       <div style={{ padding: "20px" }}>
-        <div style={{ 
-          display: "grid", 
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          gap: "16px"
-        }}>
-          {legalDocuments.map((document) => {
-            const iconColor = getDocumentIcon(document.name);
+        {legalDocuments.length > 0 ? (
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            gap: "16px"
+          }}>
+            {legalDocuments.map((document) => {
+            const iconColor = getDocumentIcon(document.name, document.fileName);
+            // Extract a clean display name from fileName (remove extension and format)
+            const getDisplayName = () => {
+              if (document.name) return document.name;
+              if (document.fileName) {
+                // Remove extension and format the name
+                const nameWithoutExt = document.fileName.replace(/\.[^/.]+$/, "");
+                // Replace underscores and hyphens with spaces, then capitalize words
+                return nameWithoutExt
+                  .replace(/[_-]/g, " ")
+                  .split(" ")
+                  .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                  .join(" ");
+              }
+              return "Document";
+            };
+            const displayName = getDisplayName();
             return (
               <div
                 key={document.id}
@@ -180,7 +228,7 @@ export default function LegalDocumentsView() {
                       color: "#111827", 
                       marginBottom: "4px" 
                     }}>
-                      {document.name}
+                      {displayName}
                     </div>
                     <div style={{ 
                       fontSize: "12px", 
@@ -194,14 +242,14 @@ export default function LegalDocumentsView() {
                         fontSize: "11px", 
                         color: "#6b7280" 
                       }}>
-                        {document.uploadedDate}
+                        {document.uploadDate ? formatDate(document.uploadDate) : document.uploadedDate || "N/A"}
                       </div>
                       <span style={{ color: "#d1d5db" }}>•</span>
                       <div style={{ 
                         fontSize: "11px", 
                         color: "#6b7280" 
                       }}>
-                        {document.fileSize}
+                        {document.size ? formatFileSize(document.size) : document.fileSize || "N/A"}
                       </div>
                       <span style={{ color: "#d1d5db" }}>•</span>
                       <div style={{ 
@@ -229,7 +277,7 @@ export default function LegalDocumentsView() {
                             strokeLinejoin="round"
                           />
                         </svg>
-                        {document.status}
+                        {document.status || "Verified"}
                       </div>
                     </div>
                   </div>
@@ -324,7 +372,23 @@ export default function LegalDocumentsView() {
               </div>
             );
           })}
-        </div>
+          </div>
+        ) : (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "40px 20px",
+            backgroundColor: "#f9fafb",
+            borderRadius: "8px",
+            border: "1px solid #e5e7eb",
+            color: "#6b7280",
+            fontSize: "14px",
+            textAlign: "center"
+          }}>
+            No legal documents uploaded yet. Please upload documents from the Legal Workflow page and click "Submit & Approve".
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import DashboardTable from "@/components/DashboardTable";
+<<<<<<< HEAD
 import UserProfile from "@/components/UserProfile";
 import NotificationDropdown from "@/components/NotificationDropdown";
+=======
+import DashboardHeader from "@/components/DashboardHeader";
+>>>>>>> 271c475d40527afb6c6438579f940b3b4f58ff86
 import { useAuth } from "@/contexts/AuthContext";
 import { filterBranchesByRole } from "@/config/roleStageMapping";
 import "@/css/branchTracker.css";
@@ -152,7 +156,7 @@ const ALL_BRANCHES = [
   {
     id: 16,
     name: "Nashville Financial Center",
-    stage: "Legal Clearance",
+    stage: "Legal Workflow",
     stageColor: "blue",
     progress: 48,
     pendingAction: "red",
@@ -173,15 +177,6 @@ const ALL_BRANCHES = [
     stage: "Layout Design",
     stageColor: "blue",
     progress: 55,
-    pendingAction: "yellow",
-    category: "business",
-  },
-  {
-    id: 19,
-    name: "Indianapolis Metro Branch",
-    stage: "Project Execution",
-    stageColor: "blue",
-    progress: 40,
     pendingAction: "yellow",
     category: "business",
   },
@@ -214,10 +209,73 @@ const ALL_BRANCHES = [
   },
   {
     id: 23,
-    name: "Legal Clearance Test Branch",
-    stage: "Legal Clearance",
+    name: "Detroit Commercial Center",
+    stage: "Agreement to Account",
+    stageColor: "blue",
+    progress: 85,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 24,
+    name: "Seattle Tech Park",
+    stage: "Security guard deployment",
+    stageColor: "blue",
+    progress: 45,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 25,
+    name: "Phoenix Industrial Hub",
+    stage: "PO to material vendor for Bought out Items",
+    stageColor: "blue",
+    progress: 60,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 26,
+    name: "Denver Business Plaza",
+    stage: "Drawings to fit-out vendor",
+    stageColor: "blue",
+    progress: 55,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 27,
+    name: "Portland Commerce Center",
+    stage: "PO to fit-out vendor",
     stageColor: "blue",
     progress: 50,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 28,
+    name: "San Diego Office Complex",
+    stage: "Site Update",
+    stageColor: "blue",
+    progress: 70,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 29,
+    name: "Las Vegas Financial District",
+    stage: "Application for telephone connection",
+    stageColor: "blue",
+    progress: 40,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 30,
+    name: "Chicago Business Center",
+    stage: "Advance to fit_out Vendor",
+    stageColor: "blue",
+    progress: 65,
     pendingAction: "yellow",
     category: "business",
   },
@@ -232,31 +290,48 @@ export default function BranchTracker() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Map stage names to routes - static mapping for optimal performance
-  const getStageRoute = (stage) => {
+  const getStageRoute = useCallback((stage) => {
     const stageRouteMap = {
       "Property Search": "/property-search",
       "Business Approval": "/business-approval",
       "Legal Workflow": "/legal-workflow",
       "Legal Clearance": "/legal-due",
       "Project Execution": "/project-execution",
+      "Security guard deployment": "/legal-verification",
+      "PO to material vendor for Bought out Items": "/project-execution",
+      "Drawings to fit-out vendor": "/fit-out-vendor-process",
+      "PO to fit-out vendor": "/fit-out-vendor-po",
+      "Site Update": "/project-execution",
+      "Application for telephone connection": "/telephonic-connection-setup",
       "Site Measurement": "/post-loi-activities",
       "Agreement Execution": "/agreement-execution",
       "Agreement Registration": "/agreement-registration",
+      "Agreement to Account": "/pim-update-rent-release",
+      "Advance to fit_out Vendor": "/accounts-review-process-orders",
       "Post-LOI Activities": "/post-loi-activities",
       "Layout Design": "/post-loi-layout-design",
       "TSA (Stamp duty)": "/term-sheet-approval",
       "TSA (Security Deposit)": "/security-deposit-payment",
-      "Vendor": "/security-deposit-payment",
+      "Vendor": "/vendor-creation",
       "Budget approval": "/budget-approval",
       "Stampduty approval": "/stamp-duty-payment-approval",
-      
       "On Hold": null, // No redirect for On Hold
       "Completed": null, // No redirect for Completed
     };
     return stageRouteMap[stage] || null;
-  };
+  }, []);
+
+  const handleDelete = useCallback((branch) => {
+    if (window.confirm(`Are you sure you want to delete "${branch.name}"?`)) {
+      // In a real app, this would call an API
+      alert(`Branch "${branch.name}" deleted successfully.`);
+      // For demo, we could remove from local state, but since it's static, just show alert
+    }
+  }, []);
 
   const handleViewDetails = (e, branch) => {
     e.preventDefault();
@@ -275,17 +350,43 @@ export default function BranchTracker() {
       // If no user role, return empty array (don't show all branches)
       return [];
     }
-    return filterBranchesByRole(ALL_BRANCHES, user.role);
-  }, [user?.role]);
 
-  const getProgressColor = (progress) => {
+    let filteredBranches = ALL_BRANCHES;
+
+    // For IT team, show only branches pending IT assessment
+    if (user.role === "IT team") {
+      // Branches that need IT assessment - those not completed and in relevant stages
+      filteredBranches = ALL_BRANCHES.filter(branch =>
+        branch.stage !== "Completed" &&
+        branch.stage !== "On Hold" &&
+        ["Property Search", "Business Approval", "Legal Workflow", "Project Execution", "Agreement Execution"].includes(branch.stage)
+      );
+    } else {
+      filteredBranches = filterBranchesByRole(ALL_BRANCHES, user.role);
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filteredBranches = filteredBranches.filter(branch =>
+        branch.name.toLowerCase().includes(query) ||
+        branch.stage.toLowerCase().includes(query) ||
+        branch.category?.toLowerCase().includes(query)
+      );
+    }
+
+    return filteredBranches;
+  }, [user?.role, searchQuery]);
+
+  const getProgressColor = useCallback((progress) => {
     if (progress === 100) return "green";
     if (progress >= 50) return "yellow";
     return "yellow";
-  };
+  }, []);
 
   return (
     <div className="dashboard-container">
+<<<<<<< HEAD
       {/* Top Header Bar */}
       <header className="dashboard-header">
         <button
@@ -334,6 +435,9 @@ export default function BranchTracker() {
           <UserProfile variant="header" showLogout={false} />
         </div>
       </header>
+=======
+      <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+>>>>>>> 271c475d40527afb6c6438579f940b3b4f58ff86
 
       <div className="dashboard-content-wrapper">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -341,7 +445,7 @@ export default function BranchTracker() {
         {/* Main Content Area */}
         <main className="dashboard-main">
           <div className="main-content">
-            <h1 className="page-title">Branch Tracker</h1>
+            <h1 className="page-title">{user?.role === "IT team" ? "IT Feasibility" : "Branch Tracker"}</h1>
 
             {/* Filters and Controls */}
             <div className="controls-bar">
@@ -398,20 +502,24 @@ export default function BranchTracker() {
                 >
                   Kanban
                 </button>
-                <button 
-                  className="add-branch-btn"
-                  onClick={() => setIsModalOpen(true)}
-                >
-                  <span>+</span> Add New Branch
-                </button>
+                {user?.role !== "IT team" && (
+                  <button
+                    className="add-branch-btn"
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    <span>+</span> Add New Branch
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Branch Table - Reusable Component */}
-            <DashboardTable 
+            <DashboardTable
               branches={branches}
               onViewDetails={handleViewDetails}
               getProgressColor={getProgressColor}
+              user={user}
+              onDelete={handleDelete}
             />
 
             {/* Pagination */}
@@ -460,7 +568,7 @@ export default function BranchTracker() {
 
       {/* Create New Branch Modal */}
       {isModalOpen && (
-        <CreateBranchModal 
+        <CreateBranchModal
           onClose={() => setIsModalOpen(false)}
         />
       )}
