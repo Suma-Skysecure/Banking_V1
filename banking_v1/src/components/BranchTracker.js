@@ -25,7 +25,7 @@ const ALL_BRANCHES = [
   {
     id: 1,
     name: "Downtown Manhattan Branch",
-    stage: "Legal Workflow",
+    stage: "Legal Clearance",
     stageColor: "blue",
     progress: 45,
     pendingAction: "red",
@@ -151,7 +151,7 @@ const ALL_BRANCHES = [
   {
     id: 16,
     name: "Nashville Financial Center",
-    stage: "Legal Workflow",
+    stage: "Legal Clearance",
     stageColor: "blue",
     progress: 48,
     pendingAction: "red",
@@ -211,6 +211,15 @@ const ALL_BRANCHES = [
     pendingAction: "yellow",
     category: "business",
   },
+  {
+    id: 23,
+    name: "Legal Clearance Test Branch",
+    stage: "Legal Clearance",
+    stageColor: "blue",
+    progress: 50,
+    pendingAction: "yellow",
+    category: "business",
+  },
 ];
 
 export default function BranchTracker() {
@@ -229,6 +238,7 @@ export default function BranchTracker() {
       "Property Search": "/property-search",
       "Business Approval": "/business-approval",
       "Legal Workflow": "/legal-workflow",
+      "Legal Clearance": "/legal-due",
       "Project Execution": "/project-execution",
       "Site Measurement": "/post-loi-activities",
       "Agreement Execution": "/agreement-execution",
@@ -240,6 +250,7 @@ export default function BranchTracker() {
       "Vendor": "/security-deposit-payment",
       "Budget approval": "/budget-approval",
       "Stampduty approval": "/stamp-duty-payment-approval",
+      
       "On Hold": null, // No redirect for On Hold
       "Completed": null, // No redirect for Completed
     };
