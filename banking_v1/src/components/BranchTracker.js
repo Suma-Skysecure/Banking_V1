@@ -15,6 +15,15 @@ import "@/css/pageHeader.css";
 // All available branches - in production, this would come from an API
 const ALL_BRANCHES = [
   {
+    id: 10,
+    name: "Phoenix Tech Hub",
+    stage: "Site Measurement",
+    stageColor: "blue",
+    progress: 50,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
     id: 1,
     name: "Downtown Manhattan Branch",
     stage: "Legal Workflow",
@@ -68,6 +77,141 @@ const ALL_BRANCHES = [
     pendingAction: "yellow",
     category: "business",
   },
+  {
+    id: 7,
+    name: "Dallas Metroplex Branch",
+    stage: "Layout Design",
+    stageColor: "blue",
+    progress: 50,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 8,
+    name: "Houston Energy District",
+    stage: "TSA (Stamp duty)",
+    stageColor: "blue",
+    progress: 50,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 9,
+    name: "Atlanta Business Center",
+    stage: "TSA (Security Deposit)",
+    stageColor: "blue",
+    progress: 50,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 11,
+    name: "Denver Commerce Center",
+    stage: "Vendor",
+    stageColor: "blue",
+    progress: 60,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 12,
+    name: "Boston Financial Plaza",
+    stage: "Budget approval",
+    stageColor: "blue",
+    progress: 55,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 13,
+    name: "San Francisco Bay Area Office",
+    stage: "Stampduty approval",
+    stageColor: "blue",
+    progress: 70,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 14,
+    name: "Austin Tech Campus",
+    stage: "Property Search",
+    stageColor: "orange",
+    progress: 35,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 15,
+    name: "Portland Commercial Plaza",
+    stage: "Business Approval",
+    stageColor: "yellow",
+    progress: 60,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 16,
+    name: "Nashville Financial Center",
+    stage: "Legal Workflow",
+    stageColor: "blue",
+    progress: 48,
+    pendingAction: "red",
+    category: "business",
+  },
+  {
+    id: 17,
+    name: "Minneapolis Retail Hub",
+    stage: "Site Measurement",
+    stageColor: "blue",
+    progress: 52,
+    pendingAction: "yellow",
+    category: "retail",
+  },
+  {
+    id: 18,
+    name: "Charlotte Business Park",
+    stage: "Layout Design",
+    stageColor: "blue",
+    progress: 55,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 19,
+    name: "Indianapolis Metro Branch",
+    stage: "Project Execution",
+    stageColor: "blue",
+    progress: 40,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 20,
+    name: "Kansas City Office Complex",
+    stage: "Agreement Execution",
+    stageColor: "blue",
+    progress: 75,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 21,
+    name: "Columbus Financial District",
+    stage: "TSA (Security Deposit)",
+    stageColor: "blue",
+    progress: 58,
+    pendingAction: "yellow",
+    category: "business",
+  },
+  {
+    id: 22,
+    name: "Milwaukee Business Center",
+    stage: "Vendor",
+    stageColor: "blue",
+    progress: 62,
+    pendingAction: "yellow",
+    category: "business",
+  },
 ];
 
 export default function BranchTracker() {
@@ -89,10 +233,16 @@ export default function BranchTracker() {
       "Business Approval": "/business-approval",
       "Legal Workflow": "/legal-workflow",
       "Project Execution": "/project-execution",
-      "Site Measurement": "/project-execution",
+      "Site Measurement": "/post-loi-activities",
       "Agreement Execution": "/agreement-execution",
       "Agreement Registration": "/agreement-registration",
       "Post-LOI Activities": "/post-loi-activities",
+      "Layout Design": "/post-loi-layout-design",
+      "TSA (Stamp duty)": "/term-sheet-approval",
+      "TSA (Security Deposit)": "/security-deposit-payment",
+      "Vendor": "/security-deposit-payment",
+      "Budget approval": "/budget-approval",
+      "Stampduty approval": "/stamp-duty-payment-approval",
       "On Hold": null, // No redirect for On Hold
       "Completed": null, // No redirect for Completed
     };
@@ -116,6 +266,8 @@ export default function BranchTracker() {
     }
     // Redirect to current stage page based on branch stage
     const route = getStageRoute(branch?.stage);
+    // Get the route based on the branch stage
+    const route = getStageRoute(branch.stage);
     if (route) {
       router.push(route);
     }
