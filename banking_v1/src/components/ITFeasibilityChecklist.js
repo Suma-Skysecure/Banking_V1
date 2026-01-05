@@ -112,6 +112,7 @@ export default function ITFeasibilityChecklist({ branchId }) {
   const [submittedAt, setSubmittedAt] = useState(null);
   const [submittedBy, setSubmittedBy] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
 
   /* ===================== LOAD ===================== */
 
@@ -165,8 +166,8 @@ export default function ITFeasibilityChecklist({ branchId }) {
   const statusLabel = sentToBRT
     ? "Sent to BRT"
     : submitted
-    ? "Submitted (65%)"
-    : "Draft";
+      ? "Submitted (65%)"
+      : "Draft";
 
   /* ===================== DASHBOARD ===================== */
 
@@ -242,20 +243,137 @@ export default function ITFeasibilityChecklist({ branchId }) {
 
   return (
     <div style={{ maxWidth: 1100, margin: "auto", padding: 24 }}>
-      {/* HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
+      {/* HEADER REMOVED AS REQUESTED */}
+
+      {/* POST-LOI ACTIVITY HEADER */}
+      <div style={{ marginBottom: "20px" }}>
+        <h2 style={{ color: "#1e3a8a", fontSize: "24px", fontWeight: "700", marginBottom: "4px" }}>Post-LOI Activities</h2>
+        <div style={{ color: "#6b7280", fontSize: "14px" }}>Accounts Team - Payment Approvals</div>
+      </div>
+
+      {/* BRANCH DETAILS HEADER CARD */}
+      <div style={{ ...card, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
-          <h1>IT Feasibility Assessment</h1>
-          <p><b>Branch:</b> {branchName}</p>
-          {submitted && (
-            <p style={{ color: "#555", fontSize: 14 }}>
-              Submitted by <b>{submittedBy}</b> on{" "}
-              {new Date(submittedAt).toLocaleString()}
-            </p>
-          )}
+          <h2 style={{ color: "#1e3a8a", fontSize: "20px", fontWeight: "700", marginBottom: "8px" }}>{branchName}</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#6b7280", marginBottom: "16px" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            <span style={{ fontSize: "14px" }}>1450 Biscayne Boulevard, Miami, FL 33132</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "6px", backgroundColor: "#eff6ff", color: "#1e40af", padding: "4px 12px", borderRadius: "100px", fontSize: "13px", fontWeight: "600" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Pending Payment Approval
+            </span>
+            <span style={{ color: "#6b7280", fontSize: "13px" }}>Property ID: PROP-MIA-2024-002</span>
+          </div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ color: "#1e3a8a", fontSize: "24px", fontWeight: "700", marginBottom: "4px" }}>₹ 48,43,00,000</div>
+          <div style={{ color: "#6b7280", fontSize: "12px" }}>LOI Circulated on Dec 18, 2024</div>
+        </div>
+      </div>
+
+      {/* BUSINESS DETAILS SUMMARY */}
+      <div style={card}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+          </svg>
+          <h3 style={{ margin: 0, color: "#1e3a8a", fontSize: "16px", fontWeight: "600" }}>Business Details Summary</h3>
         </div>
 
-        <span style={badge}>{statusLabel}</span>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "24px" }}>
+          {/* Row 1 */}
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>PROPERTY ID</div>
+            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>PROP-MIA-2024-002</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>PARKING SPACES</div>
+            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>8 Reserved</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>ZONING</div>
+            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>Commercial/Retail</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>PROPERTY TYPE</div>
+            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>Mixed Use</div>
+          </div>
+
+          {/* Row 2 */}
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>YEAR BUILT</div>
+            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>2019</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>LISTING STATUS</div>
+            <div style={{ display: "inline-block", backgroundColor: "#d1fae5", color: "#065f46", fontSize: "12px", fontWeight: "600", padding: "2px 8px", borderRadius: "4px" }}>Active</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>TOTAL AREA</div>
+            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>4,200 sq ft</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>VENDOR NAME</div>
+            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>Biscayne Development</div>
+          </div>
+
+          {/* Row 3 */}
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>AVAILABILITY</div>
+            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>30 days</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>FLOOR LEVEL</div>
+            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>Ground Floor + Mezzanine</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>VENDOR CONTACT</div>
+            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>+1 (305) 555-0198</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>LAST INSPECTION</div>
+            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>Dec 10, 2024</div>
+          </div>
+        </div>
+      </div>
+      <div style={card}>
+        <h3>LOI Document</h3>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "15px", border: "1px solid #e0e0e0", borderRadius: "8px", backgroundColor: "#f9fafb" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+            <div style={{ width: "40px", height: "40px", backgroundColor: "#ffebee", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#f44336" }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontWeight: "600", color: "#333", marginBottom: "4px" }}>LOI_{branchName.replace(/\s+/g, '_')}_2024.pdf</div>
+              <div style={{ fontSize: "12px", color: "#666" }}>Uploaded on Dec 18, 2024 • 2.4 MB</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowDocumentModal(true)}
+            style={{ padding: "8px 16px", backgroundColor: "#1e40af", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", fontWeight: "500" }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            View Document
+          </button>
+        </div>
       </div>
 
       {/* SECTIONS */}
@@ -345,6 +463,57 @@ export default function ITFeasibilityChecklist({ branchId }) {
         </div>
       </div>
 
+      {/* DOCUMENT PREVIEW MODAL */}
+      {showDocumentModal && (
+        <div style={modal} onClick={() => setShowDocumentModal(false)}>
+          <div style={{ ...modalBox, width: "800px", height: "80vh", maxWidth: "90%", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid #eee", paddingBottom: "15px" }}>
+              <h3 style={{ margin: 0 }}>LOI_{branchName.replace(/\s+/g, '_')}_2024.pdf</h3>
+              <button onClick={() => setShowDocumentModal(false)} style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer", color: "#666" }}>×</button>
+            </div>
+            <div style={{ flex: 1, backgroundColor: "#f5f5f5", borderRadius: "8px", padding: "40px", overflowY: "auto", border: "1px solid #ddd" }}>
+              <div style={{ backgroundColor: "white", width: "100%", minHeight: "800px", padding: "60px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
+                <h1 style={{ textAlign: "center", marginBottom: "40px", color: "#333" }}>LETTER OF INTENT</h1>
+                <p style={{ textAlign: "right", marginBottom: "40px" }}>Date: December 18, 2024</p>
+
+                <p><strong>To:</strong> Property Management<br /><strong>Re:</strong> Lease Proposal for {branchName}</p>
+
+                <br />
+                <p>Dear Sir/Madam,</p>
+                <p>This Letter of Intent ("LOI") outlines the basic terms and conditions under which <strong>Banking_V1</strong> ("Tenant") proposes to lease the property located at <strong>{branchName}</strong> ("Premises").</p>
+
+                <h4 style={{ marginTop: "30px" }}>1. PREMISES</h4>
+                <p>Approximately 5,000 sq. ft. of retail space located on the ground floor.</p>
+
+                <h4 style={{ marginTop: "30px" }}>2. USE</h4>
+                <p>The Premises shall be used for a retail banking branch.</p>
+
+                <h4 style={{ marginTop: "30px" }}>3. TERM</h4>
+                <p>The initial term of the lease shall be ten (10) years.</p>
+
+                <h4 style={{ marginTop: "30px" }}>4. RENT</h4>
+                <p>Base rent shall be $50.00 per square foot annually.</p>
+
+                <h4 style={{ marginTop: "30px" }}>5. IT INFRASTRUCTURE</h4>
+                <p>Landlord shall provide dedicated conduit for Tenant's telecommunications and data lines. Tenant shall have the right to install a supplementary HVAC unit for the server room.</p>
+
+                <br /><br />
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: "50px" }}>
+                  <div>
+                    <hr style={{ width: "200px", margin: "0 0 10px 0" }} />
+                    <p>Authorized Signature<br /><strong>Tenant</strong></p>
+                  </div>
+                  <div>
+                    <hr style={{ width: "200px", margin: "0 0 10px 0" }} />
+                    <p>Authorized Signature<br /><strong>Landlord</strong></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* DELETE CONFIRM */}
       {showDeleteConfirm && (
         <div style={modal}>
@@ -412,6 +581,7 @@ const modal = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
+  zIndex: 9999,
 };
 
 const modalBox = {

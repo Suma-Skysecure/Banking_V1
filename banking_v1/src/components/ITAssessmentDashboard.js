@@ -49,9 +49,6 @@ export default function ITAssessmentDashboard() {
     return () => window.removeEventListener("focus", loadStatuses);
   }, []);
 
-  /* ===================== ACCESS CONTROL ===================== */
-  if (user?.role !== "IT team" && user?.role !== "BRT team") return null;
-
   /* ===================== UNIQUE CITIES ===================== */
   const uniqueCities = useMemo(() => {
     const cities = ALL_BRANCHES.map(b => b.city);
@@ -107,6 +104,9 @@ export default function ITAssessmentDashboard() {
       };
     });
   }, [itStatuses, selectedCity, selectedStatus, selectedDate]);
+
+  /* ===================== ACCESS CONTROL ===================== */
+  if (user?.role !== "IT team" && user?.role !== "BRT team") return null;
 
   /* ===================== ACTIONS ===================== */
 
