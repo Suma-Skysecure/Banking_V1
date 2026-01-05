@@ -107,19 +107,14 @@ export default function BranchTracker() {
     }
   }, []);
 
-  const handleViewDetails = useCallback((e, branch) => {
+  const handleViewDetails = (e, branch) => {
     e.preventDefault();
-    // For IT users, redirect to IT assessment page
-    if (user?.role === "IT team") {
-      router.push(`/it/assessment/${branch.id}`);
-      return;
-    }
-    // Redirect to current stage page based on branch stage
-    const route = getStageRoute(branch?.stage);
+    // Get the route based on the branch stage
+    const route = getStageRoute(branch.stage);
     if (route) {
       router.push(route);
     }
-  }, [user?.role, router]);
+  };
 
   // Filter branches based on user role using role-to-stage mapping
   // Each role will only see branches in stages assigned to them
@@ -129,21 +124,21 @@ export default function BranchTracker() {
       // If no user role, return empty array (don't show all branches)
       return [];
     }
-    
+
     let filteredBranches = ALL_BRANCHES;
-    
+
     // For IT team, show only branches pending IT assessment
     if (user.role === "IT team") {
       // Branches that need IT assessment - those not completed and in relevant stages
-      filteredBranches = ALL_BRANCHES.filter(branch => 
-        branch.stage !== "Completed" && 
+      filteredBranches = ALL_BRANCHES.filter(branch =>
+        branch.stage !== "Completed" &&
         branch.stage !== "On Hold" &&
         ["Property Search", "Business Approval", "Legal Workflow", "Project Execution", "Agreement Execution"].includes(branch.stage)
       );
     } else {
       filteredBranches = filterBranchesByRole(ALL_BRANCHES, user.role);
     }
-    
+
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
@@ -153,7 +148,7 @@ export default function BranchTracker() {
         branch.category?.toLowerCase().includes(query)
       );
     }
-    
+
     return filteredBranches;
   }, [user?.role, searchQuery]);
 
@@ -245,14 +240,14 @@ export default function BranchTracker() {
           </button>
           <button className="header-icon-btn notification-btn" onClick={() => setShowNotifications(!showNotifications)}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M10 2C7.79 2 6 3.79 6 6V10C6 11.1 5.1 12 4 12H3C2.45 12 2 12.45 2 13C2 13.55 2.45 14 3 14H17C17.55 14 18 13.55 18 13C18 12.45 17.55 12 17 12H16C14.9 12 14 11.1 14 10V6C14 3.79 12.21 2 10 2Z" fill="#6b7280"/>
-              <path d="M10 18C11.1 18 12 17.1 12 16H8C8 17.1 8.9 18 10 18Z" fill="#6b7280"/>
+              <path d="M10 2C7.79 2 6 3.79 6 6V10C6 11.1 5.1 12 4 12H3C2.45 12 2 12.45 2 13C2 13.55 2.45 14 3 14H17C17.55 14 18 13.55 18 13C18 12.45 17.55 12 17 12H16C14.9 12 14 11.1 14 10V6C14 3.79 12.21 2 10 2Z" fill="#6b7280" />
+              <path d="M10 18C11.1 18 12 17.1 12 16H8C8 17.1 8.9 18 10 18Z" fill="#6b7280" />
             </svg>
             <span className="notification-badge">3</span>
           </button>
           <UserProfile variant="header" showLogout={false} />
         </div>
-        
+
         {/* Notification Dropdown */}
         {showNotifications && (
           <div className="notification-dropdown">
@@ -291,8 +286,8 @@ export default function BranchTracker() {
 
         {/* Main Content Area */}
         <main className="dashboard-main">
-            <div className="main-content">
-              <h1 className="page-title">{user?.role === "IT team" ? "IT Feasibility" : "Branch Tracker"}</h1>
+          <div className="main-content">
+            <h1 className="page-title">{user?.role === "IT team" ? "IT Feasibility" : "Branch Tracker"}</h1>
 
             {/* Filters and Controls */}
             <div className="controls-bar">
@@ -350,7 +345,7 @@ export default function BranchTracker() {
                   Kanban
                 </button>
                 {user?.role !== "IT team" && (
-                  <button 
+                  <button
                     className="add-branch-btn"
                     onClick={() => setIsModalOpen(true)}
                   >
@@ -361,7 +356,7 @@ export default function BranchTracker() {
             </div>
 
             {/* Branch Table - Reusable Component */}
-            <DashboardTable 
+            <DashboardTable
               branches={branches}
               onViewDetails={handleViewDetails}
               getProgressColor={getProgressColor}
@@ -415,7 +410,7 @@ export default function BranchTracker() {
 
       {/* Create New Branch Modal */}
       {isModalOpen && (
-        <CreateBranchModal 
+        <CreateBranchModal
           onClose={() => setIsModalOpen(false)}
         />
       )}
