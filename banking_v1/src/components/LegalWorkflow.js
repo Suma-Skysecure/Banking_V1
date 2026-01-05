@@ -661,7 +661,7 @@ export default function LegalWorkflow() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.doc"
+                  accept=".pdf,.doc,.docx"
                   onChange={(e) => {
                     const file = e.target.files[0];
                     if (file) {
@@ -737,7 +737,7 @@ export default function LegalWorkflow() {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <h3 className="card-title">Upload Documents</h3>
+                <h3 className="card-title">Upload Legal Documents</h3>
               </div>
 
               <div className="decision-form" style={{ padding: "20px" }}>
