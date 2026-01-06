@@ -7,6 +7,7 @@ import Sidebar from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import ToastNotification from "@/components/ToastNotification";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import "@/css/propertyDetails.css";
 import "@/css/branchTracker.css";
 
@@ -14,6 +15,7 @@ export default function PropertyDetails() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { createNotification } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
   const [property, setProperty] = useState(null);
@@ -502,6 +504,14 @@ export default function PropertyDetails() {
                   className="submit-approval-button"
                   onClick={() => {
                     console.log("Submitting property for business approval");
+                    
+                    // Create notification for business approval - target Business role
+                    const notificationMessage = property?.name
+                      ? `Property "${property.name}" has been submitted for business approval`
+                      : "Property has been submitted for business approval";
+                    
+                    // Create notification targeted to Business role
+                    createNotification(notificationMessage, "info", "/business-approval", "Business");
                     
                     // Show success notification for SRBM users
                     if (user?.role === "SRBM") {

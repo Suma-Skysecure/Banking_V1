@@ -7,6 +7,7 @@ import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import DashboardHeader from "@/components/DashboardHeader";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/businessApproval.css";
@@ -14,6 +15,7 @@ import "@/css/businessApproval.css";
 export default function LegalWorkflow() {
   const router = useRouter();
   const { user } = useAuth();
+  const { createNotification } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const fileInputRef = useRef(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -170,6 +172,19 @@ export default function LegalWorkflow() {
       
       // Store all documents in localStorage
       localStorage.setItem("uploadedLegalDocuments", JSON.stringify(documentsToStore));
+      
+      // Create notification for Legal Due team
+      const fileNames = uploadedFiles.map(f => f.name).join(", ");
+      const notificationMessage = uploadedFiles.length === 1
+        ? `Legal document "${fileNames}" has been submitted and approved for review`
+        : `${uploadedFiles.length} legal documents have been submitted and approved for review`;
+      
+      createNotification(
+        notificationMessage,
+        "info",
+        "/legal-due",
+        "Legal due"
+      );
       
       // Show success message
       alert(`Successfully submitted ${uploadedFiles.length} document(s)! The documents are now available in the Legal Due page.`);
@@ -676,8 +691,32 @@ export default function LegalWorkflow() {
                         // Store in localStorage
                         localStorage.setItem("uploadedSignedLOI", JSON.stringify(fileData));
                         
-                        // Update upload status
-                        setIsLOIUploaded(true);
+                        // Create notifications for Legal Due, Site Measurement, and IT teams
+                        const notificationMessage = `Signed LOI document "${file.name}" has been uploaded and is ready for review`;
+                        
+                        // Create notification for Legal Due team
+                        createNotification(
+                          notificationMessage,
+                          "info",
+                          "/legal-due",
+                          "Legal due"
+                        );
+                        
+                        // Create notification for Site Measurement team
+                        createNotification(
+                          notificationMessage,
+                          "info",
+                          "/post-loi-activities",
+                          "Site measurement"
+                        );
+                        
+                        // Create notification for IT team
+                        createNotification(
+                          notificationMessage,
+                          "info",
+                          "/dashboard",
+                          "IT team"
+                        );
                         
                         // Show success message
                         alert(`File "${file.name}" uploaded successfully! The document is now available in Post-LOI Activities and Legal Due pages.`);
