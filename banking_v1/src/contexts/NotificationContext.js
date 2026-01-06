@@ -31,7 +31,7 @@ export const NotificationProvider = ({ children }) => {
       if (storedNotifications) {
         const parsedNotifications = JSON.parse(storedNotifications);
         // Filter notifications: show only if no targetRole or targetRole matches current user's role
-        const filteredNotifications = parsedNotifications.filter(notif => 
+        const filteredNotifications = parsedNotifications.filter(notif =>
           !notif.targetRole || notif.targetRole === user.role
         );
         setNotifications(filteredNotifications);
@@ -75,7 +75,7 @@ export const NotificationProvider = ({ children }) => {
     }
 
     const updatedNotifications = [newNotification, ...allNotifications];
-    
+
     // Save to localStorage
     try {
       localStorage.setItem("pms_notifications", JSON.stringify(updatedNotifications));
@@ -89,7 +89,7 @@ export const NotificationProvider = ({ children }) => {
       if (storedNotifications) {
         const parsedNotifications = JSON.parse(storedNotifications);
         // Filter notifications: show only if no targetRole or targetRole matches current user's role
-        const filteredNotifications = parsedNotifications.filter(notif => 
+        const filteredNotifications = parsedNotifications.filter(notif =>
           !notif.targetRole || notif.targetRole === user?.role
         );
         setNotifications(filteredNotifications);
@@ -111,9 +111,9 @@ export const NotificationProvider = ({ children }) => {
           notif.id === notificationId ? { ...notif, read: true } : notif
         );
         localStorage.setItem("pms_notifications", JSON.stringify(updatedNotifications));
-        
+
         // Reload filtered notifications
-        const filteredNotifications = updatedNotifications.filter(notif => 
+        const filteredNotifications = updatedNotifications.filter(notif =>
           !notif.targetRole || notif.targetRole === user?.role
         );
         setNotifications(filteredNotifications);
@@ -134,6 +134,28 @@ export const NotificationProvider = ({ children }) => {
   // Get unread count
   const unreadCount = notifications.filter(notif => !notif.read).length;
 
+  // Mark all notifications as read
+  const markAllAsRead = () => {
+    try {
+      const stored = localStorage.getItem("pms_notifications");
+      if (stored) {
+        const allNotifications = JSON.parse(stored);
+        const updatedNotifications = allNotifications.map(notif =>
+          (!notif.targetRole || notif.targetRole === user?.role) ? { ...notif, read: true } : notif
+        );
+        localStorage.setItem("pms_notifications", JSON.stringify(updatedNotifications));
+
+        // Reload filtered notifications
+        const filteredNotifications = updatedNotifications.filter(notif =>
+          !notif.targetRole || notif.targetRole === user?.role
+        );
+        setNotifications(filteredNotifications);
+      }
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+    }
+  };
+
   // Refresh notifications function
   const refreshNotifications = () => {
     try {
@@ -141,7 +163,7 @@ export const NotificationProvider = ({ children }) => {
       if (storedNotifications) {
         const parsedNotifications = JSON.parse(storedNotifications);
         // Filter notifications: show only if no targetRole or targetRole matches current user's role
-        const filteredNotifications = parsedNotifications.filter(notif => 
+        const filteredNotifications = parsedNotifications.filter(notif =>
           !notif.targetRole || notif.targetRole === user?.role
         );
         setNotifications(filteredNotifications);
@@ -160,6 +182,7 @@ export const NotificationProvider = ({ children }) => {
         notifications,
         createNotification,
         markAsRead,
+        markAllAsRead,
         handleNotificationClick,
         unreadCount,
         refreshNotifications,

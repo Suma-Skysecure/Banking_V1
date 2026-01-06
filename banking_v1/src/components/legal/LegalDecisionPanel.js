@@ -30,14 +30,7 @@ export default function LegalDecisionPanel({
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Check if already submitted on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const branches = JSON.parse(localStorage.getItem("agreementReadyBranches") || "[]");
-      const isReady = branches.some(b => b.id === "PROP-MIA-2024-002");
-      setIsSubmitted(isReady);
-    }
-  }, []);
+
 
   const handleCallRequiredChange = (value) => {
     if (isFinalized) return;
