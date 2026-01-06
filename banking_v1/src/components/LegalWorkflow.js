@@ -19,7 +19,7 @@ export default function LegalWorkflow() {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const multipleFileInputRef = useRef(null);
-  
+
   // All restrictions removed - all users have full access
 
   // Format file size
@@ -128,53 +128,55 @@ export default function LegalWorkflow() {
     setUploadedFiles((prev) => prev.filter((fileObj) => fileObj.id !== fileId));
   };
 
-  // Check if submit is enabled (at least 3 files uploaded)
-  const isSubmitEnabled = uploadedFiles.length >= 3;
+  // Submit is always enabled - no document upload required
+  const isSubmitEnabled = true;
 
   // Handle submit
   const handleSubmit = async () => {
-    if (!isSubmitEnabled) {
-      alert("Please upload at least 3 documents before proceeding.");
-      return;
-    }
-    console.log("Submitting documents:", uploadedFiles);
-    
-    // Convert all files to base64 and store in localStorage
-    try {
-      const documentsToStore = [];
-      
-      // Process each file
-      for (const fileObj of uploadedFiles) {
-        const file = fileObj.file;
-        const fileData = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            resolve({
-              id: fileObj.id,
-              name: file.name,
-              fileName: file.name,
-              size: file.size,
-              type: file.type,
-              uploadDate: new Date().toISOString(),
-              data: event.target.result, // base64 string
-              status: "Verified",
-            });
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-        
-        documentsToStore.push(fileData);
+    // No document upload required - proceed directly
+    console.log("Submitting to execution:", uploadedFiles);
+
+    // If there are files, store them in localStorage
+    if (uploadedFiles.length > 0) {
+      try {
+        const documentsToStore = [];
+
+        // Process each file
+        for (const fileObj of uploadedFiles) {
+          const file = fileObj.file;
+          const fileData = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              resolve({
+                id: fileObj.id,
+                name: file.name,
+                fileName: file.name,
+                size: file.size,
+                type: file.type,
+                uploadDate: new Date().toISOString(),
+                data: event.target.result, // base64 string
+                status: "Verified",
+              });
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+
+          documentsToStore.push(fileData);
+        }
+
+        // Store all documents in localStorage
+        localStorage.setItem("uploadedLegalDocuments", JSON.stringify(documentsToStore));
+
+        // Show success message
+        alert(`Successfully submitted ${uploadedFiles.length} document(s)! The documents are now available in the Legal Due page.`);
+      } catch (error) {
+        console.error("Error processing files:", error);
+        alert("Error processing files. Please try again.");
       }
-      
-      // Store all documents in localStorage
-      localStorage.setItem("uploadedLegalDocuments", JSON.stringify(documentsToStore));
-      
-      // Show success message
-      alert(`Successfully submitted ${uploadedFiles.length} document(s)! The documents are now available in the Legal Due page.`);
-    } catch (error) {
-      console.error("Error processing files:", error);
-      alert("Error processing files. Please try again.");
+    } else {
+      // No documents uploaded - just proceed
+      alert("Successfully submitted to execution! (No documents uploaded)");
     }
   };
 
@@ -660,7 +662,7 @@ export default function LegalWorkflow() {
                     const file = e.target.files[0];
                     if (file) {
                       console.log("File selected:", file.name);
-                      
+
                       // Read file as base64 and store in localStorage
                       const reader = new FileReader();
                       reader.onload = (event) => {
@@ -671,10 +673,10 @@ export default function LegalWorkflow() {
                           uploadDate: new Date().toISOString(),
                           data: event.target.result, // base64 string
                         };
-                        
+
                         // Store in localStorage
                         localStorage.setItem("uploadedSignedLOI", JSON.stringify(fileData));
-                        
+
                         // Show success message
                         alert(`File "${file.name}" uploaded successfully! The document is now available in Post-LOI Activities and Legal Due pages.`);
                       };
