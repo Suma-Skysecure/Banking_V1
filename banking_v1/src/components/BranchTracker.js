@@ -114,6 +114,16 @@ const ALL_BRANCHES = [
     pendingAction: "yellow",
     category: "business",
   },
+  // New York Financial District - Legal Clearance stage (for Legal Due role)
+  {
+    id: 40,
+    name: "New York Financial District",
+    stage: "Legal Clearance",
+    stageColor: "orange",
+    progress: 50,
+    pendingAction: "active",
+    category: "business",
+  },
 ];
 
 export default function BranchTracker() {
@@ -195,6 +205,11 @@ export default function BranchTracker() {
         branch.stage !== "Completed" &&
         branch.stage !== "On Hold" &&
         ["Property Search", "Business Approval", "Legal Workflow", "Project Execution", "Agreement Execution"].includes(branch.stage)
+      );
+    } else if (user.role === "Legal due" || user.role === "Legaldue" || user.role === "Legal Team") {
+      // For Legal Team, show branches in Legal Clearance stage
+      filteredBranches = ALL_BRANCHES.filter(branch =>
+        branch.stage === "Legal Clearance"
       );
     } else {
       filteredBranches = filterBranchesByRole(ALL_BRANCHES, user.role);

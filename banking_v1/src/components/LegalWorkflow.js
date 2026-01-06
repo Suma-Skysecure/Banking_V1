@@ -24,23 +24,23 @@ export default function LegalWorkflow() {
   const [isLOIUploaded, setIsLOIUploaded] = useState(false);
   const [property, setProperty] = useState(null);
   const [approvalDate, setApprovalDate] = useState(null);
-  
+
   // Load property data from localStorage (from BusinessApproval or original submission)
   useEffect(() => {
     try {
       // First try to get from LegalWorkflow storage (set when approved)
       let propertyData = localStorage.getItem("propertyForLegalWorkflow");
-      
+
       // If not found, try BusinessApproval storage
       if (!propertyData) {
         propertyData = localStorage.getItem("propertyForBusinessApproval");
       }
-      
+
       if (propertyData) {
         const parsedProperty = JSON.parse(propertyData);
         setProperty(parsedProperty);
       }
-      
+
       // Get approval date (when Business approved it)
       const approvalDateData = localStorage.getItem("propertyApprovalDate");
       if (approvalDateData) {
@@ -56,13 +56,13 @@ export default function LegalWorkflow() {
       console.error("Error loading property data:", error);
     }
   }, []);
-  
+
   // Format price for display
   const formatPrice = (price) => {
     if (!price && price !== 0) return "₹0";
     // Price might be in USD (for regular properties) or already converted
-    const inrPrice = property?.isImported && property?.priceUSD 
-      ? property.priceUSD * 83.5 
+    const inrPrice = property?.isImported && property?.priceUSD
+      ? property.priceUSD * 83.5
       : (price * 83.5);
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -71,7 +71,7 @@ export default function LegalWorkflow() {
       maximumFractionDigits: 0,
     }).format(inrPrice);
   };
-  
+
   // Format price per sqft
   const formatPricePerSqft = () => {
     if (!property) return "₹0 per sq ft";
@@ -83,7 +83,7 @@ export default function LegalWorkflow() {
     }
     return "₹0 per sq ft";
   };
-  
+
   // Format approval date
   const formatApprovalDate = () => {
     if (!approvalDate) {
@@ -101,23 +101,23 @@ export default function LegalWorkflow() {
       year: "numeric",
     });
   };
-  
+
   // Helper function to check if a value is empty/missing
   const isEmpty = (value) => {
-    return value === null || value === undefined || value === "" || 
-           (typeof value === "string" && value.trim() === "");
+    return value === null || value === undefined || value === "" ||
+      (typeof value === "string" && value.trim() === "");
   };
-  
+
   // Helper function to generate default values ONLY for missing property fields
   const generateDefaultPropertyFields = (property) => {
     if (!property) return {};
-    
+
     const defaults = {};
-    
+
     // Extract area number from size string (e.g., "3,500 sq ft" -> 3500)
     const areaMatch = (property.size || property.totalArea || "").match(/[\d,]+/);
     const areaNum = areaMatch ? parseInt(areaMatch[0].replace(/,/g, "")) : 0;
-    
+
     // Only generate floor level if missing
     if (isEmpty(property.floorLevel)) {
       if (property.type?.toLowerCase().includes("industrial")) {
@@ -130,20 +130,20 @@ export default function LegalWorkflow() {
         defaults.floorLevel = "Ground Floor + Mezzanine";
       }
     }
-    
+
     // Only generate parking spaces if missing
     if (isEmpty(property.parkingSpaces)) {
       const spaces = Math.max(2, Math.floor(areaNum / 500));
       defaults.parkingSpaces = `${spaces} Reserved Spaces`;
     }
-    
+
     // Only generate year built if missing
     if (isEmpty(property.yearBuilt)) {
       const currentYear = new Date().getFullYear();
       const baseYear = property.type?.toLowerCase().includes("industrial") ? 2015 : 2018;
       defaults.yearBuilt = String(Math.max(baseYear, currentYear - 6));
     }
-    
+
     // Only generate vendor name if missing
     if (isEmpty(property.vendorName)) {
       const address = property.address || "";
@@ -156,7 +156,7 @@ export default function LegalWorkflow() {
       else if (address.includes("Marina")) defaults.vendorName = "Marina Commercial Realty";
       else defaults.vendorName = "Miami Commercial Realty Group";
     }
-    
+
     // Only generate vendor contact if missing
     if (isEmpty(property.vendorContact)) {
       const areaCode = property.address?.match(/FL (\d{5})/)?.[1]?.substring(0, 3) || "305";
@@ -164,19 +164,19 @@ export default function LegalWorkflow() {
       const lastFour = String((propIdNum % 9000) + 1000).padStart(4, '0');
       defaults.vendorContact = `+1 (${areaCode}) 555-${lastFour}`;
     }
-    
+
     // Only generate vendor email if missing
     if (isEmpty(property.vendorEmail)) {
       const vendorName = (property.vendorName || defaults.vendorName || "Miami Commercial Realty Group")
         .toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
       defaults.vendorEmail = `info@${vendorName}.com`;
     }
-    
+
     // Only generate listing status if missing
     if (isEmpty(property.listingStatus)) {
       defaults.listingStatus = property.statusType === "available" ? "Active Listing" : "Pending Listing";
     }
-    
+
     // Only generate zoning if missing
     if (isEmpty(property.zoning)) {
       const type = property.type?.toLowerCase() || "";
@@ -186,7 +186,7 @@ export default function LegalWorkflow() {
       else if (type.includes("mixed use")) defaults.zoning = "Mixed Use";
       else defaults.zoning = "Commercial";
     }
-    
+
     // Only generate last inspection if missing
     if (isEmpty(property.lastInspection)) {
       if (property.lastInspectionDate) {
@@ -196,18 +196,18 @@ export default function LegalWorkflow() {
           year: "numeric",
         });
       } else {
-        const months = ["January", "February", "March", "April", "May", "June", 
-                        "July", "August", "September", "October", "November", "December"];
+        const months = ["January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"];
         const currentDate = new Date();
         const inspectionDate = new Date(currentDate);
         inspectionDate.setMonth(currentDate.getMonth() - 2);
         defaults.lastInspection = `${months[inspectionDate.getMonth()]} ${inspectionDate.getDate()}, ${inspectionDate.getFullYear()}`;
       }
     }
-    
+
     return defaults;
   };
-  
+
   // Default property if none loaded
   const defaultProperty = {
     id: "PROP-MIA-2024-002",
@@ -228,20 +228,20 @@ export default function LegalWorkflow() {
     zoning: "Commercial/Retail",
     lastInspection: "December 10, 2024",
   };
-  
+
   // Generate defaults ONLY for missing fields and merge with property data
   // Preserve exact data from SRBM pages, only fill in what's missing
   const propertyWithDefaults = property ? (() => {
     const defaults = generateDefaultPropertyFields(property);
     const merged = { ...property };
-    
+
     // Only apply defaults for fields that are truly missing/empty
     Object.keys(defaults).forEach(key => {
       if (isEmpty(merged[key])) {
         merged[key] = defaults[key];
       }
     });
-    
+
     // Ensure essential fields are present (only if missing)
     if (isEmpty(merged.id)) {
       merged.id = merged.propertyId || `PROP-MIA-2024-${String(property.id || Date.now()).padStart(3, '0')}`;
@@ -272,12 +272,12 @@ export default function LegalWorkflow() {
     if (merged.pricePerSqft === null || merged.pricePerSqft === undefined) {
       merged.pricePerSqft = 0;
     }
-    
+
     return merged;
   })() : defaultProperty;
-  
+
   const displayProperty = propertyWithDefaults;
-  
+
   // All restrictions removed - all users have full access
 
   // Format file size
@@ -396,11 +396,11 @@ export default function LegalWorkflow() {
       return;
     }
     console.log("Submitting documents:", uploadedFiles);
-    
+
     // Convert all files to base64 and store in localStorage
     try {
       const documentsToStore = [];
-      
+
       // Process each file
       for (const fileObj of uploadedFiles) {
         const file = fileObj.file;
@@ -421,26 +421,26 @@ export default function LegalWorkflow() {
           reader.onerror = reject;
           reader.readAsDataURL(file);
         });
-        
+
         documentsToStore.push(fileData);
       }
-      
+
       // Store all documents in localStorage
       localStorage.setItem("uploadedLegalDocuments", JSON.stringify(documentsToStore));
-      
+
       // Create notification for Legal Due team
       const fileNames = uploadedFiles.map(f => f.name).join(", ");
       const notificationMessage = uploadedFiles.length === 1
         ? `Legal document "${fileNames}" has been submitted and approved for review`
         : `${uploadedFiles.length} legal documents have been submitted and approved for review`;
-      
+
       createNotification(
         notificationMessage,
         "info",
         "/legal-due",
         "Legal due"
       );
-      
+
       // Show success message
       alert(`Successfully submitted ${uploadedFiles.length} document(s)! The documents are now available in the Legal Due page.`);
     } catch (error) {
@@ -608,7 +608,7 @@ export default function LegalWorkflow() {
                 <div className="detail-item">
                   <span className="detail-label">Availability</span>
                   <span className="detail-value">
-                    {displayProperty.status?.match(/(\d+)\s*days?/i) 
+                    {displayProperty.status?.match(/(\d+)\s*days?/i)
                       ? `${displayProperty.status.match(/(\d+)\s*days?/i)[1]} days`
                       : (displayProperty.status || "Available Now")}
                   </span>
@@ -935,7 +935,7 @@ export default function LegalWorkflow() {
                     const file = e.target.files[0];
                     if (file) {
                       console.log("File selected:", file.name);
-                      
+
                       // Read file as base64 and store in localStorage
                       const reader = new FileReader();
                       reader.onload = (event) => {
@@ -946,15 +946,15 @@ export default function LegalWorkflow() {
                           uploadDate: new Date().toISOString(),
                           data: event.target.result, // base64 string
                         };
-                        
+
                         // Store in localStorage
                         localStorage.setItem("uploadedSignedLOI", JSON.stringify(fileData));
-                        
+
                         // Update upload status
                         setIsLOIUploaded(true);
                         // Create notifications for Legal Due, Site Measurement, and IT teams
                         const notificationMessage = `Signed LOI document "${file.name}" has been uploaded and is ready for review`;
-                        
+
                         // Create notification for Legal Due team
                         createNotification(
                           notificationMessage,
@@ -962,7 +962,7 @@ export default function LegalWorkflow() {
                           "/legal-due",
                           "Legal due"
                         );
-                        
+
                         // Create notification for Site Measurement team
                         createNotification(
                           notificationMessage,
@@ -970,7 +970,7 @@ export default function LegalWorkflow() {
                           "/post-loi-activities",
                           "Site measurement"
                         );
-                        
+
                         // Create notification for IT team
                         createNotification(
                           notificationMessage,
@@ -978,7 +978,7 @@ export default function LegalWorkflow() {
                           "/dashboard",
                           "IT team"
                         );
-                        
+
                         // Show success message
                         alert(`File "${file.name}" uploaded successfully! The document is now available in Post-LOI Activities and Legal Due pages.`);
                       };
