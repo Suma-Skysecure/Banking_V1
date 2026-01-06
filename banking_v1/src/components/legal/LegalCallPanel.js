@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import PermissionWrapper from "@/components/PermissionWrapper";
 
@@ -14,20 +14,61 @@ import PermissionWrapper from "@/components/PermissionWrapper";
  * @param {Function} props.onBrtConfirmed - Callback when BRT confirms
  * @param {Function} props.onBusinessDecisionComplete - Callback when business decision is complete
  */
-export default function LegalCallPanel({ 
-  isFinalized, 
-  onShowToast, 
+export default function LegalCallPanel({
+  isFinalized,
+  onShowToast,
   onBrtConfirmed,
-  onBusinessDecisionComplete 
+  onBusinessDecisionComplete
 }) {
   const router = useRouter();
   const [brtConfirmation, setBrtConfirmation] = useState(null);
   const [legalCallNotes, setLegalCallNotes] = useState("");
   const [showBusinessApproval, setShowBusinessApproval] = useState(false);
 
+  // Poll/Listen for BRT Status updates
+  useEffect(() => {
+    const checkBrtStatus = () => {
+      const requests = JSON.parse(localStorage.getItem("legalRequests") || "[]");
+      // Demo: Check for ID "1" (Downtown Manhattan Branch)
+      const target = requests.find(r => r.id === "1");
+      if (target) {
+        if (target.status === "Approved") {
+          setBrtConfirmation("approved");
+          if (onBrtConfirmed) onBrtConfirmed(true);
+        } else if (target.status === "Rejected") {
+          setBrtConfirmation("rejected");
+        }
+      }
+    };
+
+    checkBrtStatus();
+
+    const handleStorageChange = (e) => {
+      if (e.key === "legalRequests") {
+        checkBrtStatus();
+      }
+    };
+
+    // Listen for custom event triggered by BRTLegalSection
+    const handleCustomUpdate = () => checkBrtStatus();
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("notification-update", handleCustomUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("notification-update", handleCustomUpdate);
+    };
+  }, [onBrtConfirmed]);
+
   const handleBrtConfirmation = (decision) => {
     if (isFinalized) return;
     setBrtConfirmation(decision);
+    // ... rest of existing logic
+    // Update localStorage to reflect this manual change too if needed, 
+    // but typically this manual button is for the Legal User simulating it if BRT isn't available?
+    // For this flow, we'll keep the manual override but it won't persist to 'legalRequests' unless we want it to.
+
     if (onShowToast) {
       onShowToast(
         `BRT confirmation ${decision === "approved" ? "approved" : "rejected"}`,

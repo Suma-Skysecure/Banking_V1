@@ -14,10 +14,11 @@ export default function ITAssessmentPage() {
   const { branchId } = useParams();
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [currentStatus, setCurrentStatus] = useState("Pending");
 
-  /* 🔐 Allow only IT team */
+  /* 🔐 Allow only IT team and BRT team */
   useEffect(() => {
-    if (user && user.role !== "IT team") {
+    if (user && user.role !== "IT team" && user.role !== "BRT team") {
       router.push("/dashboard");
     }
   }, [user, router]);
@@ -26,15 +27,21 @@ export default function ITAssessmentPage() {
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("itStatuses") || "{}");
 
-    if (!stored[branchId] || stored[branchId].status === "Pending") {
+    if (stored[branchId]) {
+      setCurrentStatus(stored[branchId].status || "Pending");
+    }
+
+    // Only auto-start if it's Pending and user is IT team (BRT just views)
+    if ((!stored[branchId] || stored[branchId].status === "Pending") && user?.role === "IT team") {
       stored[branchId] = {
         status: "In Progress",
         progress: 20,
       };
 
       localStorage.setItem("itStatuses", JSON.stringify(stored));
+      setCurrentStatus("In Progress");
     }
-  }, [branchId]);
+  }, [branchId, user]);
 
   /* ✅ UPDATE STATUS FROM CHECKLIST */
   const handleStatusUpdate = (status, progress = 100) => {
@@ -46,6 +53,7 @@ export default function ITAssessmentPage() {
     };
 
     localStorage.setItem("itStatuses", JSON.stringify(stored));
+    setCurrentStatus(status);
   };
 
   return (
@@ -98,9 +106,25 @@ export default function ITAssessmentPage() {
         {/* Main content */}
         <main className="dashboard-main">
           <div className="main-content">
-            <h1 className="page-title">
-              IT Feasibility Assessment
-            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+              <h1 className="page-title" style={{ marginBottom: 0 }}>
+                IT Feasibility Assessment
+              </h1>
+              {currentStatus && (
+                <span
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    backgroundColor: currentStatus === 'Completed' ? '#dcfce7' : currentStatus === 'Rejected' ? '#fee2e2' : currentStatus === 'Pending Approval' ? '#ffedd5' : '#fef9c3',
+                    color: currentStatus === 'Completed' ? '#166534' : currentStatus === 'Rejected' ? '#991b1b' : currentStatus === 'Pending Approval' ? '#9a3412' : '#854d0e',
+                    border: '1px solid currentColor'
+                  }}>
+                  {currentStatus === 'Completed' ? 'Approved' : currentStatus}
+                </span>
+              )}
+            </div>
 
             <ITFeasibilityChecklist
               branchId={branchId}

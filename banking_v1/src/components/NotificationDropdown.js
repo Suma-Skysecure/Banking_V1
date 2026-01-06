@@ -10,48 +10,70 @@ import { useState, useEffect, useRef } from "react";
  */
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "Legal Clearance Required",
-      message: "New property requires legal due diligence review",
-      time: "2 minutes ago",
-      read: false,
-      type: "info",
-    },
-    {
-      id: 2,
-      title: "Document Uploaded",
-      message: "Sales Deed document has been uploaded",
-      time: "15 minutes ago",
-      read: false,
-      type: "success",
-    },
-    {
-      id: 3,
-      title: "BRT Confirmation Pending",
-      message: "BRT confirmation is required for legal call",
-      time: "1 hour ago",
-      read: false,
-      type: "warning",
-    },
-    {
-      id: 4,
-      title: "Legal Clearance Approved",
-      message: "Legal clearance has been granted for Downtown Arts Plaza",
-      time: "2 hours ago",
-      read: true,
-      type: "success",
-    },
-    {
-      id: 5,
-      title: "Compliance Status Updated",
-      message: "Compliance status has been updated to completed",
-      time: "3 hours ago",
-      read: true,
-      type: "info",
-    },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    const loadNotifications = () => {
+      const stored = JSON.parse(localStorage.getItem("userNotifications") || "[]");
+      const defaults = [
+        {
+          id: 1,
+          title: "Legal Clearance Required",
+          message: "New property requires legal due diligence review",
+          time: "2 minutes ago",
+          read: false,
+          type: "info",
+        },
+        {
+          id: 2,
+          title: "Document Uploaded",
+          message: "Sales Deed document has been uploaded",
+          time: "15 minutes ago",
+          read: false,
+          type: "success",
+        },
+        {
+          id: 3,
+          title: "BRT Confirmation Pending",
+          message: "BRT confirmation is required for legal call",
+          time: "1 hour ago",
+          read: false,
+          type: "warning",
+        },
+        {
+          id: 4,
+          title: "Legal Clearance Approved",
+          message: "Legal clearance has been granted for Downtown Arts Plaza",
+          time: "2 hours ago",
+          read: true,
+          type: "success",
+        },
+        {
+          id: 5,
+          title: "Compliance Status Updated",
+          message: "Compliance status has been updated to completed",
+          time: "3 hours ago",
+          read: true,
+          type: "info",
+        },
+      ];
+
+      // Merge stored notifications (newest) with defaults
+      // Ensure IDs are unique if possible, but for UI demo it's fine
+      setNotifications([...stored, ...defaults]);
+    };
+
+    loadNotifications();
+    window.addEventListener("storage", loadNotifications);
+    window.addEventListener("focus", loadNotifications);
+    window.addEventListener("notification-update", loadNotifications);
+
+    return () => {
+      window.removeEventListener("storage", loadNotifications);
+      window.removeEventListener("focus", loadNotifications);
+      window.removeEventListener("notification-update", loadNotifications);
+    };
+  }, []);
 
   const dropdownRef = useRef(null);
 

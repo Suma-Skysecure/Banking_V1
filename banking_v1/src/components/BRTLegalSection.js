@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ToastNotification from "@/components/ToastNotification";
 import "@/css/businessApproval.css";
 
@@ -14,17 +14,42 @@ export default function BRTLegalSection() {
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
   const [notificationType, setNotificationType] = useState("success");
+  const [legalActivities, setLegalActivities] = useState([]);
 
-  // Sample legal clearance activities data
-  const legalActivities = [
-    {
-      id: "1",
-      propertyName: "ABC Mall",
-      propertyAddress: "123 Main St, Springfield, TX",
-      document: "Legal.pdf",
-      documentId: "legal-doc-1",
-    },
-  ];
+  useEffect(() => {
+    const loadData = () => {
+      let stored = JSON.parse(localStorage.getItem("legalRequests") || "[]");
+      if (stored.length === 0) {
+        stored = [
+          {
+            id: "1",
+            propertyName: "Downtown Manhattan Branch",
+            propertyAddress: "New York, NY",
+            document: "Title_Deed_Draft.pdf",
+            status: "Pending"
+          },
+          {
+            id: "2",
+            propertyName: "Miami South Beach Location",
+            propertyAddress: "Miami, FL",
+            document: "Lease_Agreement.pdf",
+            status: "Pending"
+          }
+        ];
+        localStorage.setItem("legalRequests", JSON.stringify(stored));
+      }
+      setLegalActivities(stored);
+
+      // Load existing approvals/rejections to UI state
+      const statusMap = {};
+      stored.forEach(item => {
+        if (item.status === 'Approved') statusMap[item.id] = 'approved';
+        if (item.status === 'Rejected') statusMap[item.id] = 'disapproved';
+      });
+      setApprovalStatus(statusMap);
+    };
+    loadData();
+  }, []);
 
   const getInitials = (name) => {
     if (!name) return "?";
@@ -35,26 +60,53 @@ export default function BRTLegalSection() {
     return name.substring(0, 2).toUpperCase();
   };
 
-  const handleApprove = (activityId) => {
-    setApprovalStatus((prev) => ({
-      ...prev,
-      [activityId]: "approved",
-    }));
-    setNotificationMessage("Legal clearance approved. Notification sent to Legal team.");
-    setNotificationType("success");
+  const updateRequestStatus = (id, newStatus, notificationTitle, notificationMsg, type) => {
+    const stored = JSON.parse(localStorage.getItem("legalRequests") || "[]");
+    const updated = stored.map(item => item.id === id ? { ...item, status: newStatus } : item);
+    localStorage.setItem("legalRequests", JSON.stringify(updated));
+    setLegalActivities(updated);
+
+    const statusKey = newStatus === 'Approved' ? 'approved' : 'disapproved';
+    setApprovalStatus(prev => ({ ...prev, [id]: statusKey }));
+
+    // Send Notification to "Legal Team" (simulated via global notifications)
+    const note = {
+      id: Date.now(),
+      title: notificationTitle,
+      message: notificationMsg,
+      time: "Just now",
+      read: false,
+      type: type
+    };
+    const allNotes = JSON.parse(localStorage.getItem("userNotifications") || "[]");
+    localStorage.setItem("userNotifications", JSON.stringify([note, ...allNotes]));
+
+    // Update UI immediately
+    window.dispatchEvent(new Event("notification-update"));
+
+    setNotificationMessage(notificationMsg);
+    setNotificationType(type);
     setShowNotification(true);
-    console.log("Approved legal clearance for:", activityId);
+  };
+
+  const handleApprove = (activityId) => {
+    updateRequestStatus(
+      activityId,
+      "Approved",
+      "Legal Call Confirmed",
+      "BRT has confirmed the call. Notification sent to Legal Team.",
+      "success"
+    );
   };
 
   const handleDisapprove = (activityId) => {
-    setApprovalStatus((prev) => ({
-      ...prev,
-      [activityId]: "disapproved",
-    }));
-    setNotificationMessage("Legal clearance disapproved. Notification sent to Legal team.");
-    setNotificationType("error");
-    setShowNotification(true);
-    console.log("Disapproved legal clearance for:", activityId);
+    updateRequestStatus(
+      activityId,
+      "Rejected",
+      "Legal Call Rejected",
+      "BRT has rejected the call. Legal Team notified.",
+      "error"
+    );
   };
 
   const handleViewDocument = (document, e) => {
@@ -100,7 +152,7 @@ stream
 BT
 /F1 12 Tf
 100 700 Td
-(Legal Document) Tj
+(Legal Document Content for ${document?.document || 'Review'}) Tj
 ET
 endstream
 endobj
@@ -119,11 +171,10 @@ trailer
 startxref
 398
 %%EOF`;
-    
+
     const blob = new Blob([pdfContent], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
-    // Clean up the URL after a delay
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 

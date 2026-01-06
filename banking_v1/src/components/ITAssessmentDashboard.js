@@ -93,7 +93,7 @@ export default function ITAssessmentDashboard() {
       }
 
       if (status === "Rejected") {
-        displayStage = "IT Assessment Rejected";
+        displayStage = "BRT Rejected - Redo Assessment";
         displayStageColor = "red";
       }
 
@@ -275,6 +275,13 @@ export default function ITAssessmentDashboard() {
 
                         {user.role === "BRT team" && (
                           <>
+                            <span
+                              className="view-details-link"
+                              onClick={() => handleView(b.id)}
+                              style={{ marginRight: '10px' }}
+                            >
+                              View
+                            </span>
                             <button
                               className="action-btn approve-btn"
                               onClick={() => handleApprove(b.id)}
