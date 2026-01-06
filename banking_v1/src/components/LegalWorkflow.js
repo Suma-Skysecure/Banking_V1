@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import DashboardHeader from "@/components/DashboardHeader";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/businessApproval.css";
@@ -14,11 +15,268 @@ import "@/css/businessApproval.css";
 export default function LegalWorkflow() {
   const router = useRouter();
   const { user } = useAuth();
+  const { createNotification } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const fileInputRef = useRef(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const multipleFileInputRef = useRef(null);
+  const [isLOIUploaded, setIsLOIUploaded] = useState(false);
+  const [property, setProperty] = useState(null);
+  const [approvalDate, setApprovalDate] = useState(null);
+  
+  // Load property data from localStorage (from BusinessApproval or original submission)
+  useEffect(() => {
+    try {
+      // First try to get from LegalWorkflow storage (set when approved)
+      let propertyData = localStorage.getItem("propertyForLegalWorkflow");
+      
+      // If not found, try BusinessApproval storage
+      if (!propertyData) {
+        propertyData = localStorage.getItem("propertyForBusinessApproval");
+      }
+      
+      if (propertyData) {
+        const parsedProperty = JSON.parse(propertyData);
+        setProperty(parsedProperty);
+      }
+      
+      // Get approval date (when Business approved it)
+      const approvalDateData = localStorage.getItem("propertyApprovalDate");
+      if (approvalDateData) {
+        setApprovalDate(new Date(approvalDateData));
+      } else {
+        // Fallback to submission date
+        const submissionDateData = localStorage.getItem("propertySubmissionDate");
+        if (submissionDateData) {
+          setApprovalDate(new Date(submissionDateData));
+        }
+      }
+    } catch (error) {
+      console.error("Error loading property data:", error);
+    }
+  }, []);
+  
+  // Format price for display
+  const formatPrice = (price) => {
+    if (!price && price !== 0) return "₹0";
+    // Price might be in USD (for regular properties) or already converted
+    const inrPrice = property?.isImported && property?.priceUSD 
+      ? property.priceUSD * 83.5 
+      : (price * 83.5);
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(inrPrice);
+  };
+  
+  // Format price per sqft
+  const formatPricePerSqft = () => {
+    if (!property) return "₹0 per sq ft";
+    if (property.isImported && property.pricePerSqft) {
+      return `₹${property.pricePerSqft.toLocaleString('en-IN')} per sq ft`;
+    }
+    if (property.pricePerSqft) {
+      return `₹${(property.pricePerSqft * 83.5).toLocaleString('en-IN')} per sq ft`;
+    }
+    return "₹0 per sq ft";
+  };
+  
+  // Format approval date
+  const formatApprovalDate = () => {
+    if (!approvalDate) {
+      // Default to current date if not available
+      const now = new Date();
+      return now.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    }
+    return approvalDate.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+  
+  // Helper function to check if a value is empty/missing
+  const isEmpty = (value) => {
+    return value === null || value === undefined || value === "" || 
+           (typeof value === "string" && value.trim() === "");
+  };
+  
+  // Helper function to generate default values ONLY for missing property fields
+  const generateDefaultPropertyFields = (property) => {
+    if (!property) return {};
+    
+    const defaults = {};
+    
+    // Extract area number from size string (e.g., "3,500 sq ft" -> 3500)
+    const areaMatch = (property.size || property.totalArea || "").match(/[\d,]+/);
+    const areaNum = areaMatch ? parseInt(areaMatch[0].replace(/,/g, "")) : 0;
+    
+    // Only generate floor level if missing
+    if (isEmpty(property.floorLevel)) {
+      if (property.type?.toLowerCase().includes("industrial")) {
+        defaults.floorLevel = areaNum > 10000 ? "Ground Floor + Warehouse" : "Ground Floor";
+      } else if (property.type?.toLowerCase().includes("retail")) {
+        defaults.floorLevel = "Ground Floor";
+      } else if (areaNum > 5000) {
+        defaults.floorLevel = "Multiple Floors Available";
+      } else {
+        defaults.floorLevel = "Ground Floor + Mezzanine";
+      }
+    }
+    
+    // Only generate parking spaces if missing
+    if (isEmpty(property.parkingSpaces)) {
+      const spaces = Math.max(2, Math.floor(areaNum / 500));
+      defaults.parkingSpaces = `${spaces} Reserved Spaces`;
+    }
+    
+    // Only generate year built if missing
+    if (isEmpty(property.yearBuilt)) {
+      const currentYear = new Date().getFullYear();
+      const baseYear = property.type?.toLowerCase().includes("industrial") ? 2015 : 2018;
+      defaults.yearBuilt = String(Math.max(baseYear, currentYear - 6));
+    }
+    
+    // Only generate vendor name if missing
+    if (isEmpty(property.vendorName)) {
+      const address = property.address || "";
+      if (address.includes("Brickell")) defaults.vendorName = "Brickell Development Group";
+      else if (address.includes("Downtown")) defaults.vendorName = "Downtown Properties LLC";
+      else if (address.includes("South Beach")) defaults.vendorName = "South Beach Realty Partners";
+      else if (address.includes("Westside")) defaults.vendorName = "Westside Commercial Holdings";
+      else if (address.includes("North Miami")) defaults.vendorName = "North Miami Development Corp";
+      else if (address.includes("Eastside")) defaults.vendorName = "Eastside Business Ventures";
+      else if (address.includes("Marina")) defaults.vendorName = "Marina Commercial Realty";
+      else defaults.vendorName = "Miami Commercial Realty Group";
+    }
+    
+    // Only generate vendor contact if missing
+    if (isEmpty(property.vendorContact)) {
+      const areaCode = property.address?.match(/FL (\d{5})/)?.[1]?.substring(0, 3) || "305";
+      const propIdNum = parseInt(String(property.id || property.propertyId || "0").replace(/\D/g, "")) || 0;
+      const lastFour = String((propIdNum % 9000) + 1000).padStart(4, '0');
+      defaults.vendorContact = `+1 (${areaCode}) 555-${lastFour}`;
+    }
+    
+    // Only generate vendor email if missing
+    if (isEmpty(property.vendorEmail)) {
+      const vendorName = (property.vendorName || defaults.vendorName || "Miami Commercial Realty Group")
+        .toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
+      defaults.vendorEmail = `info@${vendorName}.com`;
+    }
+    
+    // Only generate listing status if missing
+    if (isEmpty(property.listingStatus)) {
+      defaults.listingStatus = property.statusType === "available" ? "Active Listing" : "Pending Listing";
+    }
+    
+    // Only generate zoning if missing
+    if (isEmpty(property.zoning)) {
+      const type = property.type?.toLowerCase() || "";
+      if (type.includes("commercial office")) defaults.zoning = "Commercial/Office";
+      else if (type.includes("retail")) defaults.zoning = "Commercial/Retail";
+      else if (type.includes("industrial")) defaults.zoning = "Industrial";
+      else if (type.includes("mixed use")) defaults.zoning = "Mixed Use";
+      else defaults.zoning = "Commercial";
+    }
+    
+    // Only generate last inspection if missing
+    if (isEmpty(property.lastInspection)) {
+      if (property.lastInspectionDate) {
+        defaults.lastInspection = new Date(property.lastInspectionDate).toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      } else {
+        const months = ["January", "February", "March", "April", "May", "June", 
+                        "July", "August", "September", "October", "November", "December"];
+        const currentDate = new Date();
+        const inspectionDate = new Date(currentDate);
+        inspectionDate.setMonth(currentDate.getMonth() - 2);
+        defaults.lastInspection = `${months[inspectionDate.getMonth()]} ${inspectionDate.getDate()}, ${inspectionDate.getFullYear()}`;
+      }
+    }
+    
+    return defaults;
+  };
+  
+  // Default property if none loaded
+  const defaultProperty = {
+    id: "PROP-MIA-2024-002",
+    name: "Downtown Arts Plaza",
+    address: "1450 Biscayne Boulevard, Miami, FL 33132",
+    status: "Available in 30 days",
+    statusType: "pending",
+    price: 5800000,
+    pricePerSqft: 1381,
+    type: "Mixed Use",
+    totalArea: "4,200 sq ft",
+    floorLevel: "Ground Floor + Mezzanine",
+    parkingSpaces: "8 Reserved Spaces",
+    yearBuilt: "2019",
+    vendorName: "Biscayne Development Group",
+    vendorContact: "+1 (305) 555-0198",
+    listingStatus: "Active Listing",
+    zoning: "Commercial/Retail",
+    lastInspection: "December 10, 2024",
+  };
+  
+  // Generate defaults ONLY for missing fields and merge with property data
+  // Preserve exact data from SRBM pages, only fill in what's missing
+  const propertyWithDefaults = property ? (() => {
+    const defaults = generateDefaultPropertyFields(property);
+    const merged = { ...property };
+    
+    // Only apply defaults for fields that are truly missing/empty
+    Object.keys(defaults).forEach(key => {
+      if (isEmpty(merged[key])) {
+        merged[key] = defaults[key];
+      }
+    });
+    
+    // Ensure essential fields are present (only if missing)
+    if (isEmpty(merged.id)) {
+      merged.id = merged.propertyId || `PROP-MIA-2024-${String(property.id || Date.now()).padStart(3, '0')}`;
+    }
+    if (isEmpty(merged.name)) {
+      merged.name = "Property";
+    }
+    if (isEmpty(merged.address)) {
+      merged.address = "Address not available";
+    }
+    if (isEmpty(merged.type)) {
+      merged.type = "Commercial";
+    }
+    if (isEmpty(merged.totalArea) && isEmpty(merged.size)) {
+      merged.totalArea = "";
+    } else if (isEmpty(merged.totalArea) && !isEmpty(merged.size)) {
+      merged.totalArea = merged.size;
+    }
+    if (isEmpty(merged.status)) {
+      merged.status = "Available";
+    }
+    if (isEmpty(merged.statusType)) {
+      merged.statusType = "pending";
+    }
+    if (merged.price === null || merged.price === undefined) {
+      merged.price = 0;
+    }
+    if (merged.pricePerSqft === null || merged.pricePerSqft === undefined) {
+      merged.pricePerSqft = 0;
+    }
+    
+    return merged;
+  })() : defaultProperty;
+  
+  const displayProperty = propertyWithDefaults;
   
   // All restrictions removed - all users have full access
 
@@ -170,6 +428,19 @@ export default function LegalWorkflow() {
       // Store all documents in localStorage
       localStorage.setItem("uploadedLegalDocuments", JSON.stringify(documentsToStore));
       
+      // Create notification for Legal Due team
+      const fileNames = uploadedFiles.map(f => f.name).join(", ");
+      const notificationMessage = uploadedFiles.length === 1
+        ? `Legal document "${fileNames}" has been submitted and approved for review`
+        : `${uploadedFiles.length} legal documents have been submitted and approved for review`;
+      
+      createNotification(
+        notificationMessage,
+        "info",
+        "/legal-due",
+        "Legal due"
+      );
+      
       // Show success message
       alert(`Successfully submitted ${uploadedFiles.length} document(s)! The documents are now available in the Legal Due page.`);
     } catch (error) {
@@ -215,7 +486,7 @@ export default function LegalWorkflow() {
             {/* Property Overview Card */}
             <div className="property-overview-card">
               <div className="property-overview-left">
-                <h2 className="property-name-large">Downtown Arts Plaza</h2>
+                <h2 className="property-name-large">{displayProperty.name}</h2>
                 <div className="property-address-large">
                   <svg
                     width="20"
@@ -236,7 +507,7 @@ export default function LegalWorkflow() {
                       strokeLinejoin="round"
                     />
                   </svg>
-                  <span>1450 Biscayne Boulevard, Miami, FL 33132</span>
+                  <span>{displayProperty.address}</span>
                 </div>
                 <div className="property-status-section">
                   <div className="property-status-tag pending">
@@ -264,12 +535,12 @@ export default function LegalWorkflow() {
                     </svg>
                     Pending LOI Signing
                   </div>
-                  <div className="submitted-date">Approved on Dec 15, 2024</div>
+                  <div className="submitted-date">Approved on {formatApprovalDate()}</div>
                 </div>
               </div>
               <div className="property-overview-right">
-                <div className="property-price-large">₹48,43,00,000</div>
-                <div className="property-price-per-sqft-large">₹1,15,313 per sq ft</div>
+                <div className="property-price-large">{formatPrice(displayProperty.price)}</div>
+                <div className="property-price-per-sqft-large">{formatPricePerSqft()}</div>
               </div>
             </div>
 
@@ -302,53 +573,57 @@ export default function LegalWorkflow() {
               <div className="details-grid">
                 <div className="detail-item">
                   <span className="detail-label">Property ID</span>
-                  <span className="detail-value">PROP-MIA-2024-002</span>
+                  <span className="detail-value">{displayProperty.id}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Parking Spaces</span>
-                  <span className="detail-value">8 Reserved</span>
+                  <span className="detail-value">{displayProperty.parkingSpaces}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Zoning</span>
-                  <span className="detail-value">Commercial/Retail</span>
+                  <span className="detail-value">{displayProperty.zoning}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Property Type</span>
-                  <span className="detail-value">Mixed Use</span>
+                  <span className="detail-value">{displayProperty.type}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Year Built</span>
-                  <span className="detail-value">2019</span>
+                  <span className="detail-value">{displayProperty.yearBuilt}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Listing Status</span>
                   <span className="detail-value">
-                    <span className="status-badge active">Active</span>
+                    <span className="status-badge active">{displayProperty.listingStatus}</span>
                   </span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Total Area</span>
-                  <span className="detail-value">4,200 sq ft</span>
+                  <span className="detail-value">{displayProperty.totalArea || displayProperty.size || ""}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Vendor Name</span>
-                  <span className="detail-value">Biscayne Development</span>
+                  <span className="detail-value">{displayProperty.vendorName}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Availability</span>
-                  <span className="detail-value">30 days</span>
+                  <span className="detail-value">
+                    {displayProperty.status?.match(/(\d+)\s*days?/i) 
+                      ? `${displayProperty.status.match(/(\d+)\s*days?/i)[1]} days`
+                      : (displayProperty.status || "Available Now")}
+                  </span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Floor Level</span>
-                  <span className="detail-value">Ground Floor + Mezzanine</span>
+                  <span className="detail-value">{displayProperty.floorLevel}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Vendor Contact</span>
-                  <span className="detail-value">+1 (305) 555-0198</span>
+                  <span className="detail-value">{displayProperty.vendorContact}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Last Inspection</span>
-                  <span className="detail-value">Dec 10, 2024</span>
+                  <span className="detail-value">{displayProperty.lastInspection}</span>
                 </div>
               </div>
             </div>
@@ -675,6 +950,35 @@ export default function LegalWorkflow() {
                         // Store in localStorage
                         localStorage.setItem("uploadedSignedLOI", JSON.stringify(fileData));
                         
+                        // Update upload status
+                        setIsLOIUploaded(true);
+                        // Create notifications for Legal Due, Site Measurement, and IT teams
+                        const notificationMessage = `Signed LOI document "${file.name}" has been uploaded and is ready for review`;
+                        
+                        // Create notification for Legal Due team
+                        createNotification(
+                          notificationMessage,
+                          "info",
+                          "/legal-due",
+                          "Legal due"
+                        );
+                        
+                        // Create notification for Site Measurement team
+                        createNotification(
+                          notificationMessage,
+                          "info",
+                          "/post-loi-activities",
+                          "Site measurement"
+                        );
+                        
+                        // Create notification for IT team
+                        createNotification(
+                          notificationMessage,
+                          "info",
+                          "/dashboard",
+                          "IT team"
+                        );
+                        
                         // Show success message
                         alert(`File "${file.name}" uploaded successfully! The document is now available in Post-LOI Activities and Legal Due pages.`);
                       };
@@ -687,41 +991,71 @@ export default function LegalWorkflow() {
                   style={{ display: "none" }}
                 />
                 <button
-                  className="decision-button approve-button"
+                  className={isLOIUploaded ? "decision-button" : "decision-button approve-button"}
                   onClick={() => {
-                    fileInputRef.current?.click();
+                    if (!isLOIUploaded) {
+                      fileInputRef.current?.click();
+                    }
                   }}
+                  disabled={isLOIUploaded}
                   style={{
                     padding: "14px 32px",
                     fontSize: "16px",
                     fontWeight: "600",
                     display: "flex",
                     alignItems: "center",
-                    gap: "10px"
+                    gap: "10px",
+                    backgroundColor: isLOIUploaded ? "#10b981" : undefined,
+                    color: isLOIUploaded ? "#ffffff" : undefined,
+                    cursor: isLOIUploaded ? "default" : "pointer",
+                    opacity: isLOIUploaded ? 1 : undefined
                   }}
                 >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    className="button-icon"
-                  >
-                    <path
-                      d="M10 2V12M6 8L10 2L14 8"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M2 16V17C2 18.1046 2.89543 19 4 19H16C17.1046 19 18 18.1046 18 17V16"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  Upload signed LOI
+                  {isLOIUploaded ? (
+                    <>
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        className="button-icon"
+                      >
+                        <path
+                          d="M16.667 5L7.5 14.167L3.333 10"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      Uploaded
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        className="button-icon"
+                      >
+                        <path
+                          d="M10 2V12M6 8L10 2L14 8"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M2 16V17C2 18.1046 2.89543 19 4 19H16C17.1046 19 18 18.1046 18 17V16"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      Upload signed LOI
+                    </>
+                  )}
                 </button>
               </div>
             </div>

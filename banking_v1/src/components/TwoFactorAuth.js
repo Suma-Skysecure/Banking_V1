@@ -84,12 +84,12 @@ export default function TwoFactorAuth() {
         {/* Left Panel - Branding */}
         <div className="login-left-panel">
           <div className="login-overlay">
-            <h1 className="login-title">Property Management System</h1>
+            <h1 className="login-title">Branch Management System</h1>
             <p className="login-tagline">
-              Streamlining every step of your property journey, from acquisition to launch.
+              Streamlining every step of your business journey, from acquisition to launch.
             </p>
             <p className="login-copyright">
-              ©2025 Property Management Inc. All rights reserved.
+              ©2025 Business Management Inc. All rights reserved.
             </p>
           </div>
         </div>
