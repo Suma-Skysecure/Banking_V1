@@ -49,7 +49,7 @@ export default function AgreementExecution() {
               gap: "24px",
               marginTop: "24px"
             }}>
-              {/* Site Management Card */}
+              {/* Site Measurement Card */}
               <div style={{
                 backgroundColor: "#ffffff",
                 border: "1px solid #e5e7eb",
@@ -95,7 +95,7 @@ export default function AgreementExecution() {
                     color: "#111827",
                     margin: 0
                   }}>
-                    Site Management
+                    Site Measurement
                   </h3>
                 </div>
                 <div style={{ marginBottom: "12px" }}>
@@ -196,7 +196,7 @@ export default function AgreementExecution() {
                 </button>
               </div>
 
-              {/* Overall Budget Card */}
+              {/* Vendor Card */}
               <div style={{
                 backgroundColor: "#ffffff",
                 border: "1px solid #e5e7eb",
@@ -221,7 +221,14 @@ export default function AgreementExecution() {
                   }}>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                       <path
-                        d="M10 2V18M8 6H12C12.5523 6 13 6.44772 13 7C13 7.55228 12.5523 8 12 8H8C7.44772 8 7 8.44772 7 9C7 9.55228 7.44772 10 8 10H12C12.5523 10 13 10.4477 13 11C13 11.5523 12.5523 12 12 12H8"
+                        d="M10 10C12.7614 10 15 7.76142 15 5C15 2.23858 12.7614 0 10 0C7.23858 0 5 2.23858 5 5C5 7.76142 7.23858 10 10 10Z"
+                        stroke="#ea580c"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M10 12C5.58172 12 2 15.5817 2 20H18C18 15.5817 14.4183 12 10 12Z"
                         stroke="#ea580c"
                         strokeWidth="1.5"
                         strokeLinecap="round"
@@ -235,118 +242,404 @@ export default function AgreementExecution() {
                     color: "#111827",
                     margin: 0
                   }}>
-                    Overall Budget
+                    Vendor
                   </h3>
                 </div>
-                <div style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  marginBottom: "20px"
-                }}>
-                  <div>
-                    <div style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      marginBottom: "8px"
-                    }}>
-                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Status:</span>
-                      <span style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        padding: "4px 12px",
-                        backgroundColor: "#d1fae5",
-                        color: "#065f46",
-                        borderRadius: "20px",
-                        fontSize: "12px",
-                        fontWeight: "600"
-                      }}>
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                          <path
-                            d="M13 4L6 11L3 8"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        Approved
-                      </span>
-                    </div>
-                    <div style={{
-                      display: "flex",
+                <div style={{ marginBottom: "12px" }}>
+                  <div style={{
+                    fontSize: "14px",
+                    color: "#6b7280",
+                    marginBottom: "8px"
+                  }}>
+                    Vendor Name:
+                  </div>
+                  <div style={{
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    color: "#111827",
+                    marginBottom: "12px"
+                  }}>
+                    Biscayne Development Group
+                  </div>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginBottom: "8px"
+                  }}>
+                    <span style={{ fontSize: "14px", color: "#6b7280" }}>Status:</span>
+                    <span style={{
+                      display: "inline-flex",
                       alignItems: "center",
                       gap: "6px",
-                      fontSize: "14px",
-                      color: "#6b7280",
-                      marginBottom: "12px"
+                      padding: "4px 12px",
+                      backgroundColor: "#d1fae5",
+                      color: "#065f46",
+                      borderRadius: "20px",
+                      fontSize: "12px",
+                      fontWeight: "600"
                     }}>
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <circle cx="8" cy="8" r="6" stroke="#ef4444" strokeWidth="1.5" />
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                         <path
-                          d="M8 4V8L10.5 10.5"
-                          stroke="#ef4444"
-                          strokeWidth="1.5"
+                          d="M13 4L6 11L3 8"
+                          stroke="currentColor"
+                          strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
                       </svg>
-                      Approved on: December 18, 2024
-                    </div>
-                    <div>
-                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Total Budget:</span>
-                      <span style={{
-                        fontSize: "24px",
-                        fontWeight: "700",
-                        color: "#111827",
-                        marginLeft: "8px"
-                      }}>
-                        $7,250,000
-                      </span>
-                    </div>
+                      Approved
+                    </span>
                   </div>
-                  <button
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "10px 20px",
-                      backgroundColor: "#1e3a8a",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      transition: "background-color 0.2s"
-                    }}
-                    onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
-                    onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
-                    onClick={() => {
-                      console.log("See Budget Details");
-                    }}
-                  >
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "14px",
+                    color: "#6b7280"
+                  }}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="6" stroke="#ef4444" strokeWidth="1.5" />
                       <path
-                        d="M2 12L6 8L9 11L14 6"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M10 6H14V10"
-                        stroke="currentColor"
+                        d="M8 4V8L10.5 10.5"
+                        stroke="#ef4444"
                         strokeWidth="1.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     </svg>
-                    See Budget Details
-                  </button>
+                    Created on: December 17, 2024
+                  </div>
                 </div>
+                <button
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "10px 20px",
+                    backgroundColor: "#1e3a8a",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s",
+                    marginTop: "16px"
+                  }}
+                  onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
+                  onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
+                  onClick={() => {
+                    console.log("View Vendor Details");
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M8 4C5.5 4 3 6.5 3 9C3 11 5 13 8 13C11 13 13 11 13 9C13 6.5 10.5 4 8 4Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <circle
+                      cx="8"
+                      cy="9"
+                      r="2"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                  </svg>
+                  View Vendor Details
+                </button>
+              </div>
+
+              {/* Legal Due Card */}
+              <div style={{
+                backgroundColor: "#ffffff",
+                border: "1px solid #e5e7eb",
+                borderRadius: "8px",
+                padding: "24px",
+                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)"
+              }}>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "16px"
+                }}>
+                  <div style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "8px",
+                    backgroundColor: "#fed7aa",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M3 4H17M3 8H17M3 12H17M3 16H17"
+                        stroke="#ea580c"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M6 2V6M14 2V6"
+                        stroke="#ea580c"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <h3 style={{
+                    fontSize: "18px",
+                    fontWeight: "600",
+                    color: "#111827",
+                    margin: 0
+                  }}>
+                    Legal Due
+                  </h3>
+                </div>
+                <div style={{ marginBottom: "12px" }}>
+                  <h4 style={{
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    color: "#111827",
+                    margin: "0 0 12px 0"
+                  }}>
+                    Legal Clearance
+                  </h4>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginBottom: "8px"
+                  }}>
+                    <span style={{ fontSize: "14px", color: "#6b7280" }}>Status:</span>
+                    <span style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "4px 12px",
+                      backgroundColor: "#d1fae5",
+                      color: "#065f46",
+                      borderRadius: "20px",
+                      fontSize: "12px",
+                      fontWeight: "600"
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                        <path
+                          d="M13 4L6 11L3 8"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      Cleared
+                    </span>
+                  </div>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "14px",
+                    color: "#6b7280"
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="6" stroke="#ef4444" strokeWidth="1.5" />
+                      <path
+                        d="M8 4V8L10.5 10.5"
+                        stroke="#ef4444"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Cleared on: December 16, 2024
+                  </div>
+                </div>
+                <button
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "10px 20px",
+                    backgroundColor: "#1e3a8a",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s",
+                    marginTop: "16px"
+                  }}
+                  onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
+                  onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
+                  onClick={() => {
+                    console.log("View Legal Documents");
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M4 4C4 2.89543 4.89543 2 6 2H14C15.1046 2 16 2.89543 16 4V16C16 17.1046 15.1046 18 14 18H6C4.89543 18 4 17.1046 4 16V4Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                    <path
+                      d="M6 6H14M6 10H14M6 14H10"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  View Legal Documents
+                </button>
+              </div>
+
+              {/* IT Team Card */}
+              <div style={{
+                backgroundColor: "#ffffff",
+                border: "1px solid #e5e7eb",
+                borderRadius: "8px",
+                padding: "24px",
+                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)"
+              }}>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "16px"
+                }}>
+                  <div style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "8px",
+                    backgroundColor: "#fed7aa",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M10 2V6M10 14V18M2 10H6M14 10H18"
+                        stroke="#ea580c"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      <circle cx="10" cy="10" r="3" stroke="#ea580c" strokeWidth="1.5" />
+                    </svg>
+                  </div>
+                  <h3 style={{
+                    fontSize: "18px",
+                    fontWeight: "600",
+                    color: "#111827",
+                    margin: 0
+                  }}>
+                    IT Team
+                  </h3>
+                </div>
+                <div style={{ marginBottom: "12px" }}>
+                  <h4 style={{
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    color: "#111827",
+                    margin: "0 0 12px 0"
+                  }}>
+                    IT Assessment
+                  </h4>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginBottom: "8px"
+                  }}>
+                    <span style={{ fontSize: "14px", color: "#6b7280" }}>Status:</span>
+                    <span style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "4px 12px",
+                      backgroundColor: "#d1fae5",
+                      color: "#065f46",
+                      borderRadius: "20px",
+                      fontSize: "12px",
+                      fontWeight: "600"
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                        <path
+                          d="M13 4L6 11L3 8"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      Completed
+                    </span>
+                  </div>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "14px",
+                    color: "#6b7280"
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="6" stroke="#ef4444" strokeWidth="1.5" />
+                      <path
+                        d="M8 4V8L10.5 10.5"
+                        stroke="#ef4444"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Completed on: December 15, 2024
+                  </div>
+                </div>
+                <button
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "10px 20px",
+                    backgroundColor: "#1e3a8a",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s",
+                    marginTop: "16px"
+                  }}
+                  onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
+                  onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
+                  onClick={() => {
+                    console.log("View IT Assessment");
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M2 12L6 8L9 11L14 6"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M10 6H14V10"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  View IT Assessment
+                </button>
               </div>
             </div>
 
