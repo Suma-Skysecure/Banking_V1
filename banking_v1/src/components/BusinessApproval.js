@@ -243,20 +243,50 @@ export default function BusinessApproval() {
   
   // Generate defaults ONLY for missing fields and merge with property data
   // Preserve exact data from SRBM pages, only fill in what's missing
-  const propertyWithDefaults = property ? {
-    ...property,
-    ...generateDefaultPropertyFields(property),
-    // Only set essential fields if they're completely missing
-    id: property.propertyId || property.id || `PROP-MIA-2024-${String(property.id || Date.now()).padStart(3, '0')}`,
-    name: property.name || "Property",
-    address: property.address || "Address not available",
-    type: property.type || "Commercial",
-    totalArea: property.totalArea || property.size || "",
-    status: property.status || "Available",
-    statusType: property.statusType || "pending",
-    price: property.price !== undefined && property.price !== null ? property.price : 0,
-    pricePerSqft: property.pricePerSqft !== undefined && property.pricePerSqft !== null ? property.pricePerSqft : 0,
-  } : defaultProperty;
+  const propertyWithDefaults = property ? (() => {
+    const defaults = generateDefaultPropertyFields(property);
+    const merged = { ...property };
+    
+    // Only apply defaults for fields that are truly missing/empty
+    Object.keys(defaults).forEach(key => {
+      if (isEmpty(merged[key])) {
+        merged[key] = defaults[key];
+      }
+    });
+    
+    // Ensure essential fields are present (only if missing)
+    if (isEmpty(merged.id)) {
+      merged.id = merged.propertyId || `PROP-MIA-2024-${String(property.id || Date.now()).padStart(3, '0')}`;
+    }
+    if (isEmpty(merged.name)) {
+      merged.name = "Property";
+    }
+    if (isEmpty(merged.address)) {
+      merged.address = "Address not available";
+    }
+    if (isEmpty(merged.type)) {
+      merged.type = "Commercial";
+    }
+    if (isEmpty(merged.totalArea) && isEmpty(merged.size)) {
+      merged.totalArea = "";
+    } else if (isEmpty(merged.totalArea) && !isEmpty(merged.size)) {
+      merged.totalArea = merged.size;
+    }
+    if (isEmpty(merged.status)) {
+      merged.status = "Available";
+    }
+    if (isEmpty(merged.statusType)) {
+      merged.statusType = "pending";
+    }
+    if (merged.price === null || merged.price === undefined) {
+      merged.price = 0;
+    }
+    if (merged.pricePerSqft === null || merged.pricePerSqft === undefined) {
+      merged.pricePerSqft = 0;
+    }
+    
+    return merged;
+  })() : defaultProperty;
   
   const displayProperty = propertyWithDefaults;
   

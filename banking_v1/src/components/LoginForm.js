@@ -102,7 +102,7 @@ export default function LoginForm() {
         {/* Left Panel - Branding */}
         <div className="login-left-panel">
           <div className="login-overlay">
-            <h1 className="login-title">Business Management System</h1>
+            <h1 className="login-title">Branch Management System</h1>
             <p className="login-tagline">
               Streamlining every step of your business journey, from acquisition to launch.
             </p>
