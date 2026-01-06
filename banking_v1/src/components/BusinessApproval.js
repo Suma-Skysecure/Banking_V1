@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
@@ -16,12 +16,258 @@ export default function BusinessApproval() {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [reviewComments, setReviewComments] = useState("");
+  const [property, setProperty] = useState(null);
+  const [submissionDate, setSubmissionDate] = useState(null);
+  
+  // Load property data from localStorage
+  useEffect(() => {
+    try {
+      const propertyData = localStorage.getItem("propertyForBusinessApproval");
+      const submissionDateData = localStorage.getItem("propertySubmissionDate");
+      
+      if (propertyData) {
+        const parsedProperty = JSON.parse(propertyData);
+        setProperty(parsedProperty);
+      }
+      
+      if (submissionDateData) {
+        setSubmissionDate(new Date(submissionDateData));
+      }
+    } catch (error) {
+      console.error("Error loading property data:", error);
+    }
+  }, []);
+  
+  // Format price for display
+  const formatPrice = (price) => {
+    if (!price && price !== 0) return "₹0";
+    // Price might be in USD (for regular properties) or already converted
+    const inrPrice = property?.isImported && property?.priceUSD 
+      ? property.priceUSD * 83.5 
+      : (price * 83.5);
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(inrPrice);
+  };
+  
+  // Format price per sqft
+  const formatPricePerSqft = () => {
+    if (!property) return "₹0 per sq ft";
+    if (property.isImported && property.pricePerSqft) {
+      return `₹${property.pricePerSqft.toLocaleString('en-IN')} per sq ft`;
+    }
+    if (property.pricePerSqft) {
+      return `₹${(property.pricePerSqft * 83.5).toLocaleString('en-IN')} per sq ft`;
+    }
+    return "₹0 per sq ft";
+  };
+  
+  // Format submission date
+  const formatSubmissionDate = () => {
+    if (!submissionDate) {
+      // Default to current date if not available
+      const now = new Date();
+      return now.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    }
+    return submissionDate.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+  
+  // Format submission date with time
+  const formatSubmissionDateTime = () => {
+    if (!submissionDate) {
+      // Default to current date/time if not available
+      const now = new Date();
+      return now.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    }
+    return submissionDate.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+  
+  // Extract availability days from status
+  const getAvailabilityDays = () => {
+    if (!property?.status) return "Available Now";
+    const match = property.status.match(/(\d+)\s*days?/i);
+    return match ? `${match[1]} days` : "Available Now";
+  };
+  
+  // Helper function to check if a value is empty/missing
+  const isEmpty = (value) => {
+    return value === null || value === undefined || value === "" || 
+           (typeof value === "string" && value.trim() === "");
+  };
+  
+  // Helper function to generate default values ONLY for missing property fields
+  const generateDefaultPropertyFields = (property) => {
+    if (!property) return {};
+    
+    const defaults = {};
+    
+    // Extract area number from size string (e.g., "3,500 sq ft" -> 3500)
+    const areaMatch = (property.size || property.totalArea || "").match(/[\d,]+/);
+    const areaNum = areaMatch ? parseInt(areaMatch[0].replace(/,/g, "")) : 0;
+    
+    // Only generate floor level if missing
+    if (isEmpty(property.floorLevel)) {
+      if (property.type?.toLowerCase().includes("industrial")) {
+        defaults.floorLevel = areaNum > 10000 ? "Ground Floor + Warehouse" : "Ground Floor";
+      } else if (property.type?.toLowerCase().includes("retail")) {
+        defaults.floorLevel = "Ground Floor";
+      } else if (areaNum > 5000) {
+        defaults.floorLevel = "Multiple Floors Available";
+      } else {
+        defaults.floorLevel = "Ground Floor + Mezzanine";
+      }
+    }
+    
+    // Only generate parking spaces if missing
+    if (isEmpty(property.parkingSpaces)) {
+      const spaces = Math.max(2, Math.floor(areaNum / 500));
+      defaults.parkingSpaces = `${spaces} Reserved Spaces`;
+    }
+    
+    // Only generate year built if missing
+    if (isEmpty(property.yearBuilt)) {
+      const currentYear = new Date().getFullYear();
+      const baseYear = property.type?.toLowerCase().includes("industrial") ? 2015 : 2018;
+      defaults.yearBuilt = String(Math.max(baseYear, currentYear - 6));
+    }
+    
+    // Only generate vendor name if missing
+    if (isEmpty(property.vendorName)) {
+      const address = property.address || "";
+      if (address.includes("Brickell")) defaults.vendorName = "Brickell Development Group";
+      else if (address.includes("Downtown")) defaults.vendorName = "Downtown Properties LLC";
+      else if (address.includes("South Beach")) defaults.vendorName = "South Beach Realty Partners";
+      else if (address.includes("Westside")) defaults.vendorName = "Westside Commercial Holdings";
+      else if (address.includes("North Miami")) defaults.vendorName = "North Miami Development Corp";
+      else if (address.includes("Eastside")) defaults.vendorName = "Eastside Business Ventures";
+      else if (address.includes("Marina")) defaults.vendorName = "Marina Commercial Realty";
+      else defaults.vendorName = "Miami Commercial Realty Group";
+    }
+    
+    // Only generate vendor contact if missing
+    if (isEmpty(property.vendorContact)) {
+      const areaCode = property.address?.match(/FL (\d{5})/)?.[1]?.substring(0, 3) || "305";
+      const propIdNum = parseInt(String(property.id || property.propertyId || "0").replace(/\D/g, "")) || 0;
+      const lastFour = String((propIdNum % 9000) + 1000).padStart(4, '0');
+      defaults.vendorContact = `+1 (${areaCode}) 555-${lastFour}`;
+    }
+    
+    // Only generate vendor email if missing
+    if (isEmpty(property.vendorEmail)) {
+      const vendorName = (property.vendorName || defaults.vendorName || "Miami Commercial Realty Group")
+        .toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
+      defaults.vendorEmail = `info@${vendorName}.com`;
+    }
+    
+    // Only generate listing status if missing
+    if (isEmpty(property.listingStatus)) {
+      defaults.listingStatus = property.statusType === "available" ? "Active Listing" : "Pending Listing";
+    }
+    
+    // Only generate zoning if missing
+    if (isEmpty(property.zoning)) {
+      const type = property.type?.toLowerCase() || "";
+      if (type.includes("commercial office")) defaults.zoning = "Commercial/Office";
+      else if (type.includes("retail")) defaults.zoning = "Commercial/Retail";
+      else if (type.includes("industrial")) defaults.zoning = "Industrial";
+      else if (type.includes("mixed use")) defaults.zoning = "Mixed Use";
+      else defaults.zoning = "Commercial";
+    }
+    
+    // Only generate last inspection if missing
+    if (isEmpty(property.lastInspection)) {
+      if (property.lastInspectionDate) {
+        defaults.lastInspection = new Date(property.lastInspectionDate).toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      } else {
+        const months = ["January", "February", "March", "April", "May", "June", 
+                        "July", "August", "September", "October", "November", "December"];
+        const currentDate = new Date();
+        const inspectionDate = new Date(currentDate);
+        inspectionDate.setMonth(currentDate.getMonth() - 2);
+        defaults.lastInspection = `${months[inspectionDate.getMonth()]} ${inspectionDate.getDate()}, ${inspectionDate.getFullYear()}`;
+      }
+    }
+    
+    return defaults;
+  };
+  
+  // Default property if none loaded
+  const defaultProperty = {
+    id: "PROP-MIA-2024-002",
+    name: "Downtown Arts Plaza",
+    address: "1450 Biscayne Boulevard, Miami, FL 33132",
+    status: "Available in 30 days",
+    statusType: "pending",
+    price: 5800000,
+    pricePerSqft: 1381,
+    type: "Mixed Use",
+    totalArea: "4,200 sq ft",
+    floorLevel: "Ground Floor + Mezzanine",
+    parkingSpaces: "8 Reserved Spaces",
+    yearBuilt: "2019",
+    vendorName: "Biscayne Development Group",
+    vendorContact: "+1 (305) 555-0198",
+    listingStatus: "Active Listing",
+    zoning: "Commercial/Retail",
+    lastInspection: "December 10, 2024",
+  };
+  
+  // Generate defaults ONLY for missing fields and merge with property data
+  // Preserve exact data from SRBM pages, only fill in what's missing
+  const propertyWithDefaults = property ? {
+    ...property,
+    ...generateDefaultPropertyFields(property),
+    // Only set essential fields if they're completely missing
+    id: property.propertyId || property.id || `PROP-MIA-2024-${String(property.id || Date.now()).padStart(3, '0')}`,
+    name: property.name || "Property",
+    address: property.address || "Address not available",
+    type: property.type || "Commercial",
+    totalArea: property.totalArea || property.size || "",
+    status: property.status || "Available",
+    statusType: property.statusType || "pending",
+    price: property.price !== undefined && property.price !== null ? property.price : 0,
+    pricePerSqft: property.pricePerSqft !== undefined && property.pricePerSqft !== null ? property.pricePerSqft : 0,
+  } : defaultProperty;
+  
+  const displayProperty = propertyWithDefaults;
   
   // All restrictions removed - all users have full access
 
   return (
     <div className="dashboard-container">
-      <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <DashboardHeader 
+        sidebarOpen={sidebarOpen} 
+        setSidebarOpen={setSidebarOpen}
+      />
 
       <div className="dashboard-content-wrapper">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -56,7 +302,7 @@ export default function BusinessApproval() {
             {/* Property Overview Card */}
             <div className="property-overview-card">
               <div className="property-overview-left">
-                <h2 className="property-name-large">Downtown Arts Plaza</h2>
+                <h2 className="property-name-large">{displayProperty.name}</h2>
                 <div className="property-address-large">
                   <svg
                     width="20"
@@ -77,7 +323,7 @@ export default function BusinessApproval() {
                       strokeLinejoin="round"
                     />
                   </svg>
-                  <span>1450 Biscayne Boulevard, Miami, FL 33132</span>
+                  <span>{displayProperty.address}</span>
                 </div>
                 <div className="property-status-section">
                   <div className="property-status-tag pending">
@@ -105,12 +351,12 @@ export default function BusinessApproval() {
                     </svg>
                     Pending Approval
                   </div>
-                  <div className="submitted-date">Submitted on Dec 15, 2024</div>
+                  <div className="submitted-date">Submitted on {formatSubmissionDate()}</div>
                 </div>
               </div>
               <div className="property-overview-right">
-                <div className="property-price-large">₹48,43,00,000</div>
-                <div className="property-price-per-sqft-large">₹1,15,313 per sq ft</div>
+                <div className="property-price-large">{formatPrice(displayProperty.price)}</div>
+                <div className="property-price-per-sqft-large">{formatPricePerSqft()}</div>
               </div>
             </div>
 
@@ -143,53 +389,53 @@ export default function BusinessApproval() {
               <div className="details-grid">
                 <div className="detail-item">
                   <span className="detail-label">Property ID</span>
-                  <span className="detail-value">PROP-MIA-2024-002</span>
+                  <span className="detail-value">{displayProperty.id}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Parking Spaces</span>
-                  <span className="detail-value">8 Reserved</span>
+                  <span className="detail-value">{displayProperty.parkingSpaces}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Zoning</span>
-                  <span className="detail-value">Commercial/Retail</span>
+                  <span className="detail-value">{displayProperty.zoning}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Property Type</span>
-                  <span className="detail-value">Mixed Use</span>
+                  <span className="detail-value">{displayProperty.type}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Year Built</span>
-                  <span className="detail-value">2019</span>
+                  <span className="detail-value">{displayProperty.yearBuilt}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Listing Status</span>
                   <span className="detail-value">
-                    <span className="status-badge active">Active</span>
+                    <span className="status-badge active">{displayProperty.listingStatus}</span>
                   </span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Total Area</span>
-                  <span className="detail-value">4,200 sq ft</span>
+                  <span className="detail-value">{displayProperty.totalArea || displayProperty.size || ""}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Vendor Name</span>
-                  <span className="detail-value">Biscayne Development</span>
+                  <span className="detail-value">{displayProperty.vendorName}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Availability</span>
-                  <span className="detail-value">30 days</span>
+                  <span className="detail-value">{getAvailabilityDays()}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Floor Level</span>
-                  <span className="detail-value">Ground Floor + Mezzanine</span>
+                  <span className="detail-value">{displayProperty.floorLevel}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Vendor Contact</span>
-                  <span className="detail-value">+1 (305) 555-0198</span>
+                  <span className="detail-value">{displayProperty.vendorContact}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Last Inspection</span>
-                  <span className="detail-value">Dec 10, 2024</span>
+                  <span className="detail-value">{displayProperty.lastInspection}</span>
                 </div>
               </div>
             </div>
@@ -270,7 +516,7 @@ export default function BusinessApproval() {
                     </div>
                     <div className="timeline-content">
                       <div className="timeline-title">Property Submitted</div>
-                      <div className="timeline-date">Dec 15, 2024 at 10:30 AM</div>
+                      <div className="timeline-date">{formatSubmissionDateTime()}</div>
                     </div>
                   </div>
                   <div className="timeline-item">
@@ -324,7 +570,7 @@ export default function BusinessApproval() {
                     </div>
                     <div className="workflow-timeline-content">
                       <div className="workflow-timeline-title">Property Submitted</div>
-                      <div className="workflow-timeline-date">Dec 15, 2024 at 10:30 AM</div>
+                      <div className="workflow-timeline-date">{formatSubmissionDateTime()}</div>
                     </div>
                   </div>
                   <div className="workflow-timeline-connector"></div>
@@ -419,7 +665,7 @@ export default function BusinessApproval() {
                         <span className="history-badge submitted">Submitted</span>
                       </div>
                       <div className="history-action">Submitted property for business approval</div>
-                      <div className="history-date">Dec 15, 2024 at 10:30 AM</div>
+                      <div className="history-date">{formatSubmissionDateTime()}</div>
                     </div>
                   </div>
                 </div>
@@ -570,6 +816,12 @@ export default function BusinessApproval() {
                     className="decision-button approve-button"
                     onClick={() => {
                       console.log("Approve property");
+                      // Store property data for Legal Workflow before navigating
+                      if (property) {
+                        localStorage.setItem("propertyForLegalWorkflow", JSON.stringify(property));
+                        // Store approval date
+                        localStorage.setItem("propertyApprovalDate", new Date().toISOString());
+                      }
                       router.push("/legal-workflow");
                     }}
                   >

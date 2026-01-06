@@ -67,7 +67,26 @@ export default function ITAssessmentPage() {
           ← Back to Dashboard
         </button>
 
-        <UserProfile variant="header" showLogout={false} />
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{
+            width: "32px",
+            height: "32px",
+            borderRadius: "50%",
+            background: "#06b6d4", // Cyan color similar to screenshot
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "13px",
+            fontWeight: "600"
+          }}>
+            IT
+          </div>
+          <div style={{ lineHeight: "1.2" }}>
+            <div style={{ fontSize: "13px", fontWeight: "600", color: "#1f2937" }}>ITteam</div>
+            <div style={{ fontSize: "11px", color: "#6b7280" }}>ITteam@kotakbank.com</div>
+          </div>
+        </div>
       </header>
 
       <div className="dashboard-content-wrapper">

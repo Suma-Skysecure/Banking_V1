@@ -25,6 +25,8 @@ export default function ITAssessmentDashboard() {
   const router = useRouter();
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [itStatuses, setItStatuses] = useState({});
 
   // Filters State
