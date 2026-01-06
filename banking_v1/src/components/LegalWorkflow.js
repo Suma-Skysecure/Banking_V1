@@ -21,25 +21,26 @@ export default function LegalWorkflow() {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const multipleFileInputRef = useRef(null);
+  const [isLOIUploaded, setIsLOIUploaded] = useState(false);
   const [property, setProperty] = useState(null);
   const [approvalDate, setApprovalDate] = useState(null);
-  
+
   // Load property data from localStorage (from BusinessApproval or original submission)
   useEffect(() => {
     try {
       // First try to get from LegalWorkflow storage (set when approved)
       let propertyData = localStorage.getItem("propertyForLegalWorkflow");
-      
+
       // If not found, try BusinessApproval storage
       if (!propertyData) {
         propertyData = localStorage.getItem("propertyForBusinessApproval");
       }
-      
+
       if (propertyData) {
         const parsedProperty = JSON.parse(propertyData);
         setProperty(parsedProperty);
       }
-      
+
       // Get approval date (when Business approved it)
       const approvalDateData = localStorage.getItem("propertyApprovalDate");
       if (approvalDateData) {
@@ -55,13 +56,13 @@ export default function LegalWorkflow() {
       console.error("Error loading property data:", error);
     }
   }, []);
-  
+
   // Format price for display
   const formatPrice = (price) => {
     if (!price && price !== 0) return "₹0";
     // Price might be in USD (for regular properties) or already converted
-    const inrPrice = property?.isImported && property?.priceUSD 
-      ? property.priceUSD * 83.5 
+    const inrPrice = property?.isImported && property?.priceUSD
+      ? property.priceUSD * 83.5
       : (price * 83.5);
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -70,7 +71,7 @@ export default function LegalWorkflow() {
       maximumFractionDigits: 0,
     }).format(inrPrice);
   };
-  
+
   // Format price per sqft
   const formatPricePerSqft = () => {
     if (!property) return "₹0 per sq ft";
@@ -82,7 +83,7 @@ export default function LegalWorkflow() {
     }
     return "₹0 per sq ft";
   };
-  
+
   // Format approval date
   const formatApprovalDate = () => {
     if (!approvalDate) {
@@ -100,127 +101,113 @@ export default function LegalWorkflow() {
       year: "numeric",
     });
   };
-  
-  // Helper function to generate default values for missing property fields
+
+  // Helper function to check if a value is empty/missing
+  const isEmpty = (value) => {
+    return value === null || value === undefined || value === "" ||
+      (typeof value === "string" && value.trim() === "");
+  };
+
+  // Helper function to generate default values ONLY for missing property fields
   const generateDefaultPropertyFields = (property) => {
     if (!property) return {};
-    
+
+    const defaults = {};
+
     // Extract area number from size string (e.g., "3,500 sq ft" -> 3500)
     const areaMatch = (property.size || property.totalArea || "").match(/[\d,]+/);
     const areaNum = areaMatch ? parseInt(areaMatch[0].replace(/,/g, "")) : 0;
-    
-    // Generate property ID if missing
-    const propertyId = property.propertyId || property.id || `PROP-${Date.now()}`;
-    
-    // Generate floor level based on property type and area
-    const getFloorLevel = () => {
-      if (property.floorLevel) return property.floorLevel;
+
+    // Only generate floor level if missing
+    if (isEmpty(property.floorLevel)) {
       if (property.type?.toLowerCase().includes("industrial")) {
-        return areaNum > 10000 ? "Ground Floor + Warehouse" : "Ground Floor";
+        defaults.floorLevel = areaNum > 10000 ? "Ground Floor + Warehouse" : "Ground Floor";
+      } else if (property.type?.toLowerCase().includes("retail")) {
+        defaults.floorLevel = "Ground Floor";
+      } else if (areaNum > 5000) {
+        defaults.floorLevel = "Multiple Floors Available";
+      } else {
+        defaults.floorLevel = "Ground Floor + Mezzanine";
       }
-      if (property.type?.toLowerCase().includes("retail")) {
-        return "Ground Floor";
-      }
-      if (areaNum > 5000) {
-        return "Multiple Floors Available";
-      }
-      return "Ground Floor + Mezzanine";
-    };
-    
-    // Generate parking spaces based on area
-    const getParkingSpaces = () => {
-      if (property.parkingSpaces) return property.parkingSpaces;
+    }
+
+    // Only generate parking spaces if missing
+    if (isEmpty(property.parkingSpaces)) {
       const spaces = Math.max(2, Math.floor(areaNum / 500));
-      return `${spaces} Reserved Spaces`;
-    };
-    
-    // Generate year built based on property type
-    const getYearBuilt = () => {
-      if (property.yearBuilt) return property.yearBuilt;
+      defaults.parkingSpaces = `${spaces} Reserved Spaces`;
+    }
+
+    // Only generate year built if missing
+    if (isEmpty(property.yearBuilt)) {
       const currentYear = new Date().getFullYear();
       const baseYear = property.type?.toLowerCase().includes("industrial") ? 2015 : 2018;
-      return String(Math.max(baseYear, currentYear - 6));
-    };
-    
-    // Generate vendor name based on property location/name
-    const getVendorName = () => {
-      if (property.vendorName) return property.vendorName;
+      defaults.yearBuilt = String(Math.max(baseYear, currentYear - 6));
+    }
+
+    // Only generate vendor name if missing
+    if (isEmpty(property.vendorName)) {
       const address = property.address || "";
-      if (address.includes("Brickell")) return "Brickell Development Group";
-      if (address.includes("Downtown")) return "Downtown Properties LLC";
-      if (address.includes("South Beach")) return "South Beach Realty Partners";
-      if (address.includes("Westside")) return "Westside Commercial Holdings";
-      if (address.includes("North Miami")) return "North Miami Development Corp";
-      if (address.includes("Eastside")) return "Eastside Business Ventures";
-      if (address.includes("Marina")) return "Marina Commercial Realty";
-      return "Miami Commercial Realty Group";
-    };
-    
-    // Generate vendor contact
-    const getVendorContact = () => {
-      if (property.vendorContact) return property.vendorContact;
+      if (address.includes("Brickell")) defaults.vendorName = "Brickell Development Group";
+      else if (address.includes("Downtown")) defaults.vendorName = "Downtown Properties LLC";
+      else if (address.includes("South Beach")) defaults.vendorName = "South Beach Realty Partners";
+      else if (address.includes("Westside")) defaults.vendorName = "Westside Commercial Holdings";
+      else if (address.includes("North Miami")) defaults.vendorName = "North Miami Development Corp";
+      else if (address.includes("Eastside")) defaults.vendorName = "Eastside Business Ventures";
+      else if (address.includes("Marina")) defaults.vendorName = "Marina Commercial Realty";
+      else defaults.vendorName = "Miami Commercial Realty Group";
+    }
+
+    // Only generate vendor contact if missing
+    if (isEmpty(property.vendorContact)) {
       const areaCode = property.address?.match(/FL (\d{5})/)?.[1]?.substring(0, 3) || "305";
-      // Generate deterministic contact number based on property ID
       const propIdNum = parseInt(String(property.id || property.propertyId || "0").replace(/\D/g, "")) || 0;
       const lastFour = String((propIdNum % 9000) + 1000).padStart(4, '0');
-      return `+1 (${areaCode}) 555-${lastFour}`;
-    };
-    
-    // Generate vendor email based on vendor name
-    const getVendorEmail = () => {
-      if (property.vendorEmail) return property.vendorEmail;
-      const vendorName = getVendorName().toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
-      return `info@${vendorName}.com`;
-    };
-    
-    // Generate listing status
-    const getListingStatus = () => {
-      if (property.listingStatus) return property.listingStatus;
-      return property.statusType === "available" ? "Active Listing" : "Pending Listing";
-    };
-    
-    // Generate zoning based on property type
-    const getZoning = () => {
-      if (property.zoning) return property.zoning;
+      defaults.vendorContact = `+1 (${areaCode}) 555-${lastFour}`;
+    }
+
+    // Only generate vendor email if missing
+    if (isEmpty(property.vendorEmail)) {
+      const vendorName = (property.vendorName || defaults.vendorName || "Miami Commercial Realty Group")
+        .toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
+      defaults.vendorEmail = `info@${vendorName}.com`;
+    }
+
+    // Only generate listing status if missing
+    if (isEmpty(property.listingStatus)) {
+      defaults.listingStatus = property.statusType === "available" ? "Active Listing" : "Pending Listing";
+    }
+
+    // Only generate zoning if missing
+    if (isEmpty(property.zoning)) {
       const type = property.type?.toLowerCase() || "";
-      if (type.includes("commercial office")) return "Commercial/Office";
-      if (type.includes("retail")) return "Commercial/Retail";
-      if (type.includes("industrial")) return "Industrial";
-      if (type.includes("mixed use")) return "Mixed Use";
-      return "Commercial";
-    };
-    
-    // Generate last inspection date
-    const getLastInspection = () => {
-      if (property.lastInspection) return property.lastInspection;
+      if (type.includes("commercial office")) defaults.zoning = "Commercial/Office";
+      else if (type.includes("retail")) defaults.zoning = "Commercial/Retail";
+      else if (type.includes("industrial")) defaults.zoning = "Industrial";
+      else if (type.includes("mixed use")) defaults.zoning = "Mixed Use";
+      else defaults.zoning = "Commercial";
+    }
+
+    // Only generate last inspection if missing
+    if (isEmpty(property.lastInspection)) {
       if (property.lastInspectionDate) {
-        return new Date(property.lastInspectionDate).toLocaleDateString("en-US", {
+        defaults.lastInspection = new Date(property.lastInspectionDate).toLocaleDateString("en-US", {
           month: "long",
           day: "numeric",
           year: "numeric",
         });
+      } else {
+        const months = ["January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"];
+        const currentDate = new Date();
+        const inspectionDate = new Date(currentDate);
+        inspectionDate.setMonth(currentDate.getMonth() - 2);
+        defaults.lastInspection = `${months[inspectionDate.getMonth()]} ${inspectionDate.getDate()}, ${inspectionDate.getFullYear()}`;
       }
-      const months = ["January", "February", "March", "April", "May", "June", 
-                      "July", "August", "September", "October", "November", "December"];
-      const currentDate = new Date();
-      const inspectionDate = new Date(currentDate);
-      inspectionDate.setMonth(currentDate.getMonth() - 2);
-      return `${months[inspectionDate.getMonth()]} ${inspectionDate.getDate()}, ${inspectionDate.getFullYear()}`;
-    };
-    
-    return {
-      floorLevel: getFloorLevel(),
-      parkingSpaces: getParkingSpaces(),
-      yearBuilt: getYearBuilt(),
-      vendorName: getVendorName(),
-      vendorContact: getVendorContact(),
-      vendorEmail: getVendorEmail(),
-      listingStatus: getListingStatus(),
-      zoning: getZoning(),
-      lastInspection: getLastInspection(),
-    };
+    }
+
+    return defaults;
   };
-  
+
   // Default property if none loaded
   const defaultProperty = {
     id: "PROP-MIA-2024-002",
@@ -241,25 +228,56 @@ export default function LegalWorkflow() {
     zoning: "Commercial/Retail",
     lastInspection: "December 10, 2024",
   };
-  
-  // Generate defaults for missing fields and merge with property data
-  const propertyWithDefaults = property ? {
-    ...property,
-    ...generateDefaultPropertyFields(property),
-    // Ensure essential fields are present
-    id: property.propertyId || property.id || `PROP-MIA-2024-${String(property.id || Date.now()).padStart(3, '0')}`,
-    name: property.name || "Property",
-    address: property.address || "Address not available",
-    type: property.type || "Commercial",
-    totalArea: property.totalArea || property.size || "N/A",
-    status: property.status || "Available",
-    statusType: property.statusType || "pending",
-    price: property.price || 0,
-    pricePerSqft: property.pricePerSqft || 0,
-  } : defaultProperty;
-  
+
+  // Generate defaults ONLY for missing fields and merge with property data
+  // Preserve exact data from SRBM pages, only fill in what's missing
+  const propertyWithDefaults = property ? (() => {
+    const defaults = generateDefaultPropertyFields(property);
+    const merged = { ...property };
+
+    // Only apply defaults for fields that are truly missing/empty
+    Object.keys(defaults).forEach(key => {
+      if (isEmpty(merged[key])) {
+        merged[key] = defaults[key];
+      }
+    });
+
+    // Ensure essential fields are present (only if missing)
+    if (isEmpty(merged.id)) {
+      merged.id = merged.propertyId || `PROP-MIA-2024-${String(property.id || Date.now()).padStart(3, '0')}`;
+    }
+    if (isEmpty(merged.name)) {
+      merged.name = "Property";
+    }
+    if (isEmpty(merged.address)) {
+      merged.address = "Address not available";
+    }
+    if (isEmpty(merged.type)) {
+      merged.type = "Commercial";
+    }
+    if (isEmpty(merged.totalArea) && isEmpty(merged.size)) {
+      merged.totalArea = "";
+    } else if (isEmpty(merged.totalArea) && !isEmpty(merged.size)) {
+      merged.totalArea = merged.size;
+    }
+    if (isEmpty(merged.status)) {
+      merged.status = "Available";
+    }
+    if (isEmpty(merged.statusType)) {
+      merged.statusType = "pending";
+    }
+    if (merged.price === null || merged.price === undefined) {
+      merged.price = 0;
+    }
+    if (merged.pricePerSqft === null || merged.pricePerSqft === undefined) {
+      merged.pricePerSqft = 0;
+    }
+
+    return merged;
+  })() : defaultProperty;
+
   const displayProperty = propertyWithDefaults;
-  
+
   // All restrictions removed - all users have full access
 
   // Format file size
@@ -378,11 +396,11 @@ export default function LegalWorkflow() {
       return;
     }
     console.log("Submitting documents:", uploadedFiles);
-    
+
     // Convert all files to base64 and store in localStorage
     try {
       const documentsToStore = [];
-      
+
       // Process each file
       for (const fileObj of uploadedFiles) {
         const file = fileObj.file;
@@ -403,26 +421,26 @@ export default function LegalWorkflow() {
           reader.onerror = reject;
           reader.readAsDataURL(file);
         });
-        
+
         documentsToStore.push(fileData);
       }
-      
+
       // Store all documents in localStorage
       localStorage.setItem("uploadedLegalDocuments", JSON.stringify(documentsToStore));
-      
+
       // Create notification for Legal Due team
       const fileNames = uploadedFiles.map(f => f.name).join(", ");
       const notificationMessage = uploadedFiles.length === 1
         ? `Legal document "${fileNames}" has been submitted and approved for review`
         : `${uploadedFiles.length} legal documents have been submitted and approved for review`;
-      
+
       createNotification(
         notificationMessage,
         "info",
         "/legal-due",
         "Legal due"
       );
-      
+
       // Show success message
       alert(`Successfully submitted ${uploadedFiles.length} document(s)! The documents are now available in the Legal Due page.`);
     } catch (error) {
@@ -581,7 +599,7 @@ export default function LegalWorkflow() {
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Total Area</span>
-                  <span className="detail-value">{displayProperty.totalArea || displayProperty.size}</span>
+                  <span className="detail-value">{displayProperty.totalArea || displayProperty.size || ""}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Vendor Name</span>
@@ -590,7 +608,7 @@ export default function LegalWorkflow() {
                 <div className="detail-item">
                   <span className="detail-label">Availability</span>
                   <span className="detail-value">
-                    {displayProperty.status?.match(/(\d+)\s*days?/i) 
+                    {displayProperty.status?.match(/(\d+)\s*days?/i)
                       ? `${displayProperty.status.match(/(\d+)\s*days?/i)[1]} days`
                       : (displayProperty.status || "Available Now")}
                   </span>
@@ -917,7 +935,7 @@ export default function LegalWorkflow() {
                     const file = e.target.files[0];
                     if (file) {
                       console.log("File selected:", file.name);
-                      
+
                       // Read file as base64 and store in localStorage
                       const reader = new FileReader();
                       reader.onload = (event) => {
@@ -928,13 +946,15 @@ export default function LegalWorkflow() {
                           uploadDate: new Date().toISOString(),
                           data: event.target.result, // base64 string
                         };
-                        
+
                         // Store in localStorage
                         localStorage.setItem("uploadedSignedLOI", JSON.stringify(fileData));
-                        
+
+                        // Update upload status
+                        setIsLOIUploaded(true);
                         // Create notifications for Legal Due, Site Measurement, and IT teams
                         const notificationMessage = `Signed LOI document "${file.name}" has been uploaded and is ready for review`;
-                        
+
                         // Create notification for Legal Due team
                         createNotification(
                           notificationMessage,
@@ -942,7 +962,7 @@ export default function LegalWorkflow() {
                           "/legal-due",
                           "Legal due"
                         );
-                        
+
                         // Create notification for Site Measurement team
                         createNotification(
                           notificationMessage,
@@ -950,7 +970,7 @@ export default function LegalWorkflow() {
                           "/post-loi-activities",
                           "Site measurement"
                         );
-                        
+
                         // Create notification for IT team
                         createNotification(
                           notificationMessage,
@@ -958,7 +978,7 @@ export default function LegalWorkflow() {
                           "/dashboard",
                           "IT team"
                         );
-                        
+
                         // Show success message
                         alert(`File "${file.name}" uploaded successfully! The document is now available in Post-LOI Activities and Legal Due pages.`);
                       };
