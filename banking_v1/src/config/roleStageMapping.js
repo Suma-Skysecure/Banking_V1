@@ -15,14 +15,22 @@ export const ROLE_STAGE_MAPPING = {
   // Legal due role - sees only Legal Clearance stage
   "Legal due": ["Legal Clearance"],
   
-  // Project execution role - sees only Project Execution stage
-  "Project execution": ["Project Execution"],
+  // Project execution role - sees Project Execution related stages
+  "Project execution": [
+    "Project Execution",
+    "Security guard deployment",
+    "PO to material vendor for Bought out Items",
+    "Drawings to fit-out vendor",
+    "PO to fit-out vendor",
+    "Site Update",
+    "Application for telephone connection"
+  ],
   
   // Site measurement role - sees stages related to site measurement work
   "Site measurement": ["Site Measurement", "Layout Design", "TSA (Stamp duty)", "TSA (Security Deposit)"],
   
   // Agreement execution role - sees Agreement Execution related stages
-  "Agreement execution": ["Agreement Execution", "Agreement Registration"],
+  "Agreement execution": ["Agreement Execution", "Agreement Registration", "Agreement to Account"],
   
   // IT team role - sees multiple stages for infrastructure aspects
   "IT team": ["Property Search", "Business Approval", "Legal Workflow", "Project Execution", "Agreement Execution"],
@@ -30,8 +38,8 @@ export const ROLE_STAGE_MAPPING = {
   // Vendor role - sees Vendor stage
   "Vendor": ["Vendor"],
   
-  // Account role - sees Budget approval and Stampduty approval stages
-  "Account": ["Budget approval", "Stampduty approval"],
+  // Account role - sees Budget approval, Stampduty approval, and Advance to fit_out Vendor stages
+  "Account": ["Budget approval", "Stampduty approval", "Advance to fit_out Vendor"],
 };
 
 /**
