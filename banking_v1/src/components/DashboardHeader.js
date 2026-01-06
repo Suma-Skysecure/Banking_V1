@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 /**
  * Reusable Dashboard Header Component
@@ -15,10 +16,9 @@ import { useState, useEffect, useRef } from "react";
  * @param {Object} props
  * @param {boolean} props.sidebarOpen - Whether sidebar is open
  * @param {Function} props.setSidebarOpen - Function to toggle sidebar
- * @param {Array} props.notifications - Array of notification objects (optional, will be provided by backend)
- * @param {Function} props.onNotificationClick - Callback when notification is clicked (optional)
  */
-export default function DashboardHeader({ sidebarOpen, setSidebarOpen, notifications = [], onNotificationClick }) {
+export default function DashboardHeader({ sidebarOpen, setSidebarOpen }) {
+  const { notifications, handleNotificationClick, unreadCount } = useNotifications();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationPanelRef = useRef(null);
 
@@ -45,13 +45,6 @@ export default function DashboardHeader({ sidebarOpen, setSidebarOpen, notificat
 
   const toggleNotifications = () => {
     setNotificationsOpen(!notificationsOpen);
-  };
-
-  const handleNotificationClick = (notification) => {
-    // Handle notification click (e.g., mark as read, navigate to detail)
-    if (onNotificationClick) {
-      onNotificationClick(notification);
-    }
   };
 
   return (
@@ -124,6 +117,28 @@ export default function DashboardHeader({ sidebarOpen, setSidebarOpen, notificat
                 strokeLinejoin="round"
               />
             </svg>
+            {unreadCount > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: "4px",
+                  right: "4px",
+                  backgroundColor: "#ef4444",
+                  color: "#ffffff",
+                  borderRadius: "50%",
+                  width: "18px",
+                  height: "18px",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "2px solid #ffffff"
+                }}
+              >
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
           </button>
 
           {/* Notification Panel */}

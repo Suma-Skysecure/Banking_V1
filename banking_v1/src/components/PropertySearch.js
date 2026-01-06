@@ -8,6 +8,7 @@ import PageHeader from "@/components/PageHeader";
 import DashboardHeader from "@/components/DashboardHeader";
 import ToastNotification from "@/components/ToastNotification";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import * as XLSX from "xlsx";
 import "@/css/pageHeader.css";
 import "@/css/branchTracker.css";
@@ -16,6 +17,7 @@ import "@/css/propertySearch.css";
 export default function PropertySearch() {
   const router = useRouter();
   const { user } = useAuth();
+  const { createNotification } = useNotifications();
   const [location, setLocation] = useState("");
   const [propertyType, setPropertyType] = useState("all");
   const [priceRange, setPriceRange] = useState("all");
@@ -430,6 +432,22 @@ export default function PropertySearch() {
     if (selectedProperties.length > 0) {
       console.log("Initiating listing for properties:", selectedProperties);
       
+      // Get selected property names for the notification
+      const allProperties = [...properties, ...importedProperties];
+      const selectedProps = allProperties.filter(prop => 
+        selectedProperties.includes(prop.id)
+      );
+      const propertyNames = selectedProps.map(prop => prop.name).join(", ");
+      const propertyCount = selectedProperties.length;
+      
+      // Create notification for business approval - target Business role
+      const notificationMessage = propertyCount === 1
+        ? `Property "${propertyNames}" has been initiated for business approval`
+        : `${propertyCount} properties have been initiated for business approval`;
+      
+      // Create notification targeted to Business role
+      createNotification(notificationMessage, "info", "/business-approval", "Business");
+      
       // Show success notification for SRBM users
       if (user?.role === "SRBM") {
         setShowNotification(true);
@@ -439,6 +457,13 @@ export default function PropertySearch() {
         // For other roles, redirect immediately
         router.push("/business-approval");
       }
+    }
+  };
+
+  // Handle notification click - navigate to the link if available
+  const handleNotificationClick = (notification) => {
+    if (notification.link) {
+      router.push(notification.link);
     }
   };
 
@@ -593,7 +618,10 @@ export default function PropertySearch() {
         duration={3000}
       />
       <div className="dashboard-container">
-      <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <DashboardHeader 
+        sidebarOpen={sidebarOpen} 
+        setSidebarOpen={setSidebarOpen}
+      />
 
       <div className="dashboard-content-wrapper">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
