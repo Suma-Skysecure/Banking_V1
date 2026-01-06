@@ -290,7 +290,7 @@ export default function StampDutyPaymentApproval() {
                             strokeLinejoin="round"
                           />
                         </svg>
-                        Approve Payment
+                        Approve Stamp Duty by Account
                       </button>
                       <button
                         onClick={() => setApprovalStatus("rejected")}
@@ -331,7 +331,7 @@ export default function StampDutyPaymentApproval() {
                             strokeLinejoin="round"
                           />
                         </svg>
-                        Reject Payment
+                        Reject Stamp Duty by Account
                       </button>
                     </div>
 

@@ -1,7 +1,5 @@
 "use client";
 
-import { memo } from "react";
-
 /**
  * Reusable Dashboard Table Component
  * 
@@ -9,10 +7,9 @@ import { memo } from "react";
  * @param {Array} branches - Array of branch objects to display
  * @param {Function} onViewDetails - Callback function when "View Details" is clicked
  * @param {Function} getProgressColor - Function to get progress bar color
- * @param {Object} user - User object to determine role
- * @param {Function} onDelete - Callback function when delete is clicked
+ * @param {string} viewDetailsText - Custom text for the view details link (default: "View Details")
  */
-const DashboardTable = memo(({ branches, onViewDetails, getProgressColor, user, onDelete }) => {
+export default function DashboardTable({ branches, onViewDetails, getProgressColor, viewDetailsText = "View Details" }) {
   if (!branches || branches.length === 0) {
     return (
       <div className="table-container">
@@ -61,27 +58,12 @@ const DashboardTable = memo(({ branches, onViewDetails, getProgressColor, user, 
                 ></div>
               </td>
               <td>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <button
-                    onClick={(e) => onViewDetails(e, branch)}
-                    className="view-details-link"
-                  >
-                    View Details
-                  </button>
-                  {user?.role === "IT team" && (
-                    <button
-                      onClick={() => onDelete(branch)}
-                      className="delete-btn"
-                      title="Delete"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M2 4H3.33333H14M5.33337 4V2.66667C5.33337 2.29848 5.63185 2 6.00004 2H10C10.3682 2 10.6667 2.29848 10.6667 2.66667V4M12.6667 4V13.3333C12.6667 13.7015 12.3682 14 12 14H4.00004C3.63185 14 3.33337 13.7015 3.33337 13.3333V4H12.6667Z" stroke="#f44336" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M6.66663 7.33333V11.3333" stroke="#f44336" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M9.33337 7.33333V11.3333" stroke="#f44336" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
+                <button
+                  onClick={(e) => onViewDetails(e, branch)}
+                  className="view-details-link"
+                >
+                  {viewDetailsText}
+                </button>
               </td>
             </tr>
           ))}
@@ -89,9 +71,5 @@ const DashboardTable = memo(({ branches, onViewDetails, getProgressColor, user, 
       </table>
     </div>
   );
-});
-
-DashboardTable.displayName = 'DashboardTable';
-
-export default DashboardTable;
+}
 

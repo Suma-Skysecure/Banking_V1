@@ -22,6 +22,26 @@ export default function PostLOIActivities() {
   const [notificationMessage, setNotificationMessage] = useState("");
   const [uploadedLOI, setUploadedLOI] = useState(null);
 
+  // TSA (Stamp Duty) state
+  const propertyValue = 5800000;
+  const stampDutyRate = 0.7;
+  const totalStampDuty = (propertyValue * stampDutyRate) / 100;
+  
+  // TSA (Security Deposit) state
+  const depositPercentage = 10;
+  const securityDepositAmount = (propertyValue * depositPercentage) / 100;
+  const [paymentMethod, setPaymentMethod] = useState("card");
+
+  // Format currency helper
+  const formatCurrencyTSA = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount * 83.5);
+  };
+
   // Load uploaded LOI document from localStorage
   useEffect(() => {
     const storedLOI = localStorage.getItem("uploadedSignedLOI");
@@ -245,164 +265,537 @@ export default function PostLOIActivities() {
             {/* Site Measurement Details */}
             <SiteMeasurementDetails />
 
-            {/* Layout Design Approval Section */}
-            <div className="business-details-card" style={{ marginBottom: "24px" }}>
+            {/* Layout Design Section */}
+            <LayoutDesignSection />
+
+            {/* Layout Design Approval */}
+            <LayoutDesignApproval showOnlyUpdateButton={true} />
+
+            {/* TSA (Stamp Duty) Section */}
+            <div className="business-details-card" style={{ marginTop: "24px", marginBottom: "24px" }}>
               <div className="card-header">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  className="card-icon"
-                >
-                  <path
-                    d="M3 4C3 3.44772 3.44772 3 4 3H16C16.5523 3 17 3.44772 17 4V16C17 16.5523 16.5523 17 16 17H4C3.44772 17 3 16.5523 3 16V4Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M7 8L10 11L13 8"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <h3 className="card-title">Layout Design Approval</h3>
+                <div style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  backgroundColor: "#f97316",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: "12px"
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M8 8C10.2091 8 12 6.20914 12 4C12 1.79086 10.2091 0 8 0C5.79086 0 4 1.79086 4 4C4 6.20914 5.79086 8 8 8Z"
+                      fill="white"
+                    />
+                    <path
+                      d="M8 10C4.68629 10 2 12.6863 2 16H14C14 12.6863 11.3137 10 8 10Z"
+                      fill="white"
+                    />
+                  </svg>
+                </div>
+                <h3 className="card-title">TSA (Stamp Duty)</h3>
               </div>
               <div style={{ padding: "20px" }}>
-                <div className="decision-actions">
+                {/* Calculation Breakdown */}
+                <div style={{ marginBottom: "24px" }}>
+                  <h4 style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "16px" }}>
+                    Calculation Breakdown
+                  </h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Property Value:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        {formatCurrencyTSA(propertyValue)}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Stamp Duty Rate:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        {stampDutyRate}%
+                      </span>
+                    </div>
+                    <div style={{ 
+                      display: "flex", 
+                      justifyContent: "space-between", 
+                      alignItems: "center",
+                      padding: "12px",
+                      backgroundColor: "#dbeafe",
+                      borderRadius: "6px",
+                      border: "1px solid #93c5fd"
+                    }}>
+                      <span style={{ fontSize: "16px", fontWeight: "600", color: "#1e3a8a" }}>
+                        Total Stamp Duty Amount:
+                      </span>
+                      <span style={{ fontSize: "18px", fontWeight: "700", color: "#1e3a8a" }}>
+                        {formatCurrencyTSA(totalStampDuty)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Information */}
+                <div style={{ marginBottom: "24px" }}>
+                  <h4 style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "16px" }}>
+                    Payment Information
+                  </h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Payment Status:</span>
+                      <div style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "6px 12px",
+                        backgroundColor: "#fef3c7",
+                        color: "#92400e",
+                        borderRadius: "20px",
+                        fontSize: "14px",
+                        fontWeight: "500"
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+                          <path
+                            d="M8 4V8L10.5 10.5"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        Payment Initiated
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Payment Reference Number:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        SD-MIA-2024-002-4060
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Payment Date:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        December 19, 2024
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Information and Payment Details */}
+                <div style={{ 
+                  display: "grid", 
+                  gridTemplateColumns: "1fr 1fr", 
+                  gap: "24px",
+                  marginBottom: "24px"
+                }}>
+                  {/* Additional Information */}
+                  <div className="business-details-card">
+                    <div className="card-header">
+                      <h3 className="card-title">Additional Information</h3>
+                    </div>
+                    <div style={{ padding: "20px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>State:</span>
+                          <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                            Florida
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>County:</span>
+                          <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                            Miami-Dade
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>Property Type:</span>
+                          <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                            Commercial Office
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>Transaction Type:</span>
+                          <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                            Purchase
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Details */}
+                  <div className="business-details-card">
+                    <div className="card-header">
+                      <h3 className="card-title">Payment Details</h3>
+                    </div>
+                    <div style={{ padding: "20px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
+                            Payment Date
+                          </label>
+                          <div style={{
+                            padding: "10px 12px",
+                            fontSize: "14px",
+                            border: "1px solid #d1d5db",
+                            borderRadius: "6px",
+                            backgroundColor: "#f9fafb",
+                            color: "#111827"
+                          }}>
+                            December 19, 2024
+                          </div>
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
+                            Payment Method
+                          </label>
+                          <div style={{
+                            padding: "10px 12px",
+                            fontSize: "14px",
+                            border: "1px solid #d1d5db",
+                            borderRadius: "6px",
+                            backgroundColor: "#f9fafb",
+                            color: "#111827"
+                          }}>
+                            Electronic Transfer
+                          </div>
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
+                            Paying Authority
+                          </label>
+                          <div style={{
+                            padding: "10px 12px",
+                            fontSize: "14px",
+                            border: "1px solid #d1d5db",
+                            borderRadius: "6px",
+                            backgroundColor: "#f9fafb",
+                            color: "#111827"
+                          }}>
+                            Florida Department of Revenue
+                          </div>
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
+                            Account Reference
+                          </label>
+                          <div style={{
+                            padding: "10px 12px",
+                            fontSize: "14px",
+                            border: "1px solid #d1d5db",
+                            borderRadius: "6px",
+                            backgroundColor: "#f9fafb",
+                            color: "#111827"
+                          }}>
+                            FL-REV-ACC-789456123
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit Stamp Duty for Account Button */}
+                <div style={{ display: "flex", justifyContent: "center" }}>
                   <button
-                    className="decision-button reject-button"
                     onClick={() => {
-                      console.log("Reject Layout Design");
-                    }}
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      className="button-icon"
-                    >
-                      <path
-                        d="M5 5L15 15M15 5L5 15"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    Reject
-                  </button>
-                  <button
-                    className="decision-button approve-button"
-                    onClick={() => {
-                      console.log("Approve Layout Design");
-                      setNotificationMessage("Successfully moved for Layout design");
+                      console.log("Submitting stamp duty for account");
+                      setNotificationMessage("Stamp duty submitted successfully");
                       setShowNotification(true);
                     }}
+                    style={{
+                      padding: "10px 20px",
+                      backgroundColor: "#f97316",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      transition: "background-color 0.2s"
+                    }}
+                    onMouseEnter={(e) => (e.target.style.backgroundColor = "#ea580c")}
+                    onMouseLeave={(e) => (e.target.style.backgroundColor = "#f97316")}
                   >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      className="button-icon"
-                    >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                       <path
-                        d="M16.7071 5.29289C17.0976 5.68342 17.0976 6.31658 16.7071 6.70711L8.70711 14.7071C8.31658 15.0976 7.68342 15.0976 7.29289 14.7071L3.29289 10.7071C2.90237 10.3166 2.90237 9.68342 3.29289 9.29289C3.68342 8.90237 4.31658 8.90237 4.70711 9.29289L8 12.5858L15.2929 5.29289C15.6834 4.90237 16.3166 4.90237 16.7071 5.29289Z"
-                        fill="currentColor"
+                        d="M8 1V3M8 13V15M15 8H13M3 8H1M13.364 2.636L11.95 4.05M4.05 11.95L2.636 13.364M13.364 13.364L11.95 11.95M4.05 4.05L2.636 2.636"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      />
+                      <circle
+                        cx="8"
+                        cy="8"
+                        r="3"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
                       />
                     </svg>
-                    Approve
+                    Submit Stamp Duty for Account
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Term Sheet Approval Section */}
-            <div className="business-details-card" style={{ marginBottom: "24px" }}>
+            {/* TSA (Security Deposit) Section */}
+            <div className="business-details-card" style={{ marginTop: "24px", marginBottom: "24px" }}>
               <div className="card-header">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  className="card-icon"
-                >
-                  <path
-                    d="M4 4C4 3.44772 4.44772 3 5 3H15C15.5523 3 16 3.44772 16 4V16C16 16.5523 15.5523 17 15 17H5C4.44772 17 4 16.5523 4 16V4Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M7 7H13M7 10H13M7 13H11"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <h3 className="card-title">Term Sheet Approval</h3>
+                <div style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  backgroundColor: "#f97316",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: "12px"
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M8 1L3 4V8C3 11.866 8 15 8 15C8 15 13 11.866 13 8V4L8 1Z"
+                      stroke="white"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <h3 className="card-title">TSA (Security Deposit)</h3>
               </div>
               <div style={{ padding: "20px" }}>
-                <div className="decision-actions">
+                <div style={{ 
+                  display: "grid", 
+                  gridTemplateColumns: "1fr 1fr", 
+                  gap: "24px"
+                }}>
+                  {/* Deposit Details (Left Column) */}
+                  <div>
+                    <h4 style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "20px" }}>
+                      Deposit Details
+                    </h4>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "14px", color: "#6b7280" }}>Property Value:</span>
+                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                          {formatCurrencyTSA(propertyValue)}
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "14px", color: "#6b7280" }}>Deposit Percentage:</span>
+                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                          {depositPercentage}%
+                        </span>
+                      </div>
+                      <div style={{ 
+                        display: "flex", 
+                        justifyContent: "space-between", 
+                        alignItems: "center",
+                        padding: "12px",
+                        backgroundColor: "#dbeafe",
+                        borderRadius: "6px",
+                        border: "1px solid #93c5fd"
+                      }}>
+                        <span style={{ fontSize: "16px", fontWeight: "600", color: "#1e3a8a" }}>
+                          Security Deposit Amount:
+                        </span>
+                        <span style={{ fontSize: "20px", fontWeight: "700", color: "#1e3a8a" }}>
+                          {formatCurrencyTSA(securityDepositAmount)}
+                        </span>
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
+                          Due Date
+                        </label>
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "10px 12px",
+                          fontSize: "14px",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "6px",
+                          backgroundColor: "#f9fafb",
+                          color: "#111827"
+                        }}>
+                          <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                            <path
+                              d="M2 4H14V12H2V4Z"
+                              stroke="#6b7280"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M6 2V6M10 2V6M2 8H14"
+                              stroke="#6b7280"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          December 31, 2024
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Select Payment Method (Right Column) */}
+                  <div>
+                    <h4 style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "20px" }}>
+                      Select Payment Method
+                    </h4>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      <label style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "16px",
+                        border: paymentMethod === "upi" ? "2px solid #1e3a8a" : "1px solid #d1d5db",
+                        borderRadius: "8px",
+                        backgroundColor: paymentMethod === "upi" ? "#f0f9ff" : "white",
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                      }}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="upi"
+                          checked={paymentMethod === "upi"}
+                          onChange={(e) => setPaymentMethod(e.target.value)}
+                          style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                        />
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M17 2H7C5.89543 2 5 2.89543 5 4V20C5 21.1046 5.89543 22 7 22H17C18.1046 22 19 21.1046 19 20V4C19 2.89543 18.1046 2 17 2Z"
+                            stroke={paymentMethod === "upi" ? "#1e3a8a" : "#6b7280"}
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M12 18H12.01"
+                            stroke={paymentMethod === "upi" ? "#1e3a8a" : "#6b7280"}
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827", flex: 1 }}>
+                          Pay by UPI
+                        </span>
+                      </label>
+
+                      <label style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "16px",
+                        border: paymentMethod === "card" ? "2px solid #1e3a8a" : "1px solid #d1d5db",
+                        borderRadius: "8px",
+                        backgroundColor: paymentMethod === "card" ? "#f0f9ff" : "white",
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                      }}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="card"
+                          checked={paymentMethod === "card"}
+                          onChange={(e) => setPaymentMethod(e.target.value)}
+                          style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                        />
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M2 8H22M4 16H20M3 8V16C3 17.1046 3.89543 18 5 18H19C20.1046 18 21 17.1046 21 16V8C21 6.89543 20.1046 6 19 6H5C3.89543 6 3 6.89543 3 8Z"
+                            stroke={paymentMethod === "card" ? "#1e3a8a" : "#6b7280"}
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827", flex: 1 }}>
+                          Pay by Credit/Debit Card
+                        </span>
+                      </label>
+
+                      <label style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "16px",
+                        border: paymentMethod === "netbanking" ? "2px solid #1e3a8a" : "1px solid #d1d5db",
+                        borderRadius: "8px",
+                        backgroundColor: paymentMethod === "netbanking" ? "#f0f9ff" : "white",
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                      }}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="netbanking"
+                          checked={paymentMethod === "netbanking"}
+                          onChange={(e) => setPaymentMethod(e.target.value)}
+                          style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                        />
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M3 7H21M5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7M5 7C5 5.89543 5.89543 5 7 5H17C18.1046 5 19 5.89543 19 7M9 12H15"
+                            stroke={paymentMethod === "netbanking" ? "#1e3a8a" : "#6b7280"}
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827", flex: 1 }}>
+                          Net Banking
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pay Now Button */}
+                <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end" }}>
                   <button
-                    className="decision-button reject-button"
                     onClick={() => {
-                      console.log("Reject Term Sheet");
-                    }}
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      className="button-icon"
-                    >
-                      <path
-                        d="M5 5L15 15M15 5L5 15"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    Reject
-                  </button>
-                  <button
-                    className="decision-button approve-button"
-                    onClick={() => {
-                      console.log("Approve Term Sheet");
-                      setNotificationMessage("Successfully moved for term sheet");
+                      console.log("Processing payment", { amount: securityDepositAmount, method: paymentMethod });
+                      setNotificationMessage("Security deposit payment processed successfully");
                       setShowNotification(true);
                     }}
+                    style={{
+                      padding: "14px 32px",
+                      backgroundColor: "#1e3a8a",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      transition: "background-color 0.2s"
+                    }}
+                    onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
+                    onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
                   >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      className="button-icon"
-                    >
+                    <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
                       <path
-                        d="M16.7071 5.29289C17.0976 5.68342 17.0976 6.31658 16.7071 6.70711L8.70711 14.7071C8.31658 15.0976 7.68342 15.0976 7.29289 14.7071L3.29289 10.7071C2.90237 10.3166 2.90237 9.68342 3.29289 9.29289C3.68342 8.90237 4.31658 8.90237 4.70711 9.29289L8 12.5858L15.2929 5.29289C15.6834 4.90237 16.3166 4.90237 16.7071 5.29289Z"
-                        fill="currentColor"
+                        d="M8 1L3 4V8C3 11.866 8 15 8 15C8 15 13 11.866 13 8V4L8 1Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     </svg>
-                    Approve
+                    Pay Now - {formatCurrencyTSA(securityDepositAmount)}
                   </button>
                 </div>
               </div>
             </div>
-
-            {/* Layout Design Section - Hidden for Site measurement role */}
-            {user?.role !== "Site measurement" && <LayoutDesignSection />}
-
-            {/* Layout Design Approval - Hidden for Site measurement role */}
-            {user?.role !== "Site measurement" && <LayoutDesignApproval />}
           </div>
         </main>
       </div>
