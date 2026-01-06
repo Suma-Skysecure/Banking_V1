@@ -48,10 +48,10 @@ export default function LegalDueDiligencePage() {
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { 
-      year: "numeric", 
-      month: "short", 
-      day: "numeric" 
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
     });
   };
 
@@ -149,20 +149,20 @@ export default function LegalDueDiligencePage() {
   const handleViewDetails = (e, task) => {
     e.preventDefault();
     console.log("View details clicked for task:", task);
-    
+
     // Check if this is the "Legal Due Diligence Review" task
     // The task object from DashboardTable has 'name' property (from transformed task)
     // Also check the original task data to find the first task
     const taskName = task.name || "";
     const taskId = task.id || "";
-    
-    const isLegalDueDiligenceReview = 
-      taskName === "Legal Due Diligence Review" || 
-      taskId === "1" || 
+
+    const isLegalDueDiligenceReview =
+      taskName === "Legal Due Diligence Review" ||
+      taskId === "1" ||
       taskId === "Legal Due Diligence Review" ||
       taskName.includes("Legal Due Diligence Review") ||
       taskName.includes("Legal Due Diligence");
-    
+
     if (isLegalDueDiligenceReview) {
       console.log("Opening Legal Due Details Modal for task:", task);
       setSelectedTask(task);
