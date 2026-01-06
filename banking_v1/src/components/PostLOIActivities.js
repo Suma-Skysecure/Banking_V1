@@ -787,8 +787,8 @@ export default function PostLOIActivities() {
                                 color: "#ef4444",
                                 cursor: "pointer",
                                 padding: "4px"
-                              }}
-                            >
+                    }}
+                  >
                               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                       <path
                                   d="M12 4L4 12M4 4L12 12"
@@ -828,8 +828,8 @@ export default function PostLOIActivities() {
                                 color: "#ef4444",
                                 cursor: "pointer",
                                 padding: "4px"
-                              }}
-                            >
+                    }}
+                  >
                               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                       <path
                                   d="M12 4L4 12M4 4L12 12"
@@ -1039,14 +1039,14 @@ export default function PostLOIActivities() {
                             gap: "8px"
                           }}>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path
+                      <path
                                 d="M13 4L6 11L3 8"
                                 stroke="#10b981"
-                                strokeWidth="2"
-                                strokeLinecap="round"
+                        strokeWidth="2"
+                        strokeLinecap="round"
                                 strokeLinejoin="round"
-                              />
-                            </svg>
+                      />
+                    </svg>
                             <span style={{
                               fontSize: "14px",
                               color: "#111827"
