@@ -17,7 +17,8 @@ export default function LayoutDesignApproval({
     "Premium finishing materials",
     "Flexible workspace configurations",
     "Compliance with local building codes"
-  ]
+  ],
+  showOnlyUpdateButton = false // New prop to show only Update Decision button
 }) {
   const [comments, setComments] = useState("");
   const [currentStatus, setCurrentStatus] = useState("Pending");
@@ -47,6 +48,51 @@ export default function LayoutDesignApproval({
     console.log("Updating decision", { status: currentStatus, comments });
     // Handle update decision logic here
   };
+
+  // If showOnlyUpdateButton is true, return just the button without the card wrapper
+  if (showOnlyUpdateButton) {
+    return (
+      <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end" }}>
+        <button
+          onClick={handleUpdateDecision}
+          style={{
+            padding: "12px 20px",
+            backgroundColor: "#f97316",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            fontSize: "14px",
+            fontWeight: "600",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+            transition: "background-color 0.2s"
+          }}
+          onMouseEnter={(e) => (e.target.style.backgroundColor = "#ea580c")}
+          onMouseLeave={(e) => (e.target.style.backgroundColor = "#f97316")}
+        >
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M8 1V3M8 13V15M15 8H13M3 8H1M13.364 2.636L11.95 4.05M4.05 11.95L2.636 13.364M13.364 13.364L11.95 11.95M4.05 4.05L2.636 2.636"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+            <circle
+              cx="8"
+              cy="8"
+              r="3"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+          </svg>
+          Update Decision
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="business-details-card" style={{ marginTop: "24px" }}>
@@ -90,235 +136,243 @@ export default function LayoutDesignApproval({
         gap: "24px",
         padding: "0 20px 20px 20px"
       }}>
-        {/* Left Panel */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          {/* Design Summary Card */}
-          <div style={{
-            backgroundColor: "#ffffff",
-            borderRadius: "8px",
-            padding: "20px",
-            border: "1px solid #e5e7eb"
-          }}>
-            <h3 style={{
-              fontSize: "16px",
-              fontWeight: "700",
-              color: "#111827",
-              marginBottom: "16px",
-              marginTop: 0
+        // Full view - All content
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: "1fr 1fr", 
+          gap: "24px",
+          padding: "0 20px 20px 20px"
+        }}>
+          {/* Left Panel */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            {/* Design Summary Card */}
+            <div style={{
+              backgroundColor: "#ffffff",
+              borderRadius: "8px",
+              padding: "20px",
+              border: "1px solid #e5e7eb"
             }}>
-              Design Summary
-            </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "14px", color: "#6b7280" }}>Total Layout Cost:</span>
-                <span style={{ fontSize: "16px", fontWeight: "600", color: "#10b981" }}>
-                  {formatCurrency(totalCost)}
-                </span>
+              <h3 style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "#111827",
+                marginBottom: "16px",
+                marginTop: 0
+              }}>
+                Design Summary
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "14px", color: "#6b7280" }}>Total Layout Cost:</span>
+                  <span style={{ fontSize: "16px", fontWeight: "600", color: "#10b981" }}>
+                    {formatCurrency(totalCost)}
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "14px", color: "#6b7280" }}>Design Status:</span>
+                  <span style={{ 
+                    fontSize: "16px", 
+                    fontWeight: "600", 
+                    color: currentStatus === "Approved" ? "#10b981" : currentStatus === "Rejected" ? "#ef4444" : "#f59e0b"
+                  }}>
+                    {currentStatus}
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "14px", color: "#6b7280" }}>Submitted By:</span>
+                  <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827" }}>
+                    {submittedBy}
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "14px", color: "#6b7280" }}>Submission Date:</span>
+                  <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827" }}>
+                    {submissionDate}
+                  </span>
+                </div>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "14px", color: "#6b7280" }}>Design Status:</span>
-                <span style={{ 
-                  fontSize: "16px", 
-                  fontWeight: "600", 
-                  color: currentStatus === "Approved" ? "#10b981" : currentStatus === "Rejected" ? "#ef4444" : "#f59e0b"
-                }}>
-                  {currentStatus}
-                </span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "14px", color: "#6b7280" }}>Submitted By:</span>
-                <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827" }}>
-                  {submittedBy}
-                </span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "14px", color: "#6b7280" }}>Submission Date:</span>
-                <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827" }}>
-                  {submissionDate}
-                </span>
-              </div>
+            </div>
+
+            {/* Design Specifications Card */}
+            <div style={{
+              backgroundColor: "#dbeafe",
+              borderRadius: "8px",
+              padding: "20px",
+              border: "1px solid #93c5fd"
+            }}>
+              <h3 style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "#1e3a8a",
+                marginBottom: "16px",
+                marginTop: 0
+              }}>
+                Design Specifications
+              </h3>
+              <ul style={{
+                listStyle: "none",
+                padding: 0,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px"
+              }}>
+                {specifications.map((spec, index) => (
+                  <li key={index} style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "8px",
+                    fontSize: "14px",
+                    color: "#374151"
+                  }}>
+                    <span style={{ color: "#1e40af", marginTop: "4px" }}>•</span>
+                    <span>{spec}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 
-          {/* Design Specifications Card */}
-          <div style={{
-            backgroundColor: "#dbeafe",
-            borderRadius: "8px",
-            padding: "20px",
-            border: "1px solid #93c5fd"
-          }}>
-            <h3 style={{
-              fontSize: "16px",
-              fontWeight: "700",
-              color: "#1e3a8a",
-              marginBottom: "16px",
-              marginTop: 0
-            }}>
-              Design Specifications
-            </h3>
-            <ul style={{
-              listStyle: "none",
-              padding: 0,
-              margin: 0,
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px"
-            }}>
-              {specifications.map((spec, index) => (
-                <li key={index} style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "8px",
+          {/* Right Panel */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            {/* Action Buttons */}
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button
+                onClick={handleApprove}
+                style={{
+                  flex: 1,
+                  padding: "12px 20px",
+                  backgroundColor: "#10b981",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
                   fontSize: "14px",
-                  color: "#374151"
-                }}>
-                  <span style={{ color: "#1e40af", marginTop: "4px" }}>•</span>
-                  <span>{spec}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  transition: "background-color 0.2s"
+                }}
+                onMouseEnter={(e) => (e.target.style.backgroundColor = "#059669")}
+                onMouseLeave={(e) => (e.target.style.backgroundColor = "#10b981")}
+              >
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M13 4L6 11L3 8"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Approve Design
+              </button>
+              <button
+                onClick={handleReject}
+                style={{
+                  flex: 1,
+                  padding: "12px 20px",
+                  backgroundColor: "#ef4444",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  transition: "background-color 0.2s"
+                }}
+                onMouseEnter={(e) => (e.target.style.backgroundColor = "#dc2626")}
+                onMouseLeave={(e) => (e.target.style.backgroundColor = "#ef4444")}
+              >
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M12 4L4 12M4 4L12 12"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Reject Design
+              </button>
+            </div>
 
-        {/* Right Panel */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          {/* Action Buttons */}
-          <div style={{ display: "flex", gap: "12px" }}>
-            <button
-              onClick={handleApprove}
-              style={{
-                flex: 1,
-                padding: "12px 20px",
-                backgroundColor: "#10b981",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
+            {/* Comments Section */}
+            <div>
+              <label style={{
+                display: "block",
                 fontSize: "14px",
-                fontWeight: "600",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                transition: "background-color 0.2s"
-              }}
-              onMouseEnter={(e) => (e.target.style.backgroundColor = "#059669")}
-              onMouseLeave={(e) => (e.target.style.backgroundColor = "#10b981")}
-            >
-              <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M13 4L6 11L3 8"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Approve Design
-            </button>
-            <button
-              onClick={handleReject}
-              style={{
-                flex: 1,
-                padding: "12px 20px",
-                backgroundColor: "#ef4444",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: "14px",
-                fontWeight: "600",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                transition: "background-color 0.2s"
-              }}
-              onMouseEnter={(e) => (e.target.style.backgroundColor = "#dc2626")}
-              onMouseLeave={(e) => (e.target.style.backgroundColor = "#ef4444")}
-            >
-              <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M12 4L4 12M4 4L12 12"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Reject Design
-            </button>
-          </div>
+                fontWeight: "500",
+                color: "#374151",
+                marginBottom: "8px"
+              }}>
+                Comments
+              </label>
+              <textarea
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+                placeholder="Add your approval or rejection comments here..."
+                style={{
+                  width: "100%",
+                  minHeight: "120px",
+                  padding: "12px",
+                  fontSize: "14px",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "8px",
+                  backgroundColor: "white",
+                  color: "#111827",
+                  resize: "vertical",
+                  fontFamily: "inherit"
+                }}
+              />
+            </div>
 
-          {/* Comments Section */}
-          <div>
-            <label style={{
-              display: "block",
-              fontSize: "14px",
-              fontWeight: "500",
-              color: "#374151",
-              marginBottom: "8px"
-            }}>
-              Comments
-            </label>
-            <textarea
-              value={comments}
-              onChange={(e) => setComments(e.target.value)}
-              placeholder="Add your approval or rejection comments here..."
+            {/* Update Decision Button */}
+            <button
+              onClick={handleUpdateDecision}
               style={{
                 width: "100%",
-                minHeight: "120px",
-                padding: "12px",
-                fontSize: "14px",
-                border: "1px solid #d1d5db",
+                padding: "12px 20px",
+                backgroundColor: "#f97316",
+                color: "white",
+                border: "none",
                 borderRadius: "8px",
-                backgroundColor: "white",
-                color: "#111827",
-                resize: "vertical",
-                fontFamily: "inherit"
+                fontSize: "14px",
+                fontWeight: "600",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                transition: "background-color 0.2s"
               }}
-            />
+              onMouseEnter={(e) => (e.target.style.backgroundColor = "#ea580c")}
+              onMouseLeave={(e) => (e.target.style.backgroundColor = "#f97316")}
+            >
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M8 1V3M8 13V15M15 8H13M3 8H1M13.364 2.636L11.95 4.05M4.05 11.95L2.636 13.364M13.364 13.364L11.95 11.95M4.05 4.05L2.636 2.636"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <circle
+                  cx="8"
+                  cy="8"
+                  r="3"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                />
+              </svg>
+              Update Decision
+            </button>
           </div>
-
-          {/* Update Decision Button */}
-          <button
-            onClick={handleUpdateDecision}
-            style={{
-              width: "100%",
-              padding: "12px 20px",
-              backgroundColor: "#f97316",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "14px",
-              fontWeight: "600",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              transition: "background-color 0.2s"
-            }}
-            onMouseEnter={(e) => (e.target.style.backgroundColor = "#ea580c")}
-            onMouseLeave={(e) => (e.target.style.backgroundColor = "#f97316")}
-          >
-            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M8 1V3M8 13V15M15 8H13M3 8H1M13.364 2.636L11.95 4.05M4.05 11.95L2.636 13.364M13.364 13.364L11.95 11.95M4.05 4.05L2.636 2.636"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <circle
-                cx="8"
-                cy="8"
-                r="3"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              />
-            </svg>
-            Update Decision
-          </button>
         </div>
       </div>
     </div>
