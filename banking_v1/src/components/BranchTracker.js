@@ -253,7 +253,7 @@ export default function BranchTracker() {
       "Vendor": "/security-deposit-payment",
       "Budget approval": "/budget-approval",
       "Stampduty approval": "/stamp-duty-payment-approval",
-      
+
       "On Hold": null, // No redirect for On Hold
       "Completed": null, // No redirect for Completed
     };
@@ -379,30 +379,24 @@ export default function BranchTracker() {
           </button>
         </div>
         <div className="header-actions">
-          <button className="header-icon-btn">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M10 2C10.5523 2 11 2.44772 11 3V4H15C15.5523 4 16 4.44772 16 5C16 5.55228 15.5523 6 15 6H5C4.44772 6 4 5.55228 4 5C4 4.44772 4.44772 4 5 4H9V3C9 2.44772 9.44772 2 10 2Z"
-                fill="#6b7280"
-              />
-              <path
-                d="M5 8H15L14.4 15.2C14.3 16.8 13 18 11.4 18H8.6C7 18 5.7 16.8 5.6 15.2L5 8Z"
-                fill="#6b7280"
-              />
+          {/* Trash Icon */}
+          <button className="header-icon-btn" title="Delete Notifications">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
             </svg>
           </button>
-          <button className="header-icon-btn">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M10 2L12.5 7.5L18.5 8.5L14 12.5L15 18.5L10 15.5L5 18.5L6 12.5L1.5 8.5L7.5 7.5L10 2Z"
-                fill="#6b7280"
-              />
+
+          {/* Star Icon */}
+          <button className="header-icon-btn" title="Favorites">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#6b7280" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
             </svg>
           </button>
           <button className="header-icon-btn notification-btn" onClick={() => setShowNotifications(!showNotifications)}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M10 2C7.79 2 6 3.79 6 6V10C6 11.1 5.1 12 4 12H3C2.45 12 2 12.45 2 13C2 13.55 2.45 14 3 14H17C17.55 14 18 13.55 18 13C18 12.45 17.55 12 17 12H16C14.9 12 14 11.1 14 10V6C14 3.79 12.21 2 10 2Z" fill="#6b7280" />
-              <path d="M10 18C11.1 18 12 17.1 12 16H8C8 17.1 8.9 18 10 18Z" fill="#6b7280" />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#6b7280" stroke="none">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
             <span className="notification-badge">3</span>
           </button>
