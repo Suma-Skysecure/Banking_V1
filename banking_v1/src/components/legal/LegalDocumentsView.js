@@ -6,21 +6,119 @@ import { useState, useEffect } from "react";
  * LegalDocumentsView Component
  * 
  * Displays legal documents in a card interface with view and download options
+ * 
+ * Backend Integration:
+ * When backend is ready, replace the useEffect hook to fetch documents from API:
+ * 1. Remove the DUMMY_DOCUMENTS constant
+ * 2. Replace the useEffect with an async function that calls your API endpoint
+ * 3. The API should return documents in the same format:
+ *    { id, name, fileName, uploadDate, size, type, status }
+ * 4. Update the handleViewDocument and handleDownloadDocument functions to use API URLs if needed
  */
 export default function LegalDocumentsView() {
   const [legalDocuments, setLegalDocuments] = useState([]);
 
-  // Load uploaded legal documents from localStorage
-  useEffect(() => {
+  // Dummy legal documents - Replace this with backend API call when ready
+  // TODO: Replace with actual API call to fetch legal documents
+  // Example: const fetchLegalDocuments = async () => { const response = await fetch('/api/legal-documents'); ... }
+  const DUMMY_DOCUMENTS = [
+    {
+      id: "1",
+      name: "Property Title Deed",
+      fileName: "Property_Title_Deed_Downtown_Arts_Plaza.pdf",
+      uploadDate: "2024-12-15",
+      size: 2458624, // 2.4 MB
+      type: "application/pdf",
+      status: "Verified"
+    },
+    {
+      id: "2",
+      name: "Tax Clearance Certificate",
+      fileName: "Tax_Clearance_Certificate_2024.pdf",
+      uploadDate: "2024-12-16",
+      size: 1536000, // 1.5 MB
+      type: "application/pdf",
+      status: "Verified"
+    },
+    {
+      id: "3",
+      name: "Encumbrance Certificate",
+      fileName: "Encumbrance_Certificate_Downtown_Arts.pdf",
+      uploadDate: "2024-12-17",
+      size: 1024000, // 1 MB
+      type: "application/pdf",
+      status: "Verified"
+    },
+    {
+      id: "4",
+      name: "Property Owner Identity Proof",
+      fileName: "Owner_ID_Proof_Aadhar.pdf",
+      uploadDate: "2024-12-14",
+      size: 512000, // 500 KB
+      type: "application/pdf",
+      status: "Verified"
+    },
+    {
+      id: "5",
+      name: "Sales Deed",
+      fileName: "Sales_Deed_Downtown_Arts_Plaza.pdf",
+      uploadDate: "2024-12-18",
+      size: 3072000, // 3 MB
+      type: "application/pdf",
+      status: "Verified"
+    }
+  ];
+
+  // Function to load documents from localStorage or use dummy data
+  const loadDocuments = () => {
+    // TODO: Replace with backend API call
+    // Example implementation:
+    // const fetchLegalDocuments = async () => {
+    //   try {
+    //     const response = await fetch('/api/legal-documents');
+    //     const data = await response.json();
+    //     setLegalDocuments(data);
+    //   } catch (error) {
+    //     console.error("Error fetching legal documents:", error);
+    //     // Fallback to dummy data or localStorage
+    //   }
+    // };
+    // fetchLegalDocuments();
+
+    // For now, check localStorage first, then use dummy data
     const storedDocuments = localStorage.getItem("uploadedLegalDocuments");
     if (storedDocuments) {
       try {
         const parsed = JSON.parse(storedDocuments);
-        setLegalDocuments(parsed);
+        if (parsed && parsed.length > 0) {
+          setLegalDocuments(parsed);
+          return;
+        }
       } catch (error) {
         console.error("Error parsing stored legal documents:", error);
       }
     }
+    
+    // If no stored documents, use dummy data
+    // TODO: Remove this when backend is implemented
+    setLegalDocuments(DUMMY_DOCUMENTS);
+  };
+
+  // Load uploaded legal documents from localStorage or use dummy data
+  useEffect(() => {
+    loadDocuments();
+
+    // Listen for document updates
+    const handleDocumentsUpdate = () => {
+      loadDocuments();
+    };
+
+    window.addEventListener('legalDocumentsUpdated', handleDocumentsUpdate);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('legalDocumentsUpdated', handleDocumentsUpdate);
+    };
   }, []);
 
   // Format file size
@@ -118,7 +216,7 @@ export default function LegalDocumentsView() {
   };
 
   return (
-    <div className="business-details-card" style={{ marginBottom: "24px" }}>
+    <div className="business-details-card" style={{ marginBottom: "24px" }} data-section="legal-documents">
       <div className="card-header">
         <svg
           width="20"
