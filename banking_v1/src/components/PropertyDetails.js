@@ -20,6 +20,125 @@ export default function PropertyDetails() {
   const [showNotification, setShowNotification] = useState(false);
   const [property, setProperty] = useState(null);
 
+  // Helper function to generate default values for missing property fields
+  const generateDefaultPropertyFields = (property) => {
+    if (!property) return {};
+    
+    // Extract area number from size string (e.g., "3,500 sq ft" -> 3500)
+    const areaMatch = (property.size || property.totalArea || "").match(/[\d,]+/);
+    const areaNum = areaMatch ? parseInt(areaMatch[0].replace(/,/g, "")) : 0;
+    
+    // Generate property ID if missing
+    const propertyId = property.propertyId || property.id || `PROP-${Date.now()}`;
+    
+    // Generate floor level based on property type and area
+    const getFloorLevel = () => {
+      if (property.floorLevel) return property.floorLevel;
+      if (property.type?.toLowerCase().includes("industrial")) {
+        return areaNum > 10000 ? "Ground Floor + Warehouse" : "Ground Floor";
+      }
+      if (property.type?.toLowerCase().includes("retail")) {
+        return "Ground Floor";
+      }
+      if (areaNum > 5000) {
+        return "Multiple Floors Available";
+      }
+      return "Ground Floor + Mezzanine";
+    };
+    
+    // Generate parking spaces based on area
+    const getParkingSpaces = () => {
+      if (property.parkingSpaces) return property.parkingSpaces;
+      const spaces = Math.max(2, Math.floor(areaNum / 500));
+      return `${spaces} Reserved Spaces`;
+    };
+    
+    // Generate year built based on property type
+    const getYearBuilt = () => {
+      if (property.yearBuilt) return property.yearBuilt;
+      const currentYear = new Date().getFullYear();
+      const baseYear = property.type?.toLowerCase().includes("industrial") ? 2015 : 2018;
+      return String(Math.max(baseYear, currentYear - 6));
+    };
+    
+    // Generate vendor name based on property location/name
+    const getVendorName = () => {
+      if (property.vendorName) return property.vendorName;
+      const address = property.address || "";
+      if (address.includes("Brickell")) return "Brickell Development Group";
+      if (address.includes("Downtown")) return "Downtown Properties LLC";
+      if (address.includes("South Beach")) return "South Beach Realty Partners";
+      if (address.includes("Westside")) return "Westside Commercial Holdings";
+      if (address.includes("North Miami")) return "North Miami Development Corp";
+      if (address.includes("Eastside")) return "Eastside Business Ventures";
+      return "Miami Commercial Realty Group";
+    };
+    
+    // Generate vendor contact
+    const getVendorContact = () => {
+      if (property.vendorContact) return property.vendorContact;
+      const areaCode = property.address?.match(/FL (\d{5})/)?.[1]?.substring(0, 3) || "305";
+      // Generate deterministic contact number based on property ID
+      const propIdNum = parseInt(String(property.id || property.propertyId || "0").replace(/\D/g, "")) || 0;
+      const lastFour = String((propIdNum % 9000) + 1000).padStart(4, '0');
+      return `+1 (${areaCode}) 555-${lastFour}`;
+    };
+    
+    // Generate vendor email based on vendor name
+    const getVendorEmail = () => {
+      if (property.vendorEmail) return property.vendorEmail;
+      const vendorName = getVendorName().toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
+      return `info@${vendorName}.com`;
+    };
+    
+    // Generate listing status
+    const getListingStatus = () => {
+      if (property.listingStatus) return property.listingStatus;
+      return property.statusType === "available" ? "Active Listing" : "Pending Listing";
+    };
+    
+    // Generate zoning based on property type
+    const getZoning = () => {
+      if (property.zoning) return property.zoning;
+      const type = property.type?.toLowerCase() || "";
+      if (type.includes("commercial office")) return "Commercial/Office";
+      if (type.includes("retail")) return "Commercial/Retail";
+      if (type.includes("industrial")) return "Industrial";
+      if (type.includes("mixed use")) return "Mixed Use";
+      return "Commercial";
+    };
+    
+    // Generate last inspection date
+    const getLastInspection = () => {
+      if (property.lastInspection) return property.lastInspection;
+      if (property.lastInspectionDate) {
+        return new Date(property.lastInspectionDate).toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+      const months = ["January", "February", "March", "April", "May", "June", 
+                      "July", "August", "September", "October", "November", "December"];
+      const currentDate = new Date();
+      const inspectionDate = new Date(currentDate);
+      inspectionDate.setMonth(currentDate.getMonth() - 2);
+      return `${months[inspectionDate.getMonth()]} ${inspectionDate.getDate()}, ${inspectionDate.getFullYear()}`;
+    };
+    
+    return {
+      floorLevel: getFloorLevel(),
+      parkingSpaces: getParkingSpaces(),
+      yearBuilt: getYearBuilt(),
+      vendorName: getVendorName(),
+      vendorContact: getVendorContact(),
+      vendorEmail: getVendorEmail(),
+      listingStatus: getListingStatus(),
+      zoning: getZoning(),
+      lastInspection: getLastInspection(),
+    };
+  };
+
   // Default property data - fallback if no imported data
   const defaultProperty = {
     id: "PROP-MIA-2024-002",
@@ -47,54 +166,97 @@ export default function PropertyDetails() {
     const isImported = searchParams?.get("isImported") === "true";
     const propertyId = searchParams?.get("propertyId");
 
-    if (isImported && propertyId) {
-      try {
-        const importedPropertyData = localStorage.getItem("selectedImportedProperty");
-        if (importedPropertyData) {
-          const importedProperty = JSON.parse(importedPropertyData);
+    try {
+      // Try to get property data from localStorage (works for both imported and regular properties)
+      const selectedPropertyData = localStorage.getItem("selectedProperty");
+      if (selectedPropertyData) {
+        const selectedProperty = JSON.parse(selectedPropertyData);
+        
+        // Check if this is the property we're looking for
+        // Match by propertyId or id, handling both string and number formats
+        const propId = selectedProperty.propertyId || selectedProperty.id;
+        const searchPropId = propertyId;
+        
+        // If we have a propertyId in the URL, try to match it
+        // If no propertyId in URL, just use the stored property (for backward compatibility)
+        if (!searchPropId || (propId && propId.toString() === searchPropId.toString())) {
+          // Format the property data to match the expected structure
+          let formattedProperty;
           
-          // Format the imported property data to match the expected structure
-          const formattedProperty = {
-            id: importedProperty.propertyId || importedProperty.id,
-            name: importedProperty.name || "",
-            address: importedProperty.address || "",
-            status: importedProperty.status || "Available",
-            statusType: importedProperty.statusType || "pending",
-            // Price from Excel is in INR, convert to USD equivalent for consistency
-            price: importedProperty.priceUSD || (importedProperty.price ? importedProperty.price / 83.5 : 0),
-            // Price per sqft from Excel is already in INR
-            pricePerSqft: importedProperty.pricePerSqft || 0,
-            type: importedProperty.type || "",
-            totalArea: importedProperty.size || `${importedProperty.totalArea || 0} sq ft`,
-            floorLevel: importedProperty.floorLevel || "",
-            parkingSpaces: importedProperty.parkingSpaces || "",
-            yearBuilt: importedProperty.yearBuilt || "",
-            vendorName: importedProperty.vendorName || "",
-            vendorContact: importedProperty.vendorContact || "",
-            vendorEmail: importedProperty.vendorEmail || "",
-            listingStatus: importedProperty.listingStatus || "",
-            zoning: importedProperty.zoning || "",
-            lastInspection: importedProperty.lastInspectionDate 
-              ? new Date(importedProperty.lastInspectionDate).toLocaleDateString("en-US", {
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                })
-              : "",
-            siteInspection: importedProperty.siteInspection || "",
-            dueDiligence: importedProperty.dueDiligence || "",
-            isImported: true,
-          };
+          // Generate default values for missing fields
+          const defaultFields = generateDefaultPropertyFields(selectedProperty);
+          
+          if (isImported && selectedProperty.isImported) {
+            // Format imported property data
+            formattedProperty = {
+              id: selectedProperty.propertyId || selectedProperty.id,
+              name: selectedProperty.name || "",
+              address: selectedProperty.address || "",
+              status: selectedProperty.status || "Available",
+              statusType: selectedProperty.statusType || "pending",
+              // Price from Excel is in INR, convert to USD equivalent for consistency
+              price: selectedProperty.priceUSD || (selectedProperty.price ? selectedProperty.price / 83.5 : 0),
+              // Price per sqft from Excel is already in INR
+              pricePerSqft: selectedProperty.pricePerSqft || 0,
+              type: selectedProperty.type || "",
+              totalArea: selectedProperty.size || `${selectedProperty.totalArea || 0} sq ft`,
+              floorLevel: selectedProperty.floorLevel || defaultFields.floorLevel,
+              parkingSpaces: selectedProperty.parkingSpaces || defaultFields.parkingSpaces,
+              yearBuilt: selectedProperty.yearBuilt || defaultFields.yearBuilt,
+              vendorName: selectedProperty.vendorName || defaultFields.vendorName,
+              vendorContact: selectedProperty.vendorContact || defaultFields.vendorContact,
+              vendorEmail: selectedProperty.vendorEmail || defaultFields.vendorEmail,
+              listingStatus: selectedProperty.listingStatus || defaultFields.listingStatus,
+              zoning: selectedProperty.zoning || defaultFields.zoning,
+              lastInspection: selectedProperty.lastInspectionDate 
+                ? new Date(selectedProperty.lastInspectionDate).toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : defaultFields.lastInspection,
+              siteInspection: selectedProperty.siteInspection || "",
+              dueDiligence: selectedProperty.dueDiligence || "",
+              isImported: true,
+            };
+          } else {
+            // Format regular property data
+            formattedProperty = {
+              id: selectedProperty.id ? `PROP-MIA-2024-${String(selectedProperty.id).padStart(3, '0')}` : `PROP-${Date.now()}`,
+              name: selectedProperty.name || "",
+              address: selectedProperty.address || "",
+              status: selectedProperty.status || "Available",
+              statusType: selectedProperty.statusType || "pending",
+              // Regular properties have price in USD, keep as is
+              price: selectedProperty.price || 0,
+              // Regular properties have pricePerSqft in USD
+              pricePerSqft: selectedProperty.pricePerSqft || 0,
+              type: selectedProperty.type || "",
+              totalArea: selectedProperty.size || "",
+              floorLevel: selectedProperty.floorLevel || defaultFields.floorLevel,
+              parkingSpaces: selectedProperty.parkingSpaces || defaultFields.parkingSpaces,
+              yearBuilt: selectedProperty.yearBuilt || defaultFields.yearBuilt,
+              vendorName: selectedProperty.vendorName || defaultFields.vendorName,
+              vendorContact: selectedProperty.vendorContact || defaultFields.vendorContact,
+              vendorEmail: selectedProperty.vendorEmail || defaultFields.vendorEmail,
+              listingStatus: selectedProperty.listingStatus || defaultFields.listingStatus,
+              zoning: selectedProperty.zoning || defaultFields.zoning,
+              lastInspection: selectedProperty.lastInspection || defaultFields.lastInspection,
+              siteInspection: selectedProperty.siteInspection || "",
+              dueDiligence: selectedProperty.dueDiligence || "",
+              isImported: false,
+            };
+          }
           
           setProperty(formattedProperty);
           return;
         }
-      } catch (error) {
-        console.error("Error parsing imported property data:", error);
       }
+    } catch (error) {
+      console.error("Error parsing property data:", error);
     }
 
-    // Use default property if no imported data
+    // Use default property if no property data found
     setProperty(defaultProperty);
   }, [searchParams]);
 
@@ -334,53 +496,53 @@ export default function PropertyDetails() {
                 <div className="info-list">
                   <div className="info-item">
                     <span className="info-label">Property ID:</span>
-                    <span className="info-value">{property.id}</span>
+                    <span className="info-value">{property.id || "N/A"}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Property Type:</span>
-                    <span className="info-value">{property.type}</span>
+                    <span className="info-value">{property.type || "N/A"}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Total Area:</span>
-                    <span className="info-value">{property.totalArea}</span>
+                    <span className="info-value">{property.totalArea || "N/A"}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Floor Level:</span>
-                    <span className="info-value">{property.floorLevel}</span>
+                    <span className="info-value">{property.floorLevel || "N/A"}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Parking Spaces:</span>
-                    <span className="info-value">{property.parkingSpaces}</span>
+                    <span className="info-value">{property.parkingSpaces || "N/A"}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Year Built:</span>
-                    <span className="info-value">{property.yearBuilt}</span>
+                    <span className="info-value">{property.yearBuilt || "N/A"}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Vendor Name:</span>
-                    <span className="info-value">{property.vendorName}</span>
+                    <span className="info-value">{property.vendorName || "N/A"}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Vendor Contact:</span>
-                    <span className="info-value">{property.vendorContact}</span>
+                    <span className="info-value">{property.vendorContact || "N/A"}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Vendor Email:</span>
-                    <span className="info-value">{property.vendorEmail}</span>
+                    <span className="info-value">{property.vendorEmail || "N/A"}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Listing Status:</span>
                     <span className="info-value">
-                      <span className="status-badge active">{property.listingStatus}</span>
+                      <span className="status-badge active">{property.listingStatus || "N/A"}</span>
                     </span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Zoning:</span>
-                    <span className="info-value">{property.zoning}</span>
+                    <span className="info-value">{property.zoning || "N/A"}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Last Inspection:</span>
-                    <span className="info-value">{property.lastInspection}</span>
+                    <span className="info-value">{property.lastInspection || "N/A"}</span>
                   </div>
                 </div>
               </div>
@@ -504,6 +666,13 @@ export default function PropertyDetails() {
                   className="submit-approval-button"
                   onClick={() => {
                     console.log("Submitting property for business approval");
+                    
+                    // Store property data in localStorage for Business Approval, Legal Workflow, and Dashboard
+                    if (property) {
+                      localStorage.setItem("propertyForBusinessApproval", JSON.stringify(property));
+                      // Also store submission timestamp
+                      localStorage.setItem("propertySubmissionDate", new Date().toISOString());
+                    }
                     
                     // Create notification for business approval - target Business role
                     const notificationMessage = property?.name

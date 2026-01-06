@@ -441,6 +441,16 @@ export default function PropertySearch() {
       const propertyNames = selectedProps.map(prop => prop.name).join(", ");
       const propertyCount = selectedProperties.length;
       
+      // Store the first selected property data for Business Approval, Legal Workflow, and Dashboard
+      // If multiple properties are selected, we'll use the first one
+      if (selectedProps.length > 0) {
+        const propertyForApproval = selectedProps[0];
+        // Store property data in localStorage for Business Approval, Legal Workflow, and Dashboard
+        localStorage.setItem("propertyForBusinessApproval", JSON.stringify(propertyForApproval));
+        // Also store submission timestamp
+        localStorage.setItem("propertySubmissionDate", new Date().toISOString());
+      }
+      
       // Create notification for business approval - target Business role
       const notificationMessage = propertyCount === 1
         ? `Property "${propertyNames}" has been initiated for business approval`
@@ -1063,11 +1073,8 @@ export default function PropertySearch() {
                             className="view-details-button"
                             onClick={() => {
                               // Store the selected property data in localStorage for PropertyDetails
-                              if (property.isImported) {
-                                localStorage.setItem("selectedImportedProperty", JSON.stringify(property));
-                              } else {
-                                localStorage.removeItem("selectedImportedProperty");
-                              }
+                              // Store all property data (both imported and regular) so PropertyDetails can access it
+                              localStorage.setItem("selectedProperty", JSON.stringify(property));
                             }}
                           >
                             <svg
