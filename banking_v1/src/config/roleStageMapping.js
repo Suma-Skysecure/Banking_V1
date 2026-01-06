@@ -26,8 +26,8 @@ export const ROLE_STAGE_MAPPING = {
     "Application for telephone connection"
   ],
   
-  // Site measurement role - sees stages related to site measurement work
-  "Site measurement": ["Site Measurement", "Layout Design", "TSA (Stamp duty)", "TSA (Security Deposit)"],
+  // Site measurement role - sees only Site Measurement stage
+  "Site measurement": ["Site Measurement"],
   
   // Agreement execution role - sees Agreement Execution related stages
   "Agreement execution": ["Agreement Execution", "Agreement Registration", "Agreement to Account"],

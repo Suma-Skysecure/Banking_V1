@@ -22,6 +22,26 @@ export default function PostLOIActivities() {
   const [notificationMessage, setNotificationMessage] = useState("");
   const [uploadedLOI, setUploadedLOI] = useState(null);
 
+  // TSA (Stamp Duty) state
+  const propertyValue = 5800000;
+  const stampDutyRate = 0.7;
+  const totalStampDuty = (propertyValue * stampDutyRate) / 100;
+  
+  // TSA (Security Deposit) state
+  const depositPercentage = 10;
+  const securityDepositAmount = (propertyValue * depositPercentage) / 100;
+  const [paymentMethod, setPaymentMethod] = useState("card");
+
+  // Format currency helper
+  const formatCurrencyTSA = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount * 83.5);
+  };
+
   // Load uploaded LOI document from localStorage
   useEffect(() => {
     const storedLOI = localStorage.getItem("uploadedSignedLOI");
@@ -133,97 +153,97 @@ export default function PostLOIActivities() {
               </div>
               <div style={{ padding: "20px" }}>
                 {uploadedLOI ? (
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "16px",
-                    backgroundColor: "#f9fafb",
-                    borderRadius: "8px",
-                    border: "1px solid #e5e7eb"
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
-                      <div style={{
-                        width: "40px",
-                        height: "40px",
-                        backgroundColor: "#fee2e2",
-                        borderRadius: "6px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0
-                      }}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                          <path
-                            d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
-                            stroke="#ef4444"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M14 2V8H20"
-                            stroke="#ef4444"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M16 13H8M16 17H8M10 9H8"
-                            stroke="#ef4444"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "14px", fontWeight: "600", color: "#111827", marginBottom: "4px" }}>
-                          {uploadedLOI.name}
-                        </div>
-                        <div style={{ fontSize: "12px", color: "#6b7280" }}>
-                          Uploaded on {formatDate(uploadedLOI.uploadDate)} • {formatFileSize(uploadedLOI.size)}
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        padding: "10px 20px",
-                        backgroundColor: "#1e3a8a",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "6px",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        cursor: "pointer",
-                        transition: "background-color 0.2s",
-                        flexShrink: 0
-                      }}
-                      onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
-                      onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
-                      onClick={handleViewDocument}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "16px",
+                  backgroundColor: "#f9fafb",
+                  borderRadius: "8px",
+                  border: "1px solid #e5e7eb"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
+                    <div style={{
+                      width: "40px",
+                      height: "40px",
+                      backgroundColor: "#fee2e2",
+                      borderRadius: "6px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0
+                    }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                         <path
-                          d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
+                          d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
+                          stroke="#ef4444"
+                          strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
-                        <circle
-                          cx="8"
-                          cy="8"
-                          r="2"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
+                        <path
+                          d="M14 2V8H20"
+                          stroke="#ef4444"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M16 13H8M16 17H8M10 9H8"
+                          stroke="#ef4444"
+                          strokeWidth="2"
+                          strokeLinecap="round"
                         />
                       </svg>
-                      View Document
-                    </button>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "14px", fontWeight: "600", color: "#111827", marginBottom: "4px" }}>
+                          {uploadedLOI.name}
+                      </div>
+                      <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                          Uploaded on {formatDate(uploadedLOI.uploadDate)} • {formatFileSize(uploadedLOI.size)}
+                      </div>
+                    </div>
                   </div>
+                  <button
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 20px",
+                      backgroundColor: "#1e3a8a",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      transition: "background-color 0.2s",
+                      flexShrink: 0
+                    }}
+                    onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
+                    onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
+                      onClick={handleViewDocument}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path
+                        d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle
+                        cx="8"
+                        cy="8"
+                        r="2"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      />
+                    </svg>
+                    View Document
+                  </button>
+                </div>
                 ) : (
                   <div style={{
                     display: "flex",
@@ -245,164 +265,1066 @@ export default function PostLOIActivities() {
             {/* Site Measurement Details */}
             <SiteMeasurementDetails />
 
-            {/* Layout Design Approval Section */}
-            <div className="business-details-card" style={{ marginBottom: "24px" }}>
+            {/* Layout Design Section */}
+            <LayoutDesignSection />
+
+            {/* Layout Design Approval */}
+            <LayoutDesignApproval showOnlyUpdateButton={true} />
+
+            {/* TSA (Stamp Duty) Section */}
+            <div className="business-details-card" style={{ marginTop: "24px", marginBottom: "24px" }}>
+              <div className="card-header">
+                <div style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  backgroundColor: "#f97316",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: "12px"
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M8 8C10.2091 8 12 6.20914 12 4C12 1.79086 10.2091 0 8 0C5.79086 0 4 1.79086 4 4C4 6.20914 5.79086 8 8 8Z"
+                      fill="white"
+                    />
+                    <path
+                      d="M8 10C4.68629 10 2 12.6863 2 16H14C14 12.6863 11.3137 10 8 10Z"
+                      fill="white"
+                    />
+                  </svg>
+                </div>
+                <h3 className="card-title">TSA (Stamp Duty)</h3>
+              </div>
+              <div style={{ padding: "20px" }}>
+                {/* Calculation Breakdown */}
+                <div style={{ marginBottom: "24px" }}>
+                  <h4 style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "16px" }}>
+                    Calculation Breakdown
+                  </h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Property Value:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        {formatCurrencyTSA(propertyValue)}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Stamp Duty Rate:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        {stampDutyRate}%
+                      </span>
+                    </div>
+                    <div style={{ 
+                      display: "flex", 
+                      justifyContent: "space-between", 
+                      alignItems: "center",
+                      padding: "12px",
+                      backgroundColor: "#dbeafe",
+                      borderRadius: "6px",
+                      border: "1px solid #93c5fd"
+                    }}>
+                      <span style={{ fontSize: "16px", fontWeight: "600", color: "#1e3a8a" }}>
+                        Total Stamp Duty Amount:
+                      </span>
+                      <span style={{ fontSize: "18px", fontWeight: "700", color: "#1e3a8a" }}>
+                        {formatCurrencyTSA(totalStampDuty)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Information */}
+                <div style={{ marginBottom: "24px" }}>
+                  <h4 style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "16px" }}>
+                    Payment Information
+                  </h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Payment Status:</span>
+                      <div style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "6px 12px",
+                        backgroundColor: "#fef3c7",
+                        color: "#92400e",
+                        borderRadius: "20px",
+                        fontSize: "14px",
+                        fontWeight: "500"
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+                          <path
+                            d="M8 4V8L10.5 10.5"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        Payment Initiated
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Payment Reference Number:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        SD-MIA-2024-002-4060
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Payment Date:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        December 19, 2024
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Information and Payment Details */}
+                <div style={{ 
+                  display: "grid", 
+                  gridTemplateColumns: "1fr 1fr", 
+                  gap: "24px",
+                  marginBottom: "24px"
+                }}>
+                  {/* Additional Information */}
+                  <div className="business-details-card">
+                    <div className="card-header">
+                      <h3 className="card-title">Additional Information</h3>
+                    </div>
+                    <div style={{ padding: "20px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>State:</span>
+                          <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                            Florida
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>County:</span>
+                          <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                            Miami-Dade
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>Property Type:</span>
+                          <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                            Commercial Office
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>Transaction Type:</span>
+                          <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                            Purchase
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Details */}
+                  <div className="business-details-card">
+                    <div className="card-header">
+                      <h3 className="card-title">Payment Details</h3>
+                    </div>
+                    <div style={{ padding: "20px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
+                            Payment Date
+                          </label>
+                          <div style={{
+                            padding: "10px 12px",
+                            fontSize: "14px",
+                            border: "1px solid #d1d5db",
+                            borderRadius: "6px",
+                            backgroundColor: "#f9fafb",
+                            color: "#111827"
+                          }}>
+                            December 19, 2024
+                          </div>
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
+                            Payment Method
+                          </label>
+                          <div style={{
+                            padding: "10px 12px",
+                            fontSize: "14px",
+                            border: "1px solid #d1d5db",
+                            borderRadius: "6px",
+                            backgroundColor: "#f9fafb",
+                            color: "#111827"
+                          }}>
+                            Electronic Transfer
+                          </div>
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
+                            Paying Authority
+                          </label>
+                          <div style={{
+                            padding: "10px 12px",
+                            fontSize: "14px",
+                            border: "1px solid #d1d5db",
+                            borderRadius: "6px",
+                            backgroundColor: "#f9fafb",
+                            color: "#111827"
+                          }}>
+                            Florida Department of Revenue
+                          </div>
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
+                            Account Reference
+                          </label>
+                          <div style={{
+                            padding: "10px 12px",
+                            fontSize: "14px",
+                            border: "1px solid #d1d5db",
+                            borderRadius: "6px",
+                            backgroundColor: "#f9fafb",
+                            color: "#111827"
+                          }}>
+                            FL-REV-ACC-789456123
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit Stamp Duty for Account Button */}
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                  <button
+                    onClick={() => {
+                      console.log("Submitting stamp duty for account");
+                      setNotificationMessage("Stamp duty submitted successfully");
+                      setShowNotification(true);
+                    }}
+                    style={{
+                      padding: "10px 20px",
+                      backgroundColor: "#f97316",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      transition: "background-color 0.2s"
+                    }}
+                    onMouseEnter={(e) => (e.target.style.backgroundColor = "#ea580c")}
+                    onMouseLeave={(e) => (e.target.style.backgroundColor = "#f97316")}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path
+                        d="M8 1V3M8 13V15M15 8H13M3 8H1M13.364 2.636L11.95 4.05M4.05 11.95L2.636 13.364M13.364 13.364L11.95 11.95M4.05 4.05L2.636 2.636"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      />
+                      <circle
+                        cx="8"
+                        cy="8"
+                        r="3"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      />
+                    </svg>
+                    Submit Stamp Duty for Account
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Vendor Details Section - Show after TSA (Stamp Duty) */}
+            <div style={{ marginTop: "24px", marginBottom: "24px" }}>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "24px"
+              }}>
+                {/* Left Panel: Vendor Details */}
+                <div className="business-details-card">
               <div className="card-header">
                 <svg
                   width="20"
                   height="20"
-                  viewBox="0 0 20 20"
+                      viewBox="0 0 16 16"
                   fill="none"
                   className="card-icon"
                 >
                   <path
-                    d="M3 4C3 3.44772 3.44772 3 4 3H16C16.5523 3 17 3.44772 17 4V16C17 16.5523 16.5523 17 16 17H4C3.44772 17 3 16.5523 3 16V4Z"
+                        d="M8 8C10.2091 8 12 6.20914 12 4C12 1.79086 10.2091 0 8 0C5.79086 0 4 1.79086 4 4C4 6.20914 5.79086 8 8 8Z"
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
                   <path
-                    d="M7 8L10 11L13 8"
+                        d="M8 10C4.68629 10 2 12.6863 2 16H14C14 12.6863 11.3137 10 8 10Z"
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
                 </svg>
-                <h3 className="card-title">Layout Design Approval</h3>
+                    <h3 className="card-title">Vendor Details</h3>
               </div>
               <div style={{ padding: "20px" }}>
-                <div className="decision-actions">
+                    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                      {/* Vendor Type */}
+                      <div>
+                        <label style={{
+                          display: "block",
+                          fontSize: "14px",
+                          color: "#374151",
+                          fontWeight: "500",
+                          marginBottom: "8px"
+                        }}>
+                          Vendor Type
+                        </label>
+                        <div style={{
+                          width: "100%",
+                          padding: "10px 12px",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          color: "#111827",
+                          backgroundColor: "#f9fafb"
+                        }}>
+                          Landlord (Property Owner)
+                        </div>
+                      </div>
+
+                      {/* Legal Name */}
+                      <div>
+                        <label style={{
+                          display: "block",
+                          fontSize: "14px",
+                          color: "#374151",
+                          fontWeight: "500",
+                          marginBottom: "8px"
+                        }}>
+                          Legal Name <span style={{ color: "#dc2626" }}>*</span>
+                        </label>
+                        <div style={{
+                          width: "100%",
+                          padding: "10px 12px",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          color: "#111827",
+                          backgroundColor: "#f9fafb"
+                        }}>
+                          Biscayne Development Group
+                        </div>
+                      </div>
+
+                      {/* PAN Number */}
+                      <div>
+                        <label style={{
+                          display: "block",
+                          fontSize: "14px",
+                          color: "#374151",
+                          fontWeight: "500",
+                          marginBottom: "8px"
+                        }}>
+                          PAN Number <span style={{ color: "#dc2626" }}>*</span>
+                        </label>
+                        <div style={{
+                          width: "100%",
+                          padding: "10px 12px",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          color: "#111827",
+                          backgroundColor: "#f9fafb"
+                        }}>
+                          AADCB1234F
+                        </div>
+                      </div>
+
+                      {/* GST Number */}
+                      <div>
+                        <label style={{
+                          display: "block",
+                          fontSize: "14px",
+                          color: "#374151",
+                          fontWeight: "500",
+                          marginBottom: "8px"
+                        }}>
+                          GST Number (if applicable)
+                        </label>
+                        <div style={{
+                          width: "100%",
+                          padding: "10px 12px",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          color: "#111827",
+                          backgroundColor: "#f9fafb"
+                        }}>
+                          27AADCB1234F1ZC
+                        </div>
+                      </div>
+
+                      {/* Bank Account Number */}
+                      <div>
+                        <label style={{
+                          display: "block",
+                          fontSize: "14px",
+                          color: "#374151",
+                          fontWeight: "500",
+                          marginBottom: "8px"
+                        }}>
+                          Bank Account Number
+                        </label>
+                        <div style={{
+                          width: "100%",
+                          padding: "10px 12px",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          color: "#111827",
+                          backgroundColor: "#f9fafb"
+                        }}>
+                          123456789012
+                        </div>
+                      </div>
+
+                      {/* IFSC Code */}
+                      <div>
+                        <label style={{
+                          display: "block",
+                          fontSize: "14px",
+                          color: "#374151",
+                          fontWeight: "500",
+                          marginBottom: "8px"
+                        }}>
+                          IFSC Code <span style={{ color: "#dc2626" }}>*</span>
+                        </label>
+                        <div style={{
+                          width: "100%",
+                          padding: "10px 12px",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          color: "#111827",
+                          backgroundColor: "#f9fafb"
+                        }}>
+                          ICIC0001234
+                        </div>
+                      </div>
+
+                      {/* Registered Address */}
+                      <div>
+                        <label style={{
+                          display: "block",
+                          fontSize: "14px",
+                          color: "#374151",
+                          fontWeight: "500",
+                          marginBottom: "8px"
+                        }}>
+                          Registered Address
+                        </label>
+                        <div style={{
+                          width: "100%",
+                          padding: "10px 12px",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          color: "#111827",
+                          backgroundColor: "#f9fafb",
+                          minHeight: "60px"
+                        }}>
+                          Miami, FL 33131
+                        </div>
+                      </div>
+
+                      {/* Uploaded Documents */}
+                      <div>
+                        <label style={{
+                          display: "block",
+                          fontSize: "14px",
+                          color: "#374151",
+                          fontWeight: "500",
+                          marginBottom: "8px"
+                        }}>
+                          Uploaded Documents
+                        </label>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <div style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "10px 12px",
+                            backgroundColor: "#f9fafb",
+                            borderRadius: "6px",
+                            border: "1px solid #e5e7eb"
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                              <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                                <path
+                                  d="M3 2C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V5L10 2H3Z"
+                                  stroke="#6b7280"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                              <span style={{ fontSize: "14px", color: "#111827" }}>PAN_Card.pdf</span>
+                            </div>
                   <button
-                    className="decision-button reject-button"
-                    onClick={() => {
-                      console.log("Reject Layout Design");
-                    }}
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      className="button-icon"
-                    >
+                              style={{
+                                backgroundColor: "transparent",
+                                border: "none",
+                                color: "#ef4444",
+                                cursor: "pointer",
+                                padding: "4px"
+                              }}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                       <path
-                        d="M5 5L15 15M15 5L5 15"
+                                  d="M12 4L4 12M4 4L12 12"
                         stroke="currentColor"
-                        strokeWidth="2"
+                                  strokeWidth="1.5"
                         strokeLinecap="round"
+                                  strokeLinejoin="round"
                       />
                     </svg>
-                    Reject
                   </button>
+                          </div>
+                          <div style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "10px 12px",
+                            backgroundColor: "#f9fafb",
+                            borderRadius: "6px",
+                            border: "1px solid #e5e7eb"
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                              <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                                <path
+                                  d="M3 2C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V5L10 2H3Z"
+                                  stroke="#6b7280"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                              <span style={{ fontSize: "14px", color: "#111827" }}>Cancelled_Cheque.jpg</span>
+                            </div>
                   <button
-                    className="decision-button approve-button"
-                    onClick={() => {
-                      console.log("Approve Layout Design");
-                      setNotificationMessage("Successfully moved for Layout design");
-                      setShowNotification(true);
-                    }}
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      className="button-icon"
-                    >
+                              style={{
+                                backgroundColor: "transparent",
+                                border: "none",
+                                color: "#ef4444",
+                                cursor: "pointer",
+                                padding: "4px"
+                              }}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                       <path
-                        d="M16.7071 5.29289C17.0976 5.68342 17.0976 6.31658 16.7071 6.70711L8.70711 14.7071C8.31658 15.0976 7.68342 15.0976 7.29289 14.7071L3.29289 10.7071C2.90237 10.3166 2.90237 9.68342 3.29289 9.29289C3.68342 8.90237 4.31658 8.90237 4.70711 9.29289L8 12.5858L15.2929 5.29289C15.6834 4.90237 16.3166 4.90237 16.7071 5.29289Z"
-                        fill="currentColor"
+                                  d="M12 4L4 12M4 4L12 12"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
                       />
                     </svg>
-                    Approve
                   </button>
+                          </div>
+                        </div>
+                        <div style={{ marginTop: "12px" }}>
+                          <a
+                            href="#"
+                            style={{
+                              fontSize: "14px",
+                              color: "#1e3a8a",
+                              fontWeight: "500",
+                              textDecoration: "none",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px"
+                            }}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                              <path
+                                d="M8 4V12M4 8H12"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                            Add Documents
+                          </a>
+                        </div>
+                      </div>
                 </div>
               </div>
             </div>
 
-            {/* Term Sheet Approval Section */}
-            <div className="business-details-card" style={{ marginBottom: "24px" }}>
-              <div className="card-header">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  className="card-icon"
-                >
+                {/* Right Panel: Vendor Request Summary */}
+                <div className="business-details-card">
+                  <div style={{
+                    marginBottom: "24px",
+                    paddingBottom: "16px",
+                    borderBottom: "1px solid #e5e7eb"
+                  }}>
+                    <h3 className="card-title" style={{ margin: 0 }}>Vendor Request Summary</h3>
+                  </div>
+                  <div style={{ padding: "0 20px 20px 20px" }}>
+                    {/* Vendor Name */}
+                    <div style={{
+                      fontSize: "18px",
+                      fontWeight: "700",
+                      color: "#111827",
+                      marginBottom: "20px"
+                    }}>
+                      Biscayne Development Group
+                    </div>
+
+                    {/* Vendor Information Card */}
+                    <div style={{
+                      backgroundColor: "#f9fafb",
+                      borderRadius: "8px",
+                      padding: "20px",
+                      border: "1px solid #e5e7eb",
+                      marginBottom: "20px"
+                    }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>Vendor Name:</span>
+                          <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827" }}>
+                            Biscayne Development Group
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>Vendor Type:</span>
+                          <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827" }}>
+                            Landlord (Property Owner)
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>Purpose:</span>
+                          <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827" }}>
+                            New Branch Setup
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Documents */}
+                    <div>
+                      <div style={{
+                        fontSize: "16px",
+                        fontWeight: "700",
+                        color: "#111827",
+                        marginBottom: "16px"
+                      }}>
+                        Documents
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "8px 12px",
+                          backgroundColor: "#f9fafb",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          transition: "background-color 0.2s"
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f3f4f6"}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#f9fafb"}
+                        >
+                          <div style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px"
+                          }}>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path
-                    d="M4 4C4 3.44772 4.44772 3 5 3H15C15.5523 3 16 3.44772 16 4V16C16 16.5523 15.5523 17 15 17H5C4.44772 17 4 16.5523 4 16V4Z"
-                    stroke="currentColor"
+                                d="M13 4L6 11L3 8"
+                                stroke="#10b981"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            <span style={{
+                              fontSize: "14px",
+                              color: "#111827"
+                            }}>
+                              PAN_Card.pdf
+                            </span>
+                          </div>
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path
+                              d="M6 12L10 8L6 4"
+                              stroke="#6b7280"
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
+                          </svg>
+                        </div>
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "8px 12px",
+                          backgroundColor: "#f9fafb",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          transition: "background-color 0.2s"
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f3f4f6"}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#f9fafb"}
+                        >
+                          <div style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px"
+                          }}>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path
-                    d="M7 7H13M7 10H13M7 13H11"
-                    stroke="currentColor"
+                                d="M13 4L6 11L3 8"
+                                stroke="#10b981"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            <span style={{
+                              fontSize: "14px",
+                              color: "#111827"
+                            }}>
+                              Cancelled_Cheque.jpg
+                            </span>
+                          </div>
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path
+                              d="M6 12L10 8L6 4"
+                              stroke="#6b7280"
                     strokeWidth="1.5"
                     strokeLinecap="round"
+                              strokeLinejoin="round"
                   />
                 </svg>
-                <h3 className="card-title">Term Sheet Approval</h3>
               </div>
-              <div style={{ padding: "20px" }}>
-                <div className="decision-actions">
-                  <button
-                    className="decision-button reject-button"
-                    onClick={() => {
-                      console.log("Reject Term Sheet");
-                    }}
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      className="button-icon"
-                    >
-                      <path
-                        d="M5 5L15 15M15 5L5 15"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    Reject
-                  </button>
-                  <button
-                    className="decision-button approve-button"
-                    onClick={() => {
-                      console.log("Approve Term Sheet");
-                      setNotificationMessage("Successfully moved for term sheet");
-                      setShowNotification(true);
-                    }}
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      className="button-icon"
-                    >
-                      <path
-                        d="M16.7071 5.29289C17.0976 5.68342 17.0976 6.31658 16.7071 6.70711L8.70711 14.7071C8.31658 15.0976 7.68342 15.0976 7.29289 14.7071L3.29289 10.7071C2.90237 10.3166 2.90237 9.68342 3.29289 9.29289C3.68342 8.90237 4.31658 8.90237 4.70711 9.29289L8 12.5858L15.2929 5.29289C15.6834 4.90237 16.3166 4.90237 16.7071 5.29289Z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                    Approve
-                  </button>
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "8px 12px",
+                          backgroundColor: "#f9fafb",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          transition: "background-color 0.2s"
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f3f4f6"}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#f9fafb"}
+                        >
+                          <div style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px"
+                          }}>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                              <path
+                                d="M13 4L6 11L3 8"
+                                stroke="#10b981"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            <span style={{
+                              fontSize: "14px",
+                              color: "#111827"
+                            }}>
+                              GST_Certificate.pdf
+                            </span>
+                          </div>
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path
+                              d="M6 12L10 8L6 4"
+                              stroke="#6b7280"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Layout Design Section - Hidden for Site measurement role */}
-            {user?.role !== "Site measurement" && <LayoutDesignSection />}
+            {/* TSA (Security Deposit) Section */}
+            <div className="business-details-card" style={{ marginTop: "24px", marginBottom: "24px" }}>
+              <div className="card-header">
+                <div style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  backgroundColor: "#f97316",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: "12px"
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M8 1L3 4V8C3 11.866 8 15 8 15C8 15 13 11.866 13 8V4L8 1Z"
+                      stroke="white"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <h3 className="card-title">TSA (Security Deposit)</h3>
+              </div>
+              <div style={{ padding: "20px" }}>
+                <div style={{ 
+                  display: "grid", 
+                  gridTemplateColumns: "1fr 1fr", 
+                  gap: "24px"
+                }}>
+                  {/* Deposit Details (Left Column) */}
+                  <div>
+                    <h4 style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "20px" }}>
+                      Deposit Details
+                    </h4>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "14px", color: "#6b7280" }}>Property Value:</span>
+                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                          {formatCurrencyTSA(propertyValue)}
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "14px", color: "#6b7280" }}>Deposit Percentage:</span>
+                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                          {depositPercentage}%
+                        </span>
+                      </div>
+                      <div style={{ 
+                        display: "flex", 
+                        justifyContent: "space-between", 
+                        alignItems: "center",
+                        padding: "12px",
+                        backgroundColor: "#dbeafe",
+                        borderRadius: "6px",
+                        border: "1px solid #93c5fd"
+                      }}>
+                        <span style={{ fontSize: "16px", fontWeight: "600", color: "#1e3a8a" }}>
+                          Security Deposit Amount:
+                        </span>
+                        <span style={{ fontSize: "20px", fontWeight: "700", color: "#1e3a8a" }}>
+                          {formatCurrencyTSA(securityDepositAmount)}
+                        </span>
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
+                          Due Date
+                        </label>
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "10px 12px",
+                          fontSize: "14px",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "6px",
+                          backgroundColor: "#f9fafb",
+                          color: "#111827"
+                        }}>
+                          <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                            <path
+                              d="M2 4H14V12H2V4Z"
+                              stroke="#6b7280"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M6 2V6M10 2V6M2 8H14"
+                              stroke="#6b7280"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          December 31, 2024
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-            {/* Layout Design Approval - Hidden for Site measurement role */}
-            {user?.role !== "Site measurement" && <LayoutDesignApproval />}
+                  {/* Select Payment Method (Right Column) */}
+                  <div>
+                    <h4 style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "20px" }}>
+                      Select Payment Method
+                    </h4>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      <label style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "16px",
+                        border: paymentMethod === "upi" ? "2px solid #1e3a8a" : "1px solid #d1d5db",
+                        borderRadius: "8px",
+                        backgroundColor: paymentMethod === "upi" ? "#f0f9ff" : "white",
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                      }}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="upi"
+                          checked={paymentMethod === "upi"}
+                          onChange={(e) => setPaymentMethod(e.target.value)}
+                          style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                        />
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M17 2H7C5.89543 2 5 2.89543 5 4V20C5 21.1046 5.89543 22 7 22H17C18.1046 22 19 21.1046 19 20V4C19 2.89543 18.1046 2 17 2Z"
+                            stroke={paymentMethod === "upi" ? "#1e3a8a" : "#6b7280"}
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M12 18H12.01"
+                            stroke={paymentMethod === "upi" ? "#1e3a8a" : "#6b7280"}
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                        <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827", flex: 1 }}>
+                          Pay by UPI
+                        </span>
+                      </label>
+
+                      <label style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "16px",
+                        border: paymentMethod === "card" ? "2px solid #1e3a8a" : "1px solid #d1d5db",
+                        borderRadius: "8px",
+                        backgroundColor: paymentMethod === "card" ? "#f0f9ff" : "white",
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                      }}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="card"
+                          checked={paymentMethod === "card"}
+                          onChange={(e) => setPaymentMethod(e.target.value)}
+                          style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                        />
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M2 8H22M4 16H20M3 8V16C3 17.1046 3.89543 18 5 18H19C20.1046 18 21 17.1046 21 16V8C21 6.89543 20.1046 6 19 6H5C3.89543 6 3 6.89543 3 8Z"
+                            stroke={paymentMethod === "card" ? "#1e3a8a" : "#6b7280"}
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827", flex: 1 }}>
+                          Pay by Credit/Debit Card
+                        </span>
+                      </label>
+
+                      <label style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "16px",
+                        border: paymentMethod === "netbanking" ? "2px solid #1e3a8a" : "1px solid #d1d5db",
+                        borderRadius: "8px",
+                        backgroundColor: paymentMethod === "netbanking" ? "#f0f9ff" : "white",
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                      }}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="netbanking"
+                          checked={paymentMethod === "netbanking"}
+                          onChange={(e) => setPaymentMethod(e.target.value)}
+                          style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                        />
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M3 7H21M5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7M5 7C5 5.89543 5.89543 5 7 5H17C18.1046 5 19 5.89543 19 7M9 12H15"
+                            stroke={paymentMethod === "netbanking" ? "#1e3a8a" : "#6b7280"}
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827", flex: 1 }}>
+                          Net Banking
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pay Now Button */}
+                <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end" }}>
+                  <button
+                    onClick={() => {
+                      console.log("Processing payment", { amount: securityDepositAmount, method: paymentMethod });
+                      setNotificationMessage("Security deposit payment processed successfully");
+                      setShowNotification(true);
+                    }}
+                    style={{
+                      padding: "14px 32px",
+                      backgroundColor: "#1e3a8a",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      transition: "background-color 0.2s"
+                    }}
+                    onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
+                    onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+                      <path
+                        d="M8 1L3 4V8C3 11.866 8 15 8 15C8 15 13 11.866 13 8V4L8 1Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Pay Now - {formatCurrencyTSA(securityDepositAmount)}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </main>
       </div>
