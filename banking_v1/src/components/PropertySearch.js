@@ -43,7 +43,8 @@ export default function PropertySearch() {
     }
   }, []);
   
-  // All restrictions removed - all users have full access
+  // Check if user is SRBM - only SRBM can initiate search, import, and export
+  const isSRBM = user?.role === "SRBM";
 
   // Get file type from extension
   const getFileType = (fileName) => {
@@ -703,6 +704,8 @@ export default function PropertySearch() {
                     <button 
                       type="submit" 
                       className="search-button"
+                      disabled={!isSRBM}
+                      title={!isSRBM ? "Only SRBM can initiate property search" : ""}
                     >
                       <svg
                         width="20"
@@ -744,22 +747,33 @@ export default function PropertySearch() {
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, gap: "12px" }}>
                     <button
                       onClick={handleImportClick}
+                      disabled={!isSRBM}
+                      title={!isSRBM ? "Only SRBM can import properties" : ""}
                       style={{
                         padding: "10px 24px",
-                        backgroundColor: "#f97316",
+                        backgroundColor: !isSRBM ? "#9ca3af" : "#f97316",
                         color: "#ffffff",
                         border: "none",
                         borderRadius: "6px",
                         fontSize: "14px",
                         fontWeight: "600",
-                        cursor: "pointer",
+                        cursor: !isSRBM ? "not-allowed" : "pointer",
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
                         transition: "background-color 0.2s",
+                        opacity: !isSRBM ? 0.6 : 1,
                       }}
-                      onMouseOver={(e) => (e.target.style.backgroundColor = "#ea580c")}
-                      onMouseOut={(e) => (e.target.style.backgroundColor = "#f97316")}
+                      onMouseOver={(e) => {
+                        if (isSRBM) {
+                          e.target.style.backgroundColor = "#ea580c";
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        if (isSRBM) {
+                          e.target.style.backgroundColor = "#f97316";
+                        }
+                      }}
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path
@@ -780,29 +794,30 @@ export default function PropertySearch() {
                     </button>
                     <button
                       onClick={handleExportProperties}
-                      disabled={selectedProperties.length === 0}
+                      disabled={selectedProperties.length === 0 || !isSRBM}
+                      title={!isSRBM ? "Only SRBM can export properties" : selectedProperties.length === 0 ? "Please select properties to export" : ""}
                       style={{
                         padding: "10px 24px",
-                        backgroundColor: selectedProperties.length === 0 ? "#9ca3af" : "#3b82f6",
+                        backgroundColor: (selectedProperties.length === 0 || !isSRBM) ? "#9ca3af" : "#3b82f6",
                         color: "#ffffff",
                         border: "none",
                         borderRadius: "6px",
                         fontSize: "14px",
                         fontWeight: "600",
-                        cursor: selectedProperties.length === 0 ? "not-allowed" : "pointer",
+                        cursor: (selectedProperties.length === 0 || !isSRBM) ? "not-allowed" : "pointer",
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
                         transition: "background-color 0.2s",
-                        opacity: selectedProperties.length === 0 ? 0.6 : 1,
+                        opacity: (selectedProperties.length === 0 || !isSRBM) ? 0.6 : 1,
                       }}
                       onMouseOver={(e) => {
-                        if (selectedProperties.length > 0) {
+                        if (selectedProperties.length > 0 && isSRBM) {
                           e.target.style.backgroundColor = "#2563eb";
                         }
                       }}
                       onMouseOut={(e) => {
-                        if (selectedProperties.length > 0) {
+                        if (selectedProperties.length > 0 && isSRBM) {
                           e.target.style.backgroundColor = "#3b82f6";
                         }
                       }}
@@ -830,8 +845,12 @@ export default function PropertySearch() {
                     <button
                       className="initiate-button"
                       onClick={handleInitiateListing}
-                      disabled={selectedProperties.length === 0}
-                      style={selectedProperties.length === 0 ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+                      disabled={selectedProperties.length === 0 || !isSRBM}
+                      title={!isSRBM ? "Only SRBM can initiate property listing" : selectedProperties.length === 0 ? "Please select properties" : ""}
+                      style={{
+                        opacity: (selectedProperties.length === 0 || !isSRBM) ? 0.5 : 1,
+                        cursor: (selectedProperties.length === 0 || !isSRBM) ? "not-allowed" : "pointer"
+                      }}
                     >
                       <svg
                         width="20"
@@ -871,6 +890,8 @@ export default function PropertySearch() {
                           className="property-checkbox"
                           checked={selectedProperties.includes(property.id)}
                           onChange={() => togglePropertySelection(property.id)}
+                          disabled={!isSRBM}
+                          title={!isSRBM ? "Only SRBM can select properties" : ""}
                         />
                         <div className="property-info">
                           <h3 className="property-name">{property.name}</h3>
