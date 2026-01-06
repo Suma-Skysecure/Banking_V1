@@ -114,124 +114,110 @@ export default function BusinessApproval() {
     return match ? `${match[1]} days` : "Available Now";
   };
   
-  // Helper function to generate default values for missing property fields
+  // Helper function to check if a value is empty/missing
+  const isEmpty = (value) => {
+    return value === null || value === undefined || value === "" || 
+           (typeof value === "string" && value.trim() === "");
+  };
+  
+  // Helper function to generate default values ONLY for missing property fields
   const generateDefaultPropertyFields = (property) => {
     if (!property) return {};
+    
+    const defaults = {};
     
     // Extract area number from size string (e.g., "3,500 sq ft" -> 3500)
     const areaMatch = (property.size || property.totalArea || "").match(/[\d,]+/);
     const areaNum = areaMatch ? parseInt(areaMatch[0].replace(/,/g, "")) : 0;
     
-    // Generate property ID if missing
-    const propertyId = property.propertyId || property.id || `PROP-${Date.now()}`;
-    
-    // Generate floor level based on property type and area
-    const getFloorLevel = () => {
-      if (property.floorLevel) return property.floorLevel;
+    // Only generate floor level if missing
+    if (isEmpty(property.floorLevel)) {
       if (property.type?.toLowerCase().includes("industrial")) {
-        return areaNum > 10000 ? "Ground Floor + Warehouse" : "Ground Floor";
+        defaults.floorLevel = areaNum > 10000 ? "Ground Floor + Warehouse" : "Ground Floor";
+      } else if (property.type?.toLowerCase().includes("retail")) {
+        defaults.floorLevel = "Ground Floor";
+      } else if (areaNum > 5000) {
+        defaults.floorLevel = "Multiple Floors Available";
+      } else {
+        defaults.floorLevel = "Ground Floor + Mezzanine";
       }
-      if (property.type?.toLowerCase().includes("retail")) {
-        return "Ground Floor";
-      }
-      if (areaNum > 5000) {
-        return "Multiple Floors Available";
-      }
-      return "Ground Floor + Mezzanine";
-    };
+    }
     
-    // Generate parking spaces based on area
-    const getParkingSpaces = () => {
-      if (property.parkingSpaces) return property.parkingSpaces;
+    // Only generate parking spaces if missing
+    if (isEmpty(property.parkingSpaces)) {
       const spaces = Math.max(2, Math.floor(areaNum / 500));
-      return `${spaces} Reserved Spaces`;
-    };
+      defaults.parkingSpaces = `${spaces} Reserved Spaces`;
+    }
     
-    // Generate year built based on property type
-    const getYearBuilt = () => {
-      if (property.yearBuilt) return property.yearBuilt;
+    // Only generate year built if missing
+    if (isEmpty(property.yearBuilt)) {
       const currentYear = new Date().getFullYear();
       const baseYear = property.type?.toLowerCase().includes("industrial") ? 2015 : 2018;
-      return String(Math.max(baseYear, currentYear - 6));
-    };
+      defaults.yearBuilt = String(Math.max(baseYear, currentYear - 6));
+    }
     
-    // Generate vendor name based on property location/name
-    const getVendorName = () => {
-      if (property.vendorName) return property.vendorName;
+    // Only generate vendor name if missing
+    if (isEmpty(property.vendorName)) {
       const address = property.address || "";
-      if (address.includes("Brickell")) return "Brickell Development Group";
-      if (address.includes("Downtown")) return "Downtown Properties LLC";
-      if (address.includes("South Beach")) return "South Beach Realty Partners";
-      if (address.includes("Westside")) return "Westside Commercial Holdings";
-      if (address.includes("North Miami")) return "North Miami Development Corp";
-      if (address.includes("Eastside")) return "Eastside Business Ventures";
-      if (address.includes("Marina")) return "Marina Commercial Realty";
-      return "Miami Commercial Realty Group";
-    };
+      if (address.includes("Brickell")) defaults.vendorName = "Brickell Development Group";
+      else if (address.includes("Downtown")) defaults.vendorName = "Downtown Properties LLC";
+      else if (address.includes("South Beach")) defaults.vendorName = "South Beach Realty Partners";
+      else if (address.includes("Westside")) defaults.vendorName = "Westside Commercial Holdings";
+      else if (address.includes("North Miami")) defaults.vendorName = "North Miami Development Corp";
+      else if (address.includes("Eastside")) defaults.vendorName = "Eastside Business Ventures";
+      else if (address.includes("Marina")) defaults.vendorName = "Marina Commercial Realty";
+      else defaults.vendorName = "Miami Commercial Realty Group";
+    }
     
-    // Generate vendor contact
-    const getVendorContact = () => {
-      if (property.vendorContact) return property.vendorContact;
+    // Only generate vendor contact if missing
+    if (isEmpty(property.vendorContact)) {
       const areaCode = property.address?.match(/FL (\d{5})/)?.[1]?.substring(0, 3) || "305";
-      // Generate deterministic contact number based on property ID
       const propIdNum = parseInt(String(property.id || property.propertyId || "0").replace(/\D/g, "")) || 0;
       const lastFour = String((propIdNum % 9000) + 1000).padStart(4, '0');
-      return `+1 (${areaCode}) 555-${lastFour}`;
-    };
+      defaults.vendorContact = `+1 (${areaCode}) 555-${lastFour}`;
+    }
     
-    // Generate vendor email based on vendor name
-    const getVendorEmail = () => {
-      if (property.vendorEmail) return property.vendorEmail;
-      const vendorName = getVendorName().toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
-      return `info@${vendorName}.com`;
-    };
+    // Only generate vendor email if missing
+    if (isEmpty(property.vendorEmail)) {
+      const vendorName = (property.vendorName || defaults.vendorName || "Miami Commercial Realty Group")
+        .toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
+      defaults.vendorEmail = `info@${vendorName}.com`;
+    }
     
-    // Generate listing status
-    const getListingStatus = () => {
-      if (property.listingStatus) return property.listingStatus;
-      return property.statusType === "available" ? "Active Listing" : "Pending Listing";
-    };
+    // Only generate listing status if missing
+    if (isEmpty(property.listingStatus)) {
+      defaults.listingStatus = property.statusType === "available" ? "Active Listing" : "Pending Listing";
+    }
     
-    // Generate zoning based on property type
-    const getZoning = () => {
-      if (property.zoning) return property.zoning;
+    // Only generate zoning if missing
+    if (isEmpty(property.zoning)) {
       const type = property.type?.toLowerCase() || "";
-      if (type.includes("commercial office")) return "Commercial/Office";
-      if (type.includes("retail")) return "Commercial/Retail";
-      if (type.includes("industrial")) return "Industrial";
-      if (type.includes("mixed use")) return "Mixed Use";
-      return "Commercial";
-    };
+      if (type.includes("commercial office")) defaults.zoning = "Commercial/Office";
+      else if (type.includes("retail")) defaults.zoning = "Commercial/Retail";
+      else if (type.includes("industrial")) defaults.zoning = "Industrial";
+      else if (type.includes("mixed use")) defaults.zoning = "Mixed Use";
+      else defaults.zoning = "Commercial";
+    }
     
-    // Generate last inspection date
-    const getLastInspection = () => {
-      if (property.lastInspection) return property.lastInspection;
+    // Only generate last inspection if missing
+    if (isEmpty(property.lastInspection)) {
       if (property.lastInspectionDate) {
-        return new Date(property.lastInspectionDate).toLocaleDateString("en-US", {
+        defaults.lastInspection = new Date(property.lastInspectionDate).toLocaleDateString("en-US", {
           month: "long",
           day: "numeric",
           year: "numeric",
         });
+      } else {
+        const months = ["January", "February", "March", "April", "May", "June", 
+                        "July", "August", "September", "October", "November", "December"];
+        const currentDate = new Date();
+        const inspectionDate = new Date(currentDate);
+        inspectionDate.setMonth(currentDate.getMonth() - 2);
+        defaults.lastInspection = `${months[inspectionDate.getMonth()]} ${inspectionDate.getDate()}, ${inspectionDate.getFullYear()}`;
       }
-      const months = ["January", "February", "March", "April", "May", "June", 
-                      "July", "August", "September", "October", "November", "December"];
-      const currentDate = new Date();
-      const inspectionDate = new Date(currentDate);
-      inspectionDate.setMonth(currentDate.getMonth() - 2);
-      return `${months[inspectionDate.getMonth()]} ${inspectionDate.getDate()}, ${inspectionDate.getFullYear()}`;
-    };
+    }
     
-    return {
-      floorLevel: getFloorLevel(),
-      parkingSpaces: getParkingSpaces(),
-      yearBuilt: getYearBuilt(),
-      vendorName: getVendorName(),
-      vendorContact: getVendorContact(),
-      vendorEmail: getVendorEmail(),
-      listingStatus: getListingStatus(),
-      zoning: getZoning(),
-      lastInspection: getLastInspection(),
-    };
+    return defaults;
   };
   
   // Default property if none loaded
@@ -255,20 +241,21 @@ export default function BusinessApproval() {
     lastInspection: "December 10, 2024",
   };
   
-  // Generate defaults for missing fields and merge with property data
+  // Generate defaults ONLY for missing fields and merge with property data
+  // Preserve exact data from SRBM pages, only fill in what's missing
   const propertyWithDefaults = property ? {
     ...property,
     ...generateDefaultPropertyFields(property),
-    // Ensure essential fields are present
+    // Only set essential fields if they're completely missing
     id: property.propertyId || property.id || `PROP-MIA-2024-${String(property.id || Date.now()).padStart(3, '0')}`,
     name: property.name || "Property",
     address: property.address || "Address not available",
     type: property.type || "Commercial",
-    totalArea: property.totalArea || property.size || "N/A",
+    totalArea: property.totalArea || property.size || "",
     status: property.status || "Available",
     statusType: property.statusType || "pending",
-    price: property.price || 0,
-    pricePerSqft: property.pricePerSqft || 0,
+    price: property.price !== undefined && property.price !== null ? property.price : 0,
+    pricePerSqft: property.pricePerSqft !== undefined && property.pricePerSqft !== null ? property.pricePerSqft : 0,
   } : defaultProperty;
   
   const displayProperty = propertyWithDefaults;
@@ -428,7 +415,7 @@ export default function BusinessApproval() {
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Total Area</span>
-                  <span className="detail-value">{displayProperty.totalArea || displayProperty.size}</span>
+                  <span className="detail-value">{displayProperty.totalArea || displayProperty.size || ""}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Vendor Name</span>
