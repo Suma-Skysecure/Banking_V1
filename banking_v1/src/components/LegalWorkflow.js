@@ -19,6 +19,7 @@ export default function LegalWorkflow() {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const multipleFileInputRef = useRef(null);
+  const [isLOIUploaded, setIsLOIUploaded] = useState(false);
   
   // All restrictions removed - all users have full access
 
@@ -675,6 +676,9 @@ export default function LegalWorkflow() {
                         // Store in localStorage
                         localStorage.setItem("uploadedSignedLOI", JSON.stringify(fileData));
                         
+                        // Update upload status
+                        setIsLOIUploaded(true);
+                        
                         // Show success message
                         alert(`File "${file.name}" uploaded successfully! The document is now available in Post-LOI Activities and Legal Due pages.`);
                       };
@@ -687,41 +691,71 @@ export default function LegalWorkflow() {
                   style={{ display: "none" }}
                 />
                 <button
-                  className="decision-button approve-button"
+                  className={isLOIUploaded ? "decision-button" : "decision-button approve-button"}
                   onClick={() => {
-                    fileInputRef.current?.click();
+                    if (!isLOIUploaded) {
+                      fileInputRef.current?.click();
+                    }
                   }}
+                  disabled={isLOIUploaded}
                   style={{
                     padding: "14px 32px",
                     fontSize: "16px",
                     fontWeight: "600",
                     display: "flex",
                     alignItems: "center",
-                    gap: "10px"
+                    gap: "10px",
+                    backgroundColor: isLOIUploaded ? "#10b981" : undefined,
+                    color: isLOIUploaded ? "#ffffff" : undefined,
+                    cursor: isLOIUploaded ? "default" : "pointer",
+                    opacity: isLOIUploaded ? 1 : undefined
                   }}
                 >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    className="button-icon"
-                  >
-                    <path
-                      d="M10 2V12M6 8L10 2L14 8"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M2 16V17C2 18.1046 2.89543 19 4 19H16C17.1046 19 18 18.1046 18 17V16"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  Upload signed LOI
+                  {isLOIUploaded ? (
+                    <>
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        className="button-icon"
+                      >
+                        <path
+                          d="M16.667 5L7.5 14.167L3.333 10"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      Uploaded
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        className="button-icon"
+                      >
+                        <path
+                          d="M10 2V12M6 8L10 2L14 8"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M2 16V17C2 18.1046 2.89543 19 4 19H16C17.1046 19 18 18.1046 18 17V16"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      Upload signed LOI
+                    </>
+                  )}
                 </button>
               </div>
             </div>

@@ -8,7 +8,7 @@ import { useState } from "react";
  */
 export default function LayoutDesignApproval({
   totalCost = 473000 * 83.5, // Converted from USD to INR
-  designStatus = "Approved",
+  designStatus = "Pending",
   submittedBy = "Alex Thompson - Design Lead",
   submissionDate = "December 23, 2024",
   specifications = [
@@ -20,7 +20,7 @@ export default function LayoutDesignApproval({
   ]
 }) {
   const [comments, setComments] = useState("");
-  const [currentStatus, setCurrentStatus] = useState(designStatus);
+  const [currentStatus, setCurrentStatus] = useState("Pending");
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-IN", {
@@ -120,7 +120,7 @@ export default function LayoutDesignApproval({
                 <span style={{ 
                   fontSize: "16px", 
                   fontWeight: "600", 
-                  color: currentStatus === "Approved" ? "#10b981" : "#ef4444" 
+                  color: currentStatus === "Approved" ? "#10b981" : currentStatus === "Rejected" ? "#ef4444" : "#f59e0b"
                 }}>
                   {currentStatus}
                 </span>

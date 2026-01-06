@@ -33,6 +33,7 @@ export default function VendorCreation() {
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [ifscCode, setIfscCode] = useState("");
   const [registeredAddress, setRegisteredAddress] = useState("");
+  const [isDraftSaved, setIsDraftSaved] = useState(false);
   
   // Document state management
   const [uploadedDocuments, setUploadedDocuments] = useState({
@@ -142,8 +143,24 @@ export default function VendorCreation() {
   };
 
   const handleSaveDraft = () => {
-    console.log("Saving as draft...");
-    // Implement save as draft logic
+    // Save vendor data to localStorage
+    const vendorData = {
+      vendorType,
+      legalName,
+      panNumber,
+      gstNumber,
+      bankAccountNumber,
+      ifscCode,
+      registeredAddress,
+      uploadedDocuments,
+      savedAt: new Date().toISOString()
+    };
+    
+    localStorage.setItem(`vendorDraft_${legalName || 'default'}`, JSON.stringify(vendorData));
+    setIsDraftSaved(true);
+    console.log("Draft saved successfully, isDraftSaved set to:", true);
+    // Optionally show a success message
+    alert("Draft saved successfully!");
   };
 
   const handleSubmitForVerification = () => {
@@ -681,7 +698,7 @@ export default function VendorCreation() {
                             fontSize: "14px",
                             color: "#111827"
                           }}>
-                            PAN Card {uploadedDocuments.panCard.length > 0 && `(${uploadedDocuments.panCard.length})`}
+                            PAN Card ({uploadedDocuments.panCard.length})
                           </span>
                         </div>
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -727,7 +744,7 @@ export default function VendorCreation() {
                             fontSize: "14px",
                             color: "#111827"
                           }}>
-                            Bank Details {uploadedDocuments.bankDetails.length > 0 && `(${uploadedDocuments.bankDetails.length})`}
+                            Bank Details ({uploadedDocuments.bankDetails.length})
                           </span>
                         </div>
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -773,7 +790,7 @@ export default function VendorCreation() {
                             fontSize: "14px",
                             color: "#111827"
                           }}>
-                            GST, Others ({uploadedDocuments.gstOthers.length})
+                            GST ({uploadedDocuments.gstOthers.length})
                           </span>
                         </div>
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -787,51 +804,6 @@ export default function VendorCreation() {
                         </svg>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const allDocs = [...uploadedDocuments.panCard, ...uploadedDocuments.bankDetails, ...uploadedDocuments.gstOthers];
-                        setViewDocumentModal({ open: true, category: "all", documents: allDocs });
-                      }}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        marginTop: "8px",
-                        fontSize: "14px",
-                        color: "#1e40af",
-                        fontWeight: "500",
-                        backgroundColor: "transparent",
-                        border: "none",
-                        cursor: "pointer",
-                        padding: 0
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path
-                          d="M8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M8 11C9.65685 11 11 9.65685 11 8C11 6.34315 9.65685 5 8 5C6.34315 5 5 6.34315 5 8C5 9.65685 6.34315 11 8 11Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M8 5V8L10 10"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      View All
-                    </button>
                   </div>
                 </div>
               </div>
@@ -909,8 +881,8 @@ export default function VendorCreation() {
                   onClick={handleSubmitForVerification}
                   style={{
                     padding: "12px 24px",
-                    backgroundColor: "#dc2626",
-                    color: "#ffffff",
+                    backgroundColor: "rgb(220, 38, 38)",
+                    color: "rgb(255, 255, 255)",
                     border: "none",
                     borderRadius: "8px",
                     fontSize: "16px",
@@ -918,10 +890,8 @@ export default function VendorCreation() {
                     cursor: "pointer",
                     transition: "background-color 0.2s"
                   }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = "#b91c1c"}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = "#dc2626"}
                 >
-                  Submit for Verification
+                  Create Vendor
                 </button>
               </div>
             </div>
@@ -973,7 +943,7 @@ export default function VendorCreation() {
               }}>
                 {viewDocumentModal.category === "panCard" && "PAN Card Documents"}
                 {viewDocumentModal.category === "bankDetails" && "Bank Details Documents"}
-                {viewDocumentModal.category === "gstOthers" && "GST & Other Documents"}
+                {viewDocumentModal.category === "gstOthers" && "GST Documents"}
                 {viewDocumentModal.category === "addressProof" && "Address Proof Documents"}
                 {viewDocumentModal.category === "all" && "All Documents"}
               </h2>
