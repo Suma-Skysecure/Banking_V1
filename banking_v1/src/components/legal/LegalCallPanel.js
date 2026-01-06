@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import PermissionWrapper from "@/components/PermissionWrapper";
 
@@ -14,23 +14,73 @@ import PermissionWrapper from "@/components/PermissionWrapper";
  * @param {Function} props.onBrtConfirmed - Callback when BRT confirms
  * @param {Function} props.onBusinessDecisionComplete - Callback when business decision is complete
  */
-export default function LegalCallPanel({ 
-  isFinalized, 
-  onShowToast, 
+export default function LegalCallPanel({
+  isFinalized,
+  onShowToast,
   onBrtConfirmed,
-  onBusinessDecisionComplete 
+  onBusinessDecisionComplete
 }) {
   const router = useRouter();
-  const [brtConfirmation, setBrtConfirmation] = useState(null);
+  const SHARED_STORAGE_KEY = "legalBrtCallStatus_PROP-MIA-2024-002";
+
+  // Initialize from localStorage to check for saved status
+  const [brtConfirmation, setBrtConfirmation] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(SHARED_STORAGE_KEY) || null;
+    }
+    return null;
+  });
+
+  // Listen for updates from other components
+  useEffect(() => {
+    const handleStatusUpdate = (event) => {
+      let newValue = null;
+
+      if (event.type === 'legalBrtStatusUpdate') {
+        newValue = event.detail?.status;
+      } else if (event.type === 'storage' && event.key === SHARED_STORAGE_KEY) {
+        newValue = event.newValue;
+      }
+
+      if (newValue !== null && newValue !== undefined) {
+        setBrtConfirmation(newValue);
+      }
+    };
+
+    window.addEventListener('legalBrtStatusUpdate', handleStatusUpdate);
+    window.addEventListener('storage', handleStatusUpdate);
+
+    // Initial check
+    const current = localStorage.getItem(SHARED_STORAGE_KEY);
+    if (current && current !== brtConfirmation) {
+      setBrtConfirmation(current);
+    }
+
+    return () => {
+      window.removeEventListener('legalBrtStatusUpdate', handleStatusUpdate);
+      window.removeEventListener('storage', handleStatusUpdate);
+    };
+  }, []);
+
   const [legalCallNotes, setLegalCallNotes] = useState("");
   const [showBusinessApproval, setShowBusinessApproval] = useState(false);
 
   const handleBrtConfirmation = (decision) => {
     if (isFinalized) return;
     setBrtConfirmation(decision);
+
+    // Save to localStorage
+    localStorage.setItem(SHARED_STORAGE_KEY, decision);
+
+    // Dispatch custom event for real-time update
+    window.dispatchEvent(new CustomEvent('legalBrtStatusUpdate', {
+      detail: { status: decision }
+    }));
+
     if (onShowToast) {
+      const statusText = decision === "approved" ? "accepted" : "rejected";
       onShowToast(
-        `BRT confirmation ${decision === "approved" ? "approved" : "rejected"}`,
+        `BRT has ${statusText} of viewed document and called`,
         decision === "approved" ? "success" : "error"
       );
     }
@@ -124,50 +174,56 @@ export default function LegalCallPanel({
               </span>
             </div>
           ) : (
-            <PermissionWrapper page="legalDueDiligence" action="approve">
-              <div className="decision-actions">
-                <button
-                  className="decision-button reject-button"
-                  onClick={() => handleBrtConfirmation("rejected")}
-                  disabled={isFinalized}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    className="button-icon"
-                  >
-                    <path
-                      d="M5 5L15 15M15 5L5 15"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  Reject
-                </button>
-                <button
-                  className="decision-button approve-button"
-                  onClick={() => handleBrtConfirmation("approved")}
-                  disabled={isFinalized}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    className="button-icon"
-                  >
-                    <path
-                      d="M16.7071 5.29289C17.0976 5.68342 17.0976 6.31658 16.7071 6.70711L8.70711 14.7071C8.31658 15.0976 7.68342 15.0976 7.29289 14.7071L3.29289 10.7071C2.90237 10.3166 2.90237 9.68342 3.29289 9.29289C3.68342 8.90237 4.31658 8.90237 4.70711 9.29289L8 12.5858L15.2929 5.29289C15.6834 4.90237 16.3166 4.90237 16.7071 5.29289Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                  Approve
-                </button>
+            <>
+              <div style={{ marginBottom: "16px", padding: "12px", border: "1px solid #e5e7eb", borderRadius: "6px", display: "flex", alignItems: "center", gap: "10px", backgroundColor: "#fff" }}>
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#f59e0b" }}></div>
+                <span style={{ fontSize: "14px", fontWeight: "500", color: "#374151" }}>Status: <strong>Pending Confirmation</strong></span>
               </div>
-            </PermissionWrapper>
+              <PermissionWrapper page="legalDueDiligence" action="approve">
+                <div className="decision-actions">
+                  <button
+                    className="decision-button reject-button"
+                    onClick={() => handleBrtConfirmation("rejected")}
+                    disabled={isFinalized}
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      className="button-icon"
+                    >
+                      <path
+                        d="M5 5L15 15M15 5L5 15"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    Reject
+                  </button>
+                  <button
+                    className="decision-button approve-button"
+                    onClick={() => handleBrtConfirmation("approved")}
+                    disabled={isFinalized}
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      className="button-icon"
+                    >
+                      <path
+                        d="M16.7071 5.29289C17.0976 5.68342 17.0976 6.31658 16.7071 6.70711L8.70711 14.7071C8.31658 15.0976 7.68342 15.0976 7.29289 14.7071L3.29289 10.7071C2.90237 10.3166 2.90237 9.68342 3.29289 9.29289C3.68342 8.90237 4.31658 8.90237 4.70711 9.29289L8 12.5858L15.2929 5.29289C15.6834 4.90237 16.3166 4.90237 16.7071 5.29289Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                    Approve
+                  </button>
+                </div>
+              </PermissionWrapper>
+            </>
           )}
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import NotificationDropdown from "@/components/NotificationDropdown";
 import { useNotifications } from "@/contexts/NotificationContext";
 
 /**
@@ -9,9 +10,9 @@ import { useNotifications } from "@/contexts/NotificationContext";
  * Used across all dashboard pages with:
  * - Hamburger menu
  * - Search bar
- * - Bell icon for notifications
- * - Notification panel that opens on bell click
+ * - Bell icon for notifications (via NotificationDropdown)
  */
+export default function DashboardHeader({ sidebarOpen, setSidebarOpen }) {
 /**
  * @param {Object} props
  * @param {boolean} props.sidebarOpen - Whether sidebar is open
@@ -91,6 +92,8 @@ export default function DashboardHeader({ sidebarOpen, setSidebarOpen }) {
             className="header-search-input"
           />
         </div>
+        <div className="header-actions">
+          <NotificationDropdown />
         <div className="header-actions" style={{ position: "relative" }}>
           <button 
             className="header-icon-btn" 

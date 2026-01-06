@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PermissionWrapper from "@/components/PermissionWrapper";
 import LegalCallPanel from "./LegalCallPanel";
 import DocumentUploadModal from "@/components/DocumentUploadModal";
@@ -28,6 +28,16 @@ export default function LegalDecisionPanel({
   onBusinessDecisionComplete,
 }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Check if already submitted on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const branches = JSON.parse(localStorage.getItem("agreementReadyBranches") || "[]");
+      const isReady = branches.some(b => b.id === "PROP-MIA-2024-002");
+      setIsSubmitted(isReady);
+    }
+  }, []);
 
   const handleCallRequiredChange = (value) => {
     if (isFinalized) return;
@@ -48,9 +58,101 @@ export default function LegalDecisionPanel({
 
   const handleUploadSubmit = (uploadedFiles) => {
     console.log("Legal documents uploaded:", uploadedFiles);
+
+    // Convert uploaded files to the format expected by LegalDocumentsView
+    const formattedDocuments = uploadedFiles.map((fileObj, index) => {
+      const file = fileObj.file || fileObj;
+      return {
+        id: fileObj.id || `doc-${Date.now()}-${index}`,
+        name: fileObj.name || file.name?.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " "),
+        fileName: file.name || fileObj.fileName,
+        uploadDate: new Date().toISOString().split('T')[0],
+        size: file.size || fileObj.size || 0,
+        type: file.type || fileObj.type || "application/pdf",
+        status: "Verified",
+        data: fileObj.data || null // Base64 data if available
+      };
+    });
+
+    // Get existing documents from localStorage
+    const existingDocuments = JSON.parse(localStorage.getItem("uploadedLegalDocuments") || "[]");
+
+    // Merge new documents with existing ones (avoid duplicates)
+    const allDocuments = [...existingDocuments];
+    formattedDocuments.forEach(newDoc => {
+      const exists = allDocuments.some(existing => existing.id === newDoc.id || existing.fileName === newDoc.fileName);
+      if (!exists) {
+        allDocuments.push(newDoc);
+      }
+    });
+
+    // Save to localStorage
+    localStorage.setItem("uploadedLegalDocuments", JSON.stringify(allDocuments));
+
+    // Dispatch custom events
+    window.dispatchEvent(new CustomEvent('legalDocumentsUpdated'));
+
     setIsUploadModalOpen(false);
     if (onShowToast) {
-      onShowToast("Legal documents uploaded successfully", "success");
+      onShowToast(`Successfully uploaded ${uploadedFiles.length} legal document(s). Please click 'Submit' to finalize.`, "success");
+    }
+  };
+
+  const handleSubmit = () => {
+    // Get documents to include in submission
+    const allDocuments = JSON.parse(localStorage.getItem("uploadedLegalDocuments") || "[]");
+
+    if (allDocuments.length === 0) {
+      if (onShowToast) onShowToast("No documents uploaded to submit.", "error");
+      return;
+    }
+
+    // Save branch status for Agreement Execution
+    const submittedBranch = {
+      id: "PROP-MIA-2024-002",
+      name: "Downtown Arts Plaza",
+      location: "Miami, FL 33132",
+      status: "Ready for Agreement Registration",
+      submittedDate: new Date().toISOString(),
+      documents: allDocuments
+    };
+
+    // Get existing branches or init empty array
+    const existingBranches = JSON.parse(localStorage.getItem("agreementReadyBranches") || "[]");
+    const updatedBranches = existingBranches.filter(b => b.id !== submittedBranch.id);
+    updatedBranches.push(submittedBranch);
+    localStorage.setItem("agreementReadyBranches", JSON.stringify(updatedBranches));
+
+    // Dispatch custom events
+    window.dispatchEvent(new Event('agreementBranchesUpdated'));
+
+    setIsSubmitted(true);
+
+    if (onShowToast) {
+      onShowToast("Submitted to Agreement Execution", "success");
+    }
+  };
+
+  const handleViewDocuments = () => {
+    // Scroll to the Legal Documents section
+    const legalDocumentsSection = document.querySelector('[data-section="legal-documents"]');
+
+    if (legalDocumentsSection) {
+      legalDocumentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Add a slight highlight effect
+      legalDocumentsSection.style.transition = 'box-shadow 0.3s';
+      legalDocumentsSection.style.boxShadow = '0 0 0 3px rgba(30, 58, 138, 0.3)';
+      setTimeout(() => {
+        legalDocumentsSection.style.boxShadow = '';
+      }, 2000);
+    } else {
+      // Fallback: scroll to any element with "Legal Documents" text
+      const elements = Array.from(document.querySelectorAll('*')).filter(el =>
+        el.textContent && el.textContent.includes('Legal Documents')
+      );
+      if (elements.length > 0) {
+        elements[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
   };
 
@@ -177,9 +279,9 @@ export default function LegalDecisionPanel({
 
         {/* Legal Documents Upload Section - Always show when a selection is made */}
         {callRequired && (callRequired === "yes" || callRequired === "no") && (
-          <div style={{ 
-            marginTop: "32px", 
-            paddingTop: "24px", 
+          <div style={{
+            marginTop: "32px",
+            paddingTop: "24px",
             borderTop: "2px solid #e5e7eb",
             backgroundColor: "#f9fafb",
             padding: "24px",
@@ -189,9 +291,9 @@ export default function LegalDecisionPanel({
             marginBottom: "-20px"
           }}>
             <div style={{ marginBottom: "16px" }}>
-              <h4 style={{ 
-                fontSize: "18px", 
-                fontWeight: "700", 
+              <h4 style={{
+                fontSize: "18px",
+                fontWeight: "700",
                 color: "#1e3a8a",
                 marginBottom: "8px",
                 display: "flex",
@@ -216,75 +318,169 @@ export default function LegalDecisionPanel({
                 </svg>
                 Final Agreements
               </h4>
-              <p style={{ 
-                fontSize: "14px", 
+              <p style={{
+                fontSize: "14px",
                 color: "#6b7280",
                 margin: 0
               }}>
                 Upload legal documents and final agreements for submission
               </p>
             </div>
-            <button
-              onClick={handleUploadDocuments}
-              disabled={isFinalized}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                padding: "14px 28px",
-                backgroundColor: "#1e3a8a",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: "15px",
-                fontWeight: "600",
-                cursor: isFinalized ? "not-allowed" : "pointer",
-                opacity: isFinalized ? 0.6 : 1,
-                transition: "all 0.2s",
-                boxShadow: isFinalized ? "none" : "0 2px 4px rgba(30, 58, 138, 0.2)",
-                width: "100%",
-                justifyContent: "center"
-              }}
-              onMouseEnter={(e) => {
-                if (!isFinalized) {
-                  e.target.style.backgroundColor = "#1e40af";
-                  e.target.style.boxShadow = "0 4px 8px rgba(30, 58, 138, 0.3)";
+            <div style={{ display: "flex", gap: "12px", width: "100%" }}>
+              <button
+                onClick={handleUploadDocuments}
+                disabled={isFinalized || isSubmitted}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "14px 28px",
+                  backgroundColor: (isFinalized || isSubmitted) ? "#9ca3af" : "#1e3a8a",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "15px",
+                  fontWeight: "600",
+                  cursor: (isFinalized || isSubmitted) ? "not-allowed" : "pointer",
+                  opacity: (isFinalized || isSubmitted) ? 0.6 : 1,
+                  transition: "all 0.2s",
+                  boxShadow: (isFinalized || isSubmitted) ? "none" : "0 2px 4px rgba(30, 58, 138, 0.2)",
+                  flex: 1,
+                  justifyContent: "center"
+                }}
+                onMouseEnter={(e) => {
+                  if (!isFinalized && !isSubmitted) {
+                    e.target.style.backgroundColor = "#1e40af";
+                    e.target.style.boxShadow = "0 4px 8px rgba(30, 58, 138, 0.3)";
+                    e.target.style.transform = "translateY(-1px)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isFinalized && !isSubmitted) {
+                    e.target.style.backgroundColor = "#1e3a8a";
+                    e.target.style.boxShadow = "0 2px 4px rgba(30, 58, 138, 0.2)";
+                    e.target.style.transform = "translateY(0)";
+                  }
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M7 10L12 15L17 10"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M12 15V3"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                {isSubmitted ? "Documents Submitted" : "Upload Legal Documents"}
+              </button>
+
+              {!isSubmitted && (
+                <button
+                  onClick={handleSubmit}
+                  disabled={isFinalized}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "14px 28px",
+                    backgroundColor: "#f59e0b",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "15px",
+                    fontWeight: "600",
+                    cursor: isFinalized ? "not-allowed" : "pointer",
+                    transition: "all 0.2s",
+                    boxShadow: "0 2px 4px rgba(245, 158, 11, 0.2)",
+                    flex: 1,
+                    justifyContent: "center"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isFinalized) {
+                      e.target.style.backgroundColor = "#d97706";
+                      e.target.style.boxShadow = "0 4px 8px rgba(245, 158, 11, 0.3)";
+                      e.target.style.transform = "translateY(-1px)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isFinalized) {
+                      e.target.style.backgroundColor = "#f59e0b";
+                      e.target.style.boxShadow = "0 2px 4px rgba(245, 158, 11, 0.2)";
+                      e.target.style.transform = "translateY(0)";
+                    }
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12L10 17L20 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Submit to Execution
+                </button>
+              )}
+
+              <button
+                onClick={handleViewDocuments}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "14px 28px",
+                  backgroundColor: "#10b981",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "15px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  boxShadow: "0 2px 4px rgba(16, 185, 129, 0.2)",
+                  flex: 1,
+                  justifyContent: "center"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#059669";
+                  e.target.style.boxShadow = "0 4px 8px rgba(16, 185, 129, 0.3)";
                   e.target.style.transform = "translateY(-1px)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isFinalized) {
-                  e.target.style.backgroundColor = "#1e3a8a";
-                  e.target.style.boxShadow = "0 2px 4px rgba(30, 58, 138, 0.2)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#10b981";
+                  e.target.style.boxShadow = "0 2px 4px rgba(16, 185, 129, 0.2)";
                   e.target.style.transform = "translateY(0)";
-                }
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M7 10L12 15L17 10"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M12 15V3"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Upload Legal Documents
-            </button>
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                </svg>
+                View Documents
+              </button>
+            </div>
           </div>
         )}
       </div>

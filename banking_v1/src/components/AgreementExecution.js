@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import DashboardHeader from "@/components/DashboardHeader";
@@ -9,10 +9,60 @@ import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/agreementExecution.css";
+import LegalDocumentsView from "@/components/legal/LegalDocumentsView";
 
 export default function AgreementExecution() {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isReady, setIsReady] = useState(false);
+  const [legalDocuments, setLegalDocuments] = useState([]);
+  const [itAssessmentData, setItAssessmentData] = useState(null);
+  const [itApprovalData, setItApprovalData] = useState(null);
+
+  useEffect(() => {
+    // Check if property is ready for agreement
+    const checkStatus = () => {
+      // 1. Check Legal/Agreement Readiness
+      const branches = JSON.parse(localStorage.getItem("agreementReadyBranches") || "[]");
+      const downtownBranch = branches.find(b => b.id === "PROP-MIA-2024-002");
+      setIsReady(!!downtownBranch);
+
+      if (downtownBranch && downtownBranch.documents) {
+        setLegalDocuments(downtownBranch.documents);
+      } else {
+        setLegalDocuments([]);
+      }
+
+      // 2. Check IT Assessment Status
+      // Look for approved IT assessment for Branch ID 1 (Downtown Manhattan) as proxy
+      const storedApprovals = JSON.parse(localStorage.getItem('itApprovals') || "[]");
+      const approvedIT = storedApprovals.find(app => (app.branchId === 1 || app.branchId === "1") && app.status === 'approved');
+
+      if (approvedIT) {
+        setItApprovalData(approvedIT);
+
+        // Also fetch the assessment details
+        const storedAssessments = JSON.parse(localStorage.getItem('itAssessments') || "[]");
+        const assessment = storedAssessments.find(assess => (assess.branch.id === 1 || assess.branch.id === "1")); // forcing ID 1 match
+        if (assessment) {
+          setItAssessmentData(assessment);
+        }
+      } else {
+        setItApprovalData(null);
+        setItAssessmentData(null);
+      }
+    };
+
+    checkStatus();
+
+    // Listen for updates
+    window.addEventListener('agreementBranchesUpdated', checkStatus);
+    window.addEventListener('storage', checkStatus);
+    return () => {
+      window.removeEventListener('agreementBranchesUpdated', checkStatus);
+      window.removeEventListener('storage', checkStatus);
+    };
+  }, []);
 
   return (
     <div className="dashboard-container">
@@ -34,9 +84,9 @@ export default function AgreementExecution() {
               address="1450 Biscayne Boulevard, Miami, FL 33132"
               propertyId="PROP-MIA-2024-002"
               propertyValue="$5,800,000"
-              badgeText="Ready for Agreement Registration"
-              badgeIcon="check"
-              badgeType="completed"
+              badgeText={isReady ? "Ready for Agreement Registration" : "Pending Legal Due Diligence"}
+              badgeIcon={isReady ? "check" : "clock"}
+              badgeType={isReady ? "completed" : "pending"}
               rightLabel="Property Value"
               showValue={true}
               mapPinColor="#ef4444"
@@ -416,22 +466,22 @@ export default function AgreementExecution() {
                       alignItems: "center",
                       justifyContent: "center"
                     }}>
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path
-                        d="M10 2L4 5V9C4 13 7 16 10 17C13 16 16 13 16 9V5L10 2Z"
-                        stroke="#ea580c"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M10 8V12M8 10H12"
-                        stroke="#ea580c"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path
+                          d="M10 2L4 5V9C4 13 7 16 10 17C13 16 16 13 16 9V5L10 2Z"
+                          stroke="#ea580c"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M10 8V12M8 10H12"
+                          stroke="#ea580c"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                     </div>
                     <h3 style={{
                       fontSize: "18px",
@@ -788,6 +838,148 @@ export default function AgreementExecution() {
                 </div>
               </div>
             </div>
+
+            {/* NEW: Legal Documents Section */}
+            {legalDocuments.length > 0 && (
+              <div style={{ marginTop: "32px" }}>
+                <LegalDocumentsView documents={legalDocuments} />
+              </div>
+            )}
+
+            {/* NEW: IT Assessment Section (Only if approved) */}
+            {itApprovalData && (
+              <div style={{ marginTop: "32px" }}>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "24px"
+                }}>
+                  <div style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "8px",
+                    backgroundColor: "#dbeafe",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 17V11M9 11C9 10.4477 9.44772 10 10 10H14C14.5523 10 15 10.4477 15 11M9 11H7M15 11V17M15 11H17M9 21H15C16.1046 21 17 20.1046 17 19V7C17 5.89543 16.1046 5 15 5H9C7.89543 5 7 5.89543 7 7V19C7 20.1046 7.89543 21 9 21Z" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M12 2V5" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <h2 style={{
+                    fontSize: "20px",
+                    fontWeight: "600",
+                    color: "#111827",
+                    margin: 0
+                  }}>
+                    IT Assessment & Feasibility
+                  </h2>
+                </div>
+
+                <div style={{
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  padding: "24px",
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)"
+                }}>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: "20px",
+                    paddingBottom: "20px",
+                    borderBottom: "1px solid #e5e7eb"
+                  }}>
+                    <div>
+                      <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#111827", margin: "0 0 4px 0" }}>Assessment Status</h3>
+                      <p style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}>Verified by BRT Team</p>
+                    </div>
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "6px 12px",
+                      backgroundColor: "#d1fae5",
+                      color: "#065f46",
+                      borderRadius: "20px",
+                      fontSize: "13px",
+                      fontWeight: "600"
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                        <path d="M13 4L6 11L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      BRT Approved
+                    </div>
+                  </div>
+
+                  {itAssessmentData && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                      <div>
+                        <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "8px" }}>Infrastructure Needs</h4>
+                        <p style={{ fontSize: "14px", color: "#4b5563", backgroundColor: "#f9fafb", padding: "12px", borderRadius: "6px", border: "1px solid #e5e7eb", margin: 0 }}>
+                          {itAssessmentData.assessment.infrastructureNeeds || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "8px" }}>Estimated Budget</h4>
+                        <p style={{ fontSize: "14px", color: "#4b5563", backgroundColor: "#f9fafb", padding: "12px", borderRadius: "6px", border: "1px solid #e5e7eb", margin: 0 }}>
+                          ${itAssessmentData.assessment.estimatedBudget || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "8px" }}>Technical Requirements</h4>
+                        <p style={{ fontSize: "14px", color: "#4b5563", backgroundColor: "#f9fafb", padding: "12px", borderRadius: "6px", border: "1px solid #e5e7eb", margin: 0 }}>
+                          {itAssessmentData.assessment.technicalRequirements || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "8px" }}>Implementation Timeline</h4>
+                        <p style={{ fontSize: "14px", color: "#4b5563", backgroundColor: "#f9fafb", padding: "12px", borderRadius: "6px", border: "1px solid #e5e7eb", margin: 0 }}>
+                          {itAssessmentData.assessment.implementationTimeline || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "8px" }}>Budget Allocation Teams</h4>
+                        <p style={{ fontSize: "14px", color: "#4b5563", backgroundColor: "#f9fafb", padding: "12px", borderRadius: "6px", border: "1px solid #e5e7eb", margin: 0 }}>
+                          {itAssessmentData.assessment.budgetAllocationTeams || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "8px" }}>Risk Assessment</h4>
+                        <p style={{ fontSize: "14px", color: "#4b5563", backgroundColor: "#f9fafb", padding: "12px", borderRadius: "6px", border: "1px solid #e5e7eb", margin: 0 }}>
+                          {itAssessmentData.assessment.riskAssessment || "N/A"}
+                        </p>
+                      </div>
+                      <div style={{ gridColumn: "span 2" }}>
+                        <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "8px" }}>Additional Recommendations</h4>
+                        <p style={{ fontSize: "14px", color: "#4b5563", backgroundColor: "#f9fafb", padding: "12px", borderRadius: "6px", border: "1px solid #e5e7eb", margin: 0 }}>
+                          {itAssessmentData.assessment.recommendations || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: "24px" }}>
+                    <h4 style={{ fontSize: "14px", fontWeight: "600", color: "#374151", marginBottom: "12px" }}>Approval Checklist</h4>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
+                      {Object.entries(itApprovalData.approvals).filter(([k, v]) => v).map(([key, value]) => (
+                        <div key={key} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "#4b5563" }}>
+                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="8" fill="#d1fae5" />
+                            <path d="M6 10L9 13L14 8" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          <span style={{ textTransform: "capitalize" }}>{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Ready to Proceed Section */}
             <div style={{ marginTop: "32px" }}>

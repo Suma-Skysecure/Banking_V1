@@ -120,6 +120,39 @@ export default function ITFeasibilityChecklist({ branchId }) {
   useEffect(() => {
     if (!branchId) return;
 
+    // Static mapping of branch names to ensure names are displayed instead of IDs
+    const BRANCH_NAMES = {
+      1: "Downtown Manhattan Branch",
+      2: "Beverly Hills Boutique",
+      3: "Chicago River North Site",
+      4: "Miami South Beach Location",
+      5: "Seattle Waterfront Project",
+      6: "New York Financial District",
+      7: "Dallas Metroplex Branch",
+      8: "Houston Energy District",
+      9: "Atlanta Business Center",
+      10: "Phoenix Tech Hub",
+      11: "Denver Commerce Center",
+      12: "Boston Financial Plaza",
+      13: "San Francisco Bay Area Office",
+      14: "Austin Tech Campus",
+      15: "Portland Commercial Plaza",
+      16: "Nashville Financial Center",
+      17: "Minneapolis Retail Hub",
+      18: "Charlotte Business Park",
+      20: "Kansas City Office Complex",
+      21: "Columbus Financial District",
+      22: "Milwaukee Business Center",
+      23: "Detroit Commercial Center",
+      24: "Seattle Tech Park",
+      25: "Phoenix Industrial Hub",
+      26: "Denver Business Plaza",
+      27: "Portland Commerce Center",
+      28: "San Diego Office Complex",
+      29: "Las Vegas Financial District",
+      30: "Chicago Business Center"
+    };
+
     const branchMap = JSON.parse(
       localStorage.getItem("branchMap") || "{}"
     );
@@ -128,7 +161,8 @@ export default function ITFeasibilityChecklist({ branchId }) {
       localStorage.getItem(`itAssessment_${branchId}`) || "{}"
     );
 
-    setBranchName(branchMap[branchId] || `Branch ${branchId}`);
+    // Prefer static name, then localStorage map, then fallback
+    setBranchName(BRANCH_NAMES[branchId] || branchMap[branchId] || `Branch ${branchId}`);
     setData(saved.data || {});
     setOverallRemarks(saved.overallRemarks || "");
     setSubmitted(Boolean(saved.submitted));
@@ -194,10 +228,10 @@ export default function ITFeasibilityChecklist({ branchId }) {
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { 
-      year: "numeric", 
-      month: "short", 
-      day: "numeric" 
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
     });
   };
 
