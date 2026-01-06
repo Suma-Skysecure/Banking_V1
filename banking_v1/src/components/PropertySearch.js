@@ -8,6 +8,7 @@ import PageHeader from "@/components/PageHeader";
 import DashboardHeader from "@/components/DashboardHeader";
 import ToastNotification from "@/components/ToastNotification";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import * as XLSX from "xlsx";
 import "@/css/pageHeader.css";
 import "@/css/branchTracker.css";
@@ -16,6 +17,7 @@ import "@/css/propertySearch.css";
 export default function PropertySearch() {
   const router = useRouter();
   const { user } = useAuth();
+  const { createNotification } = useNotifications();
   const [location, setLocation] = useState("");
   const [propertyType, setPropertyType] = useState("all");
   const [priceRange, setPriceRange] = useState("all");
@@ -41,7 +43,8 @@ export default function PropertySearch() {
     }
   }, []);
   
-  // All restrictions removed - all users have full access
+  // Check if user is SRBM - only SRBM can initiate search, import, and export
+  const isSRBM = user?.role === "SRBM";
 
   // Get file type from extension
   const getFileType = (fileName) => {
@@ -430,6 +433,32 @@ export default function PropertySearch() {
     if (selectedProperties.length > 0) {
       console.log("Initiating listing for properties:", selectedProperties);
       
+      // Get selected property names for the notification
+      const allProperties = [...properties, ...importedProperties];
+      const selectedProps = allProperties.filter(prop => 
+        selectedProperties.includes(prop.id)
+      );
+      const propertyNames = selectedProps.map(prop => prop.name).join(", ");
+      const propertyCount = selectedProperties.length;
+      
+      // Store the first selected property data for Business Approval, Legal Workflow, and Dashboard
+      // If multiple properties are selected, we'll use the first one
+      if (selectedProps.length > 0) {
+        const propertyForApproval = selectedProps[0];
+        // Store property data in localStorage for Business Approval, Legal Workflow, and Dashboard
+        localStorage.setItem("propertyForBusinessApproval", JSON.stringify(propertyForApproval));
+        // Also store submission timestamp
+        localStorage.setItem("propertySubmissionDate", new Date().toISOString());
+      }
+      
+      // Create notification for business approval - target Business role
+      const notificationMessage = propertyCount === 1
+        ? `Property "${propertyNames}" has been initiated for business approval`
+        : `${propertyCount} properties have been initiated for business approval`;
+      
+      // Create notification targeted to Business role
+      createNotification(notificationMessage, "info", "/business-approval", "Business");
+      
       // Show success notification for SRBM users
       if (user?.role === "SRBM") {
         setShowNotification(true);
@@ -439,6 +468,13 @@ export default function PropertySearch() {
         // For other roles, redirect immediately
         router.push("/business-approval");
       }
+    }
+  };
+
+  // Handle notification click - navigate to the link if available
+  const handleNotificationClick = (notification) => {
+    if (notification.link) {
+      router.push(notification.link);
     }
   };
 
@@ -593,7 +629,10 @@ export default function PropertySearch() {
         duration={3000}
       />
       <div className="dashboard-container">
-      <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <DashboardHeader 
+        sidebarOpen={sidebarOpen} 
+        setSidebarOpen={setSidebarOpen}
+      />
 
       <div className="dashboard-content-wrapper">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -675,6 +714,8 @@ export default function PropertySearch() {
                     <button 
                       type="submit" 
                       className="search-button"
+                      disabled={!isSRBM}
+                      title={!isSRBM ? "Only SRBM can initiate property search" : ""}
                     >
                       <svg
                         width="20"
@@ -716,22 +757,33 @@ export default function PropertySearch() {
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, gap: "12px" }}>
                     <button
                       onClick={handleImportClick}
+                      disabled={!isSRBM}
+                      title={!isSRBM ? "Only SRBM can import properties" : ""}
                       style={{
                         padding: "10px 24px",
-                        backgroundColor: "#f97316",
+                        backgroundColor: !isSRBM ? "#9ca3af" : "#f97316",
                         color: "#ffffff",
                         border: "none",
                         borderRadius: "6px",
                         fontSize: "14px",
                         fontWeight: "600",
-                        cursor: "pointer",
+                        cursor: !isSRBM ? "not-allowed" : "pointer",
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
                         transition: "background-color 0.2s",
+                        opacity: !isSRBM ? 0.6 : 1,
                       }}
-                      onMouseOver={(e) => (e.target.style.backgroundColor = "#ea580c")}
-                      onMouseOut={(e) => (e.target.style.backgroundColor = "#f97316")}
+                      onMouseOver={(e) => {
+                        if (isSRBM) {
+                          e.target.style.backgroundColor = "#ea580c";
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        if (isSRBM) {
+                          e.target.style.backgroundColor = "#f97316";
+                        }
+                      }}
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path
@@ -752,29 +804,30 @@ export default function PropertySearch() {
                     </button>
                     <button
                       onClick={handleExportProperties}
-                      disabled={selectedProperties.length === 0}
+                      disabled={selectedProperties.length === 0 || !isSRBM}
+                      title={!isSRBM ? "Only SRBM can export properties" : selectedProperties.length === 0 ? "Please select properties to export" : ""}
                       style={{
                         padding: "10px 24px",
-                        backgroundColor: selectedProperties.length === 0 ? "#9ca3af" : "#3b82f6",
+                        backgroundColor: (selectedProperties.length === 0 || !isSRBM) ? "#9ca3af" : "#3b82f6",
                         color: "#ffffff",
                         border: "none",
                         borderRadius: "6px",
                         fontSize: "14px",
                         fontWeight: "600",
-                        cursor: selectedProperties.length === 0 ? "not-allowed" : "pointer",
+                        cursor: (selectedProperties.length === 0 || !isSRBM) ? "not-allowed" : "pointer",
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
                         transition: "background-color 0.2s",
-                        opacity: selectedProperties.length === 0 ? 0.6 : 1,
+                        opacity: (selectedProperties.length === 0 || !isSRBM) ? 0.6 : 1,
                       }}
                       onMouseOver={(e) => {
-                        if (selectedProperties.length > 0) {
+                        if (selectedProperties.length > 0 && isSRBM) {
                           e.target.style.backgroundColor = "#2563eb";
                         }
                       }}
                       onMouseOut={(e) => {
-                        if (selectedProperties.length > 0) {
+                        if (selectedProperties.length > 0 && isSRBM) {
                           e.target.style.backgroundColor = "#3b82f6";
                         }
                       }}
@@ -802,8 +855,12 @@ export default function PropertySearch() {
                     <button
                       className="initiate-button"
                       onClick={handleInitiateListing}
-                      disabled={selectedProperties.length === 0}
-                      style={selectedProperties.length === 0 ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+                      disabled={selectedProperties.length === 0 || !isSRBM}
+                      title={!isSRBM ? "Only SRBM can initiate property listing" : selectedProperties.length === 0 ? "Please select properties" : ""}
+                      style={{
+                        opacity: (selectedProperties.length === 0 || !isSRBM) ? 0.5 : 1,
+                        cursor: (selectedProperties.length === 0 || !isSRBM) ? "not-allowed" : "pointer"
+                      }}
                     >
                       <svg
                         width="20"
@@ -843,6 +900,8 @@ export default function PropertySearch() {
                           className="property-checkbox"
                           checked={selectedProperties.includes(property.id)}
                           onChange={() => togglePropertySelection(property.id)}
+                          disabled={!isSRBM}
+                          title={!isSRBM ? "Only SRBM can select properties" : ""}
                         />
                         <div className="property-info">
                           <h3 className="property-name">{property.name}</h3>
@@ -1014,11 +1073,8 @@ export default function PropertySearch() {
                             className="view-details-button"
                             onClick={() => {
                               // Store the selected property data in localStorage for PropertyDetails
-                              if (property.isImported) {
-                                localStorage.setItem("selectedImportedProperty", JSON.stringify(property));
-                              } else {
-                                localStorage.removeItem("selectedImportedProperty");
-                              }
+                              // Store all property data (both imported and regular) so PropertyDetails can access it
+                              localStorage.setItem("selectedProperty", JSON.stringify(property));
                             }}
                           >
                             <svg

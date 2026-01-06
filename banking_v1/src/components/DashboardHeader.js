@@ -12,7 +12,6 @@ import NotificationDropdown from "@/components/NotificationDropdown";
  * - Bell icon for notifications (via NotificationDropdown)
  */
 export default function DashboardHeader({ sidebarOpen, setSidebarOpen }) {
-
   return (
     <>
       <header className="dashboard-header">
@@ -64,4 +63,3 @@ export default function DashboardHeader({ sidebarOpen, setSidebarOpen }) {
     </>
   );
 }
-
