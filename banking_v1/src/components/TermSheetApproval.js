@@ -9,9 +9,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/postLOIActivities.css";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 export default function TermSheetApproval() {
   const { user } = useAuth();
+  const { createNotification } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [approvalStatus, setApprovalStatus] = useState("pending");
   const [comments, setComments] = useState("");
@@ -58,239 +60,249 @@ export default function TermSheetApproval() {
             />
 
             {/* Stamp Duty Payment Details */}
-              <div className="business-details-card">
-                <div className="card-header">
-                  <div style={{
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "50%",
-                    backgroundColor: "#f97316",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginRight: "12px"
-                  }}>
-                    <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M8 8C10.2091 8 12 6.20914 12 4C12 1.79086 10.2091 0 8 0C5.79086 0 4 1.79086 4 4C4 6.20914 5.79086 8 8 8Z"
-                        fill="white"
-                      />
-                      <path
-                        d="M8 10C4.68629 10 2 12.6863 2 16H14C14 12.6863 11.3137 10 8 10Z"
-                        fill="white"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="card-title">Stamp Duty Payment Details</h3>
+            <div className="business-details-card">
+              <div className="card-header">
+                <div style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  backgroundColor: "#f97316",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: "12px"
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M8 8C10.2091 8 12 6.20914 12 4C12 1.79086 10.2091 0 8 0C5.79086 0 4 1.79086 4 4C4 6.20914 5.79086 8 8 8Z"
+                      fill="white"
+                    />
+                    <path
+                      d="M8 10C4.68629 10 2 12.6863 2 16H14C14 12.6863 11.3137 10 8 10Z"
+                      fill="white"
+                    />
+                  </svg>
                 </div>
-                <div style={{ padding: "20px" }}>
-                  {/* Calculation Breakdown */}
-                  <div style={{ marginBottom: "24px" }}>
-                    <h4 style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "16px" }}>
-                      Calculation Breakdown
-                    </h4>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "14px", color: "#6b7280" }}>Property Value:</span>
-                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
-                          {formatCurrency(propertyValue)}
-                        </span>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "14px", color: "#6b7280" }}>Stamp Duty Rate:</span>
-                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
-                          {stampDutyRate}%
-                        </span>
-                      </div>
-                      <div style={{ 
-                        display: "flex", 
-                        justifyContent: "space-between", 
-                        alignItems: "center",
-                        padding: "12px",
-                        backgroundColor: "#dbeafe",
-                        borderRadius: "6px",
-                        border: "1px solid #93c5fd"
-                      }}>
-                        <span style={{ fontSize: "16px", fontWeight: "600", color: "#1e3a8a" }}>
-                          Total Stamp Duty Amount:
-                        </span>
-                        <span style={{ fontSize: "18px", fontWeight: "700", color: "#1e3a8a" }}>
-                          {formatCurrency(totalStampDuty)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Payment Information */}
-                  <div style={{ marginBottom: "24px" }}>
-                    <h4 style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "16px" }}>
-                      Payment Information
-                    </h4>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "14px", color: "#6b7280" }}>Payment Status:</span>
-                        <div style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          padding: "6px 12px",
-                          backgroundColor: "#fef3c7",
-                          color: "#92400e",
-                          borderRadius: "20px",
-                          fontSize: "14px",
-                          fontWeight: "500"
-                        }}>
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
-                            <path
-                              d="M8 4V8L10.5 10.5"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                          Payment Initiated
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "14px", color: "#6b7280" }}>Payment Reference Number:</span>
-                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
-                          SD-MIA-2024-002-4060
-                        </span>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "14px", color: "#6b7280" }}>Payment Date:</span>
-                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
-                          December 19, 2024
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
+                <h3 className="card-title">Stamp Duty Payment Details</h3>
               </div>
+              <div style={{ padding: "20px" }}>
+                {/* Calculation Breakdown */}
+                <div style={{ marginBottom: "24px" }}>
+                  <h4 style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "16px" }}>
+                    Calculation Breakdown
+                  </h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Property Value:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        {formatCurrency(propertyValue)}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Stamp Duty Rate:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        {stampDutyRate}%
+                      </span>
+                    </div>
+                    <div style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "12px",
+                      backgroundColor: "#dbeafe",
+                      borderRadius: "6px",
+                      border: "1px solid #93c5fd"
+                    }}>
+                      <span style={{ fontSize: "16px", fontWeight: "600", color: "#1e3a8a" }}>
+                        Total Stamp Duty Amount:
+                      </span>
+                      <span style={{ fontSize: "18px", fontWeight: "700", color: "#1e3a8a" }}>
+                        {formatCurrency(totalStampDuty)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Information */}
+                <div style={{ marginBottom: "24px" }}>
+                  <h4 style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "16px" }}>
+                    Payment Information
+                  </h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Payment Status:</span>
+                      <div style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "6px 12px",
+                        backgroundColor: "#fef3c7",
+                        color: "#92400e",
+                        borderRadius: "20px",
+                        fontSize: "14px",
+                        fontWeight: "500"
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+                          <path
+                            d="M8 4V8L10.5 10.5"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        Payment Initiated
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Payment Reference Number:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        SD-MIA-2024-002-4060
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Payment Date:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        December 19, 2024
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
 
             {/* Additional Information and Payment Details Section */}
-              <div style={{ 
-                display: "grid", 
-                gridTemplateColumns: "1fr 1fr", 
-                gap: "24px",
-                marginTop: "24px"
-              }}>
-                {/* Additional Information */}
-                <div className="business-details-card">
-                  <div className="card-header">
-                    <h3 className="card-title">Additional Information</h3>
-                  </div>
-                  <div style={{ padding: "20px" }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "14px", color: "#6b7280" }}>State:</span>
-                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
-                          Florida
-                        </span>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "14px", color: "#6b7280" }}>County:</span>
-                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
-                          Miami-Dade
-                        </span>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "14px", color: "#6b7280" }}>Property Type:</span>
-                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
-                          Commercial Office
-                        </span>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "14px", color: "#6b7280" }}>Transaction Type:</span>
-                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
-                          Purchase
-                        </span>
-                      </div>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "24px",
+              marginTop: "24px"
+            }}>
+              {/* Additional Information */}
+              <div className="business-details-card">
+                <div className="card-header">
+                  <h3 className="card-title">Additional Information</h3>
+                </div>
+                <div style={{ padding: "20px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>State:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        Florida
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>County:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        Miami-Dade
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Property Type:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        Commercial Office
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", color: "#6b7280" }}>Transaction Type:</span>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                        Purchase
+                      </span>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Payment Details */}
-                <div className="business-details-card">
-                  <div className="card-header">
-                    <h3 className="card-title">Payment Details</h3>
-                  </div>
-                  <div style={{ padding: "20px" }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <div>
-                        <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
-                          Payment Date
-                        </label>
-                        <div style={{
-                          padding: "10px 12px",
-                          fontSize: "14px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "6px",
-                          backgroundColor: "#f9fafb",
-                          color: "#111827"
-                        }}>
-                          December 19, 2024
-                        </div>
+              {/* Payment Details */}
+              <div className="business-details-card">
+                <div className="card-header">
+                  <h3 className="card-title">Payment Details</h3>
+                </div>
+                <div style={{ padding: "20px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
+                        Payment Date
+                      </label>
+                      <div style={{
+                        padding: "10px 12px",
+                        fontSize: "14px",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "6px",
+                        backgroundColor: "#f9fafb",
+                        color: "#111827"
+                      }}>
+                        December 19, 2024
                       </div>
-                      <div>
-                        <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
-                          Payment Method
-                        </label>
-                        <div style={{
-                          padding: "10px 12px",
-                          fontSize: "14px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "6px",
-                          backgroundColor: "#f9fafb",
-                          color: "#111827"
-                        }}>
-                          Electronic Transfer
-                        </div>
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
+                        Payment Method
+                      </label>
+                      <div style={{
+                        padding: "10px 12px",
+                        fontSize: "14px",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "6px",
+                        backgroundColor: "#f9fafb",
+                        color: "#111827"
+                      }}>
+                        Electronic Transfer
                       </div>
-                      <div>
-                        <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
-                          Paying Authority
-                        </label>
-                        <div style={{
-                          padding: "10px 12px",
-                          fontSize: "14px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "6px",
-                          backgroundColor: "#f9fafb",
-                          color: "#111827"
-                        }}>
-                          Florida Department of Revenue
-                        </div>
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
+                        Paying Authority
+                      </label>
+                      <div style={{
+                        padding: "10px 12px",
+                        fontSize: "14px",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "6px",
+                        backgroundColor: "#f9fafb",
+                        color: "#111827"
+                      }}>
+                        Florida Department of Revenue
                       </div>
-                      <div>
-                        <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
-                          Account Reference
-                        </label>
-                        <div style={{
-                          padding: "10px 12px",
-                          fontSize: "14px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "6px",
-                          backgroundColor: "#f9fafb",
-                          color: "#111827"
-                        }}>
-                          FL-REV-ACC-789456123
-                        </div>
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
+                        Account Reference
+                      </label>
+                      <div style={{
+                        padding: "10px 12px",
+                        fontSize: "14px",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "6px",
+                        backgroundColor: "#f9fafb",
+                        color: "#111827"
+                      }}>
+                        FL-REV-ACC-789456123
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
 
             {/* Submit Stamp Duty for Account Button */}
             <div style={{ marginTop: "24px", display: "flex", justifyContent: "center" }}>
               <button
                 onClick={() => {
                   console.log("Submitting stamp duty for account", { status: approvalStatus, comments });
+
+                  // Notify Accounts Team
+                  createNotification(
+                    "Stamp Duty submitted for approval",
+                    "info",
+                    "/accounts-approval",
+                    "Account"
+                  );
+
                   // Handle submit stamp duty for account logic here
+                  alert("Stamp duty submitted to Accounts Team.");
                 }}
                 style={{
                   padding: "10px 20px",

@@ -108,12 +108,13 @@ export default function ITAssessmentDashboard() {
   }, [itStatuses, selectedCity, selectedStatus, selectedDate]);
 
   /* ===================== ACCESS CONTROL ===================== */
-  if (user?.role !== "IT team" && user?.role !== "BRT team") return null;
+  if (user?.role !== "IT team" && user?.role !== "BRT" && user?.role !== "BRT team") return null;
 
   /* ===================== ACTIONS ===================== */
 
   const handleView = (branchId) => {
-    router.push(`/it/assessment/${branchId}`);
+    // Force full page load to ensure data freshness
+    window.location.href = `/it/assessment/${branchId}`;
   };
 
   const handleApprove = (branchId) => {
@@ -273,7 +274,7 @@ export default function ITAssessmentDashboard() {
                           </span>
                         )}
 
-                        {user.role === "BRT team" && (
+                        {(user.role === "BRT" || user.role === "BRT team") && (
                           <>
                             <span
                               className="view-details-link"
@@ -282,18 +283,22 @@ export default function ITAssessmentDashboard() {
                             >
                               View
                             </span>
-                            <button
-                              className="action-btn approve-btn"
-                              onClick={() => handleApprove(b.id)}
-                            >
-                              Approve
-                            </button>
-                            <button
-                              className="action-btn reject-btn"
-                              onClick={() => handleReject(b.id)}
-                            >
-                              Reject
-                            </button>
+                            {b.status === "Pending Approval" && (
+                              <>
+                                <button
+                                  className="action-btn approve-btn"
+                                  onClick={() => handleApprove(b.id)}
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  className="action-btn reject-btn"
+                                  onClick={() => handleReject(b.id)}
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )}
                           </>
                         )}
                       </td>

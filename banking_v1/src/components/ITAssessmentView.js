@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import "@/css/itFeasibilityAssessment.css";
 
 export default function ITAssessmentView({ branchId }) {
   const { user } = useAuth();
+  const { createNotification } = useNotifications();
   const router = useRouter();
   const [branch, setBranch] = useState(null);
   const [assessment, setAssessment] = useState(null);
@@ -15,7 +17,7 @@ export default function ITAssessmentView({ branchId }) {
   const [isApproved, setIsApproved] = useState(false);
 
   // Role-based access control - only BRT team can access for approvals
-  if (!user || user.role !== "BRT team") {
+  if (!user || user.role !== "BRT") {
     return (
       <div style={{ textAlign: "center", padding: "100px", color: "#6b7280" }}>
         <h2>Access Denied</h2>
@@ -151,8 +153,20 @@ export default function ITAssessmentView({ branchId }) {
 
     // Show appropriate notification
     if (isFullyApproved) {
+      createNotification(
+        `BRT has approved the IT assessment form for ${branch?.name || "the branch"}`,
+        "success",
+        "/it-assessment",
+        "IT team"
+      );
       alert("BRT Approved: IT Assessment has been approved!");
     } else {
+      createNotification(
+        `BRT has rejected the IT assessment form for ${branch?.name || "the branch"}`,
+        "error",
+        "/it-assessment",
+        "IT team"
+      );
       alert("BRT Rejected: IT Assessment requires revisions!");
     }
 

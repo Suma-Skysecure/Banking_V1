@@ -11,11 +11,13 @@ import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/agreementExecution.css";
 import "@/css/businessApproval.css";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 export default function VendorCreation() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { createNotification } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Use existing project data - default vendor information
@@ -33,7 +35,8 @@ export default function VendorCreation() {
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [ifscCode, setIfscCode] = useState("");
   const [registeredAddress, setRegisteredAddress] = useState("");
-  
+  const [loiDocument, setLoiDocument] = useState(null);
+
   // Document state management
   const [uploadedDocuments, setUploadedDocuments] = useState({
     panCard: [],
@@ -48,6 +51,19 @@ export default function VendorCreation() {
     gstOthers: useRef(null),
     addressProof: useRef(null)
   };
+
+  // Load LOI document from localStorage on component mount
+  useEffect(() => {
+    try {
+      const storedLOI = localStorage.getItem("uploadedSignedLOI");
+      if (storedLOI) {
+        const loiData = JSON.parse(storedLOI);
+        setLoiDocument(loiData);
+      }
+    } catch (error) {
+      console.error("Error loading LOI document from localStorage:", error);
+    }
+  }, []);
 
   // Load documents from localStorage on component mount
   useEffect(() => {
@@ -71,11 +87,24 @@ export default function VendorCreation() {
 
   // Format file size
   const formatFileSize = (bytes) => {
-    if (bytes === 0) return "0 Bytes";
+    if (!bytes || bytes === 0) return "0 Bytes";
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  };
+
+  // Convert data URL to Blob
+  const dataURLToBlob = (dataURL) => {
+    const arr = dataURL.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
   };
 
   const handleDocumentUpload = (e, category) => {
@@ -89,7 +118,7 @@ export default function VendorCreation() {
         type: file.type,
         uploadDate: new Date().toISOString()
       }));
-      
+
       setUploadedDocuments(prev => ({
         ...prev,
         [category]: [...prev[category], ...fileObjects]
@@ -115,7 +144,7 @@ export default function VendorCreation() {
       ...prev,
       [category]: prev[category].filter(doc => doc.id !== docId)
     }));
-    
+
     // Update modal documents if modal is open for this category
     setViewDocumentModal(prevModal => {
       if (prevModal.open && prevModal.category === category) {
@@ -148,7 +177,17 @@ export default function VendorCreation() {
 
   const handleSubmitForVerification = () => {
     console.log("Submitting for verification...");
+
+    // Send notification to Site Measurement Team
+    createNotification(
+      `New Vendor "${legalName}" Created`,
+      "info",
+      "/site-measurement",
+      "Site measurement"
+    );
+
     // Implement submission logic
+    alert("Vendor created and submitted for verification. Notification sent to Site Measurement Team.");
   };
 
   return (
@@ -176,6 +215,181 @@ export default function VendorCreation() {
                 Fill in the details to create vendor in ERP system for new branch setup.
               </p>
             </div>
+
+            {/* LOI Document Section - Only show for Vendor role and when LOI document exists */}
+            {user?.role === "Vendor" && loiDocument && (
+              <div style={{ marginBottom: "24px" }}>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "16px"
+                }}>
+                  <div style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "6px",
+                    backgroundColor: "#1e3a8a",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0
+                  }}>
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path
+                        d="M3 2.5C2.72386 2.5 2.5 2.72386 2.5 3V15C2.5 15.2761 2.72386 15.5 3 15.5H15C15.2761 15.5 15.5 15.2761 15.5 15V5.5L11 2.5H3Z"
+                        stroke="white"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M11 2.5V5.5H15.5"
+                        stroke="white"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M4 8H14M4 11H14"
+                        stroke="white"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
+                  <h2 style={{
+                    fontSize: "20px",
+                    fontWeight: "600",
+                    color: "#111827",
+                    margin: 0
+                  }}>
+                    LOI Document
+                  </h2>
+                </div>
+
+                {/* LOI Document Card */}
+                <div style={{
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  padding: "20px",
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "16px"
+                }}>
+                  {/* Document Icon */}
+                  <div style={{
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "6px",
+                    backgroundColor: "#fee2e2",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0
+                  }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
+                        stroke="#dc2626"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M14 2V8H20"
+                        stroke="#dc2626"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M8 11H16M8 14H16"
+                        stroke="#dc2626"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
+
+                  {/* Document Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      color: "#111827",
+                      marginBottom: "4px"
+                    }}>
+                      {loiDocument.name || "Standard_LOI_1.pdf"}
+                    </div>
+                    <div style={{
+                      fontSize: "14px",
+                      color: "#6b7280"
+                    }}>
+                      {loiDocument.uploadDate
+                        ? `Uploaded on ${new Date(loiDocument.uploadDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                        : "Uploaded on Jan 6, 2026"} • {formatFileSize(loiDocument.size || 113680)}
+                    </div>
+                  </div>
+
+                  {/* View Document Button */}
+                  <button
+                    onClick={() => {
+                      // Open the LOI document in a new tab
+                      if (loiDocument.data) {
+                        const blob = dataURLToBlob(loiDocument.data);
+                        const url = URL.createObjectURL(blob);
+                        window.open(url, '_blank');
+                        setTimeout(() => URL.revokeObjectURL(url), 100);
+                      }
+                    }}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 20px",
+                      backgroundColor: "#1e3a8a",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      transition: "background-color 0.2s",
+                      flexShrink: 0
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = "#1d4ed8"}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = "#1e3a8a"}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path
+                        d="M9 3C5.68629 3 3 5.68629 3 9C3 12.3137 5.68629 15 9 15C12.3137 15 15 12.3137 15 9C15 5.68629 12.3137 3 9 3Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M9 12C10.6569 12 12 10.6569 12 9C12 7.34315 10.6569 6 9 6C7.34315 6 6 7.34315 6 9C6 10.6569 7.34315 12 9 12Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M5.63604 5.63604L3.51472 3.51472M12.364 5.63604L14.4853 3.51472M5.63604 12.364L3.51472 14.4853M12.364 12.364L14.4853 14.4853"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    View Document
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div style={{
               display: "grid",
@@ -648,7 +862,7 @@ export default function VendorCreation() {
                       flexDirection: "column",
                       gap: "8px"
                     }}>
-                      <div 
+                      <div
                         onClick={() => handleViewDocuments("panCard")}
                         style={{
                           display: "flex",
@@ -694,7 +908,7 @@ export default function VendorCreation() {
                           />
                         </svg>
                       </div>
-                      <div 
+                      <div
                         onClick={() => handleViewDocuments("bankDetails")}
                         style={{
                           display: "flex",
@@ -740,7 +954,7 @@ export default function VendorCreation() {
                           />
                         </svg>
                       </div>
-                      <div 
+                      <div
                         onClick={() => handleViewDocuments("gstOthers")}
                         style={{
                           display: "flex",
@@ -909,8 +1123,8 @@ export default function VendorCreation() {
                   onClick={handleSubmitForVerification}
                   style={{
                     padding: "12px 24px",
-                    backgroundColor: "#dc2626",
-                    color: "#ffffff",
+                    backgroundColor: "rgb(220, 38, 38)",
+                    color: "rgb(255, 255, 255)",
                     border: "none",
                     borderRadius: "8px",
                     fontSize: "16px",
@@ -918,10 +1132,8 @@ export default function VendorCreation() {
                     cursor: "pointer",
                     transition: "background-color 0.2s"
                   }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = "#b91c1c"}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = "#dc2626"}
                 >
-                  Submit for Verification
+                  Create Vendor
                 </button>
               </div>
             </div>
@@ -1020,19 +1232,19 @@ export default function VendorCreation() {
                         type: file.type,
                         uploadDate: new Date().toISOString()
                       }));
-                      
+
                       // Update uploaded documents state
                       setUploadedDocuments(prev => ({
                         ...prev,
                         [viewDocumentModal.category]: [...(prev[viewDocumentModal.category] || []), ...fileObjects]
                       }));
-                      
+
                       // Update modal documents
                       setViewDocumentModal(prev => ({
                         ...prev,
                         documents: [...(prev.documents || []), ...fileObjects]
                       }));
-                      
+
                       // Reset input
                       e.target.value = "";
                     }

@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
       email: username.includes("@") ? username : `${username}@pms.com`,
       name: username,
     };
-    
+
     setUser(userData);
     localStorage.setItem("pms_user", JSON.stringify(userData));
     return userData;
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
 
   const hasPermission = (page, action) => {
     if (!user) return false;
-    
+
     const permissions = getRolePermissions(user.role);
     return permissions[page]?.[action] || false;
   };
@@ -122,8 +122,7 @@ const getRolePermissions = (role) => {
     agreementExecution: allPermissions,
     agreementRegistration: allPermissions,
     projectExecution: allPermissions,
-    // IT Assessment pages - only for IT role
-    itAssessment: role === "IT team" ? allPermissions : { view: false, edit: false, approve: false, upload: false, initiate: false },
+    itAssessment: allPermissions,
   };
 
   return permissions;

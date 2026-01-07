@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Property Management System - Login",
+  title: "Branch Management System",
   description:
-    "Property Management System - Streamlining every step of your property journey",
+    "Branch Management System - Streamlining every step of your business journey",
 };
 
 export default function RootLayout({ children }) {

@@ -8,13 +8,13 @@
 export const ROLE_STAGE_MAPPING = {
   // Business role - sees only Business Approval stage
   "Business": ["Business Approval"],
-  
+
   // SRBM role - sees only Property Search stage (initiates property search, not approval)
   "SRBM": ["Property Search"],
-  
+
   // Legal due role - sees only Legal Clearance stage
   "Legal due": ["Legal Clearance"],
-  
+
   // Project execution role - sees Project Execution related stages
   "Project execution": [
     "Project Execution",
@@ -25,19 +25,19 @@ export const ROLE_STAGE_MAPPING = {
     "Site Update",
     "Application for telephone connection"
   ],
-  
-  // Site measurement role - sees stages related to site measurement work
-  "Site measurement": ["Site Measurement", "Layout Design", "TSA (Stamp duty)", "TSA (Security Deposit)"],
-  
+
+  // Site measurement role - sees only Site Measurement stage
+  "Site measurement": ["Site Measurement"],
+
   // Agreement execution role - sees Agreement Execution related stages
   "Agreement execution": ["Agreement Execution", "Agreement Registration", "Agreement to Account"],
-  
+
   // IT team role - sees multiple stages for infrastructure aspects
   "IT team": ["Property Search", "Business Approval", "Legal Workflow", "Project Execution", "Agreement Execution"],
-  
+
   // Vendor role - sees Vendor stage
   "Vendor": ["Vendor"],
-  
+
   // Account role - sees Budget approval, Stampduty approval, and Advance to fit_out Vendor stages
   "Account": ["Budget approval", "Stampduty approval", "Advance to fit_out Vendor"],
 };
@@ -76,14 +76,14 @@ export const filterBranchesByRole = (branches, role) => {
   if (!role || !branches || branches.length === 0) {
     return branches || [];
   }
-  
+
   const allowedStages = getAllowedStages(role);
-  
+
   // If no mapping found for role, return empty array (don't show all)
   if (allowedStages.length === 0) {
     return [];
   }
-  
+
   // Optimized filtering using Set for O(1) lookup
   const allowedStagesSet = new Set(allowedStages);
   return branches.filter(branch => branch?.stage && allowedStagesSet.has(branch.stage));

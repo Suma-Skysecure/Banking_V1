@@ -22,7 +22,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
   return (
     <aside className={`dashboard-sidebar ${sidebarOpen ? "open" : "closed"}`}>
-      <div className="sidebar-logo">PropSys</div>
+      <div className="sidebar-logo">Branch Management System</div>
       <nav className="sidebar-nav">
         {navigationItems.map((item, index) => {
           return (

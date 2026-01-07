@@ -3,6 +3,7 @@
 import BranchTracker from "@/components/BranchTracker";
 import BRTDashboard from "@/components/BRTDashboard";
 import ITAssessmentDashboard from "@/components/ITAssessmentDashboard";
+import LegalDueDiligencePage from "@/components/legal/LegalDueDiligencePage";
 import Providers from "@/components/Providers";
 import { useAuth } from "@/contexts/AuthContext";
 

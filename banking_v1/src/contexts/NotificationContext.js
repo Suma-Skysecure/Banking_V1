@@ -1,6 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "./AuthContext";
 
 const NotificationContext = createContext(null);
 
@@ -13,65 +15,180 @@ export const useNotifications = () => {
 };
 
 export const NotificationProvider = ({ children }) => {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "New LOI Generated",
-      message: "LOI-2024-001234 has been generated and requires review",
-      time: "2 minutes ago",
-      unread: true,
-      fileName: null
-    },
-    {
-      id: 2,
-      title: "Document Approved",
-      message: "Stamp Duty certificate has been approved",
-      time: "1 hour ago",
-      unread: true,
-      fileName: null
-    },
-    {
-      id: 3,
-      title: "Legal Review Required",
-      message: "Property ABC Mall requires legal clearance",
-      time: "3 hours ago",
-      unread: true,
-      fileName: null
-    },
-    {
-      id: 4,
-      title: "Workflow Completed",
-      message: "Legal clearance workflow for XYZ Plaza is complete",
-      time: "1 day ago",
-      unread: false,
-      fileName: null
+  const { user } = useAuth();
+  const router = useRouter();
+  const [notifications, setNotifications] = useState([]);
+
+  // Load and filter notifications based on user role
+  useEffect(() => {
+    if (!user) {
+      setNotifications(prev => prev.length > 0 ? [] : prev);
+      return;
     }
-  ]);
 
-  const addNotification = (notification) => {
+    try {
+      const storedNotifications = localStorage.getItem("pms_notifications");
+      if (storedNotifications) {
+        const parsedNotifications = JSON.parse(storedNotifications);
+        // Filter notifications: show only if no targetRole or targetRole matches current user's role
+        const filteredNotifications = parsedNotifications.filter(notif =>
+          !notif.targetRole || (user.role && notif.targetRole.toLowerCase().trim() === user.role.toLowerCase().trim())
+        );
+        // Only update if different to avoid potential loops (though dependent on user change usually)
+        setNotifications(filteredNotifications);
+      } else {
+        setNotifications(prev => prev.length > 0 ? [] : prev);
+      }
+    } catch (error) {
+      console.error("Error loading notifications from localStorage:", error);
+      setNotifications(prev => prev.length > 0 ? [] : prev);
+    }
+  }, [user]);
+
+  // Create a new notification
+  const createNotification = (message, type = "info", link = null, targetRole = null) => {
     const newNotification = {
-      id: Date.now(),
-      time: "Just now",
-      unread: true,
-      ...notification
+      id: `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      message,
+      time: new Date().toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }),
+      type,
+      link,
+      targetRole, // Role that should see this notification
+      read: false,
+      createdAt: new Date().toISOString(),
     };
-    setNotifications((prev) => [newNotification, ...prev]);
+
+    // Get all notifications from localStorage
+    let allNotifications = [];
+    try {
+      const stored = localStorage.getItem("pms_notifications");
+      if (stored) {
+        allNotifications = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error("Error loading notifications from localStorage:", error);
+    }
+
+    const updatedNotifications = [newNotification, ...allNotifications];
+
+    // Save to localStorage
+    try {
+      localStorage.setItem("pms_notifications", JSON.stringify(updatedNotifications));
+    } catch (error) {
+      console.error("Error saving notification to localStorage:", error);
+    }
+
+    // Reload notifications to update the filtered list
+    try {
+      const storedNotifications = localStorage.getItem("pms_notifications");
+      if (storedNotifications) {
+        const parsedNotifications = JSON.parse(storedNotifications);
+        // Filter notifications: show only if no targetRole or targetRole matches current user's role
+        const filteredNotifications = parsedNotifications.filter(notif =>
+          !notif.targetRole || (user?.role && notif.targetRole.toLowerCase().trim() === user.role.toLowerCase().trim())
+        );
+        setNotifications(filteredNotifications);
+      }
+    } catch (error) {
+      console.error("Error reloading notifications:", error);
+    }
+
+    return newNotification;
   };
 
+  // Mark notification as read
+  const markAsRead = (notificationId) => {
+    try {
+      const stored = localStorage.getItem("pms_notifications");
+      if (stored) {
+        const allNotifications = JSON.parse(stored);
+        const updatedNotifications = allNotifications.map(notif =>
+          notif.id === notificationId ? { ...notif, read: true } : notif
+        );
+        localStorage.setItem("pms_notifications", JSON.stringify(updatedNotifications));
+
+        // Reload filtered notifications
+        const filteredNotifications = updatedNotifications.filter(notif =>
+          !notif.targetRole || notif.targetRole === user?.role
+        );
+        setNotifications(filteredNotifications);
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
+  // Handle notification click - navigate to link if available
+  const handleNotificationClick = (notification) => {
+    if (notification.link) {
+      markAsRead(notification.id);
+      router.push(notification.link);
+    }
+  };
+
+  // Get unread count
+  const unreadCount = notifications.filter(notif => !notif.read).length;
+
+  // Mark all notifications as read
   const markAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((n) => ({ ...n, unread: false }))
-    );
+    try {
+      const stored = localStorage.getItem("pms_notifications");
+      if (stored) {
+        const allNotifications = JSON.parse(stored);
+        const updatedNotifications = allNotifications.map(notif =>
+          (!notif.targetRole || notif.targetRole === user?.role) ? { ...notif, read: true } : notif
+        );
+        localStorage.setItem("pms_notifications", JSON.stringify(updatedNotifications));
+
+        // Reload filtered notifications
+        const filteredNotifications = updatedNotifications.filter(notif =>
+          !notif.targetRole || notif.targetRole === user?.role
+        );
+        setNotifications(filteredNotifications);
+      }
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+    }
   };
 
-  const markAsRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, unread: false } : n))
-    );
+  // Refresh notifications function
+  const refreshNotifications = () => {
+    try {
+      const storedNotifications = localStorage.getItem("pms_notifications");
+      if (storedNotifications) {
+        const parsedNotifications = JSON.parse(storedNotifications);
+        // Filter notifications: show only if no targetRole or targetRole matches current user's role
+        const filteredNotifications = parsedNotifications.filter(notif =>
+          !notif.targetRole || notif.targetRole === user?.role
+        );
+        setNotifications(filteredNotifications);
+      } else {
+        setNotifications([]);
+      }
+    } catch (error) {
+      console.error("Error loading notifications from localStorage:", error);
+      setNotifications([]);
+    }
   };
 
   return (
-    <NotificationContext.Provider value={{ notifications, addNotification, markAllAsRead, markAsRead }}>
+    <NotificationContext.Provider
+      value={{
+        notifications,
+        createNotification,
+        markAsRead,
+        markAllAsRead,
+        handleNotificationClick,
+        unreadCount,
+        refreshNotifications,
+      }}
+    >
       {children}
     </NotificationContext.Provider>
   );

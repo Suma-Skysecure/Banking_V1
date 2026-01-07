@@ -333,10 +333,7 @@ export default function ITFeasibilityChecklist({ branchId }) {
       {/* HEADER REMOVED AS REQUESTED */}
 
       {/* POST-LOI ACTIVITY HEADER */}
-      <div style={{ marginBottom: "20px" }}>
-        <h2 style={{ color: "#1e3a8a", fontSize: "24px", fontWeight: "700", marginBottom: "4px" }}>Post-LOI Activities</h2>
-        <div style={{ color: "#6b7280", fontSize: "14px" }}>Accounts Team - Payment Approvals</div>
-      </div>
+      {/* Header removed */}
 
       {/* BRANCH DETAILS HEADER CARD */}
       <div style={{ ...card, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>

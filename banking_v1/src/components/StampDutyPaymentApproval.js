@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import ToastNotification from "@/components/ToastNotification";
 import PageHeader from "@/components/PageHeader";
 import DashboardHeader from "@/components/DashboardHeader";
 import PropertySummaryCard from "@/components/PropertySummaryCard";
@@ -15,6 +16,9 @@ export default function StampDutyPaymentApproval() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [approvalStatus, setApprovalStatus] = useState("pending");
   const [comments, setComments] = useState("");
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success");
 
   // Property and payment data
   const propertyValue = 5800000;
@@ -28,6 +32,27 @@ export default function StampDutyPaymentApproval() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount * 83.5);
+  };
+
+  const handleApprove = () => {
+    setApprovalStatus("approved");
+    setToastMessage("Approved stamp duty and sent to Agreement execution team");
+    setToastType("success");
+    setShowToast(true);
+  };
+
+  const handleReject = () => {
+    setApprovalStatus("rejected");
+    setToastMessage("Stamp duty payment rejected");
+    setToastType("error");
+    setShowToast(true);
+  };
+
+  const handleUpdate = () => {
+    setToastMessage("Approval status updated successfully");
+    setToastType("info");
+    setShowToast(true);
+    console.log("Updating approval status", { status: approvalStatus, comments });
   };
 
   return (
@@ -97,9 +122,9 @@ export default function StampDutyPaymentApproval() {
                         {stampDutyRate}%
                       </span>
                     </div>
-                    <div style={{ 
-                      display: "flex", 
-                      justifyContent: "space-between", 
+                    <div style={{
+                      display: "flex",
+                      justifyContent: "space-between",
                       alignItems: "center",
                       padding: "12px",
                       backgroundColor: "#dbeafe",
@@ -236,9 +261,9 @@ export default function StampDutyPaymentApproval() {
             </div>
 
             {/* Approval Actions and Summary Section */}
-            <div style={{ 
-              display: "grid", 
-              gridTemplateColumns: "1fr 1fr", 
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
               gap: "24px",
               marginTop: "24px"
             }}>
@@ -252,7 +277,7 @@ export default function StampDutyPaymentApproval() {
                     {/* Action Buttons */}
                     <div style={{ display: "flex", gap: "12px" }}>
                       <button
-                        onClick={() => setApprovalStatus("approved")}
+                        onClick={handleApprove}
                         style={{
                           flex: 1,
                           padding: "12px 20px",
@@ -290,10 +315,10 @@ export default function StampDutyPaymentApproval() {
                             strokeLinejoin="round"
                           />
                         </svg>
-                        Approve Payment
+                        Approve Stamp Duty by Account
                       </button>
                       <button
-                        onClick={() => setApprovalStatus("rejected")}
+                        onClick={handleReject}
                         style={{
                           flex: 1,
                           padding: "12px 20px",
@@ -331,7 +356,7 @@ export default function StampDutyPaymentApproval() {
                             strokeLinejoin="round"
                           />
                         </svg>
-                        Reject Payment
+                        Reject Stamp Duty by Account
                       </button>
                     </div>
 
@@ -417,10 +442,7 @@ export default function StampDutyPaymentApproval() {
             {/* Update Approval Status Button */}
             <div style={{ marginTop: "24px" }}>
               <button
-                onClick={() => {
-                  console.log("Updating approval status", { status: approvalStatus, comments });
-                  // Handle update approval status logic here
-                }}
+                onClick={handleUpdate}
                 style={{
                   width: "100%",
                   padding: "14px 20px",
@@ -460,6 +482,13 @@ export default function StampDutyPaymentApproval() {
           </div>
         </main>
       </div>
+
+      <ToastNotification
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 }

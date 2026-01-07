@@ -50,26 +50,28 @@ export default function TwoFactorAuth() {
   const handleSubmit = (e) => {
     e.preventDefault();
     const otpValue = otp.join("");
-    
+
     // Static validation - accept any 6-digit OTP
     if (otpValue.length === 6) {
       console.log("OTP entered:", otpValue);
-      
+
       // Get user data from sessionStorage
       const pendingRole = sessionStorage.getItem("pending_role");
       const pendingUsername = sessionStorage.getItem("pending_username");
-      
+
       if (pendingRole && pendingUsername) {
         // Login the user using AuthContext
         login(pendingUsername, "", pendingRole);
-        
+
         // Clear sessionStorage
         sessionStorage.removeItem("pending_role");
         sessionStorage.removeItem("pending_username");
       }
-      
-      // Redirect to dashboard
-      router.push("/dashboard");
+
+      // Redirect to dashboard with a slight delay to ensure state update
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 100);
     }
   };
 
@@ -84,12 +86,12 @@ export default function TwoFactorAuth() {
         {/* Left Panel - Branding */}
         <div className="login-left-panel">
           <div className="login-overlay">
-            <h1 className="login-title">Property Management System</h1>
+            <h1 className="login-title">Branch Management System</h1>
             <p className="login-tagline">
-              Streamlining every step of your property journey, from acquisition to launch.
+              Streamlining every step of your business journey, from acquisition to launch.
             </p>
             <p className="login-copyright">
-              ©2025 Property Management Inc. All rights reserved.
+              ©2025 Business Management Inc. All rights reserved.
             </p>
           </div>
         </div>
