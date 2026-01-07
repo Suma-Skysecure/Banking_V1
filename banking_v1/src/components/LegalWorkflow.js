@@ -18,12 +18,14 @@ export default function LegalWorkflow() {
   const { createNotification } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const fileInputRef = useRef(null);
-  const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const multipleFileInputRef = useRef(null);
   const [isLOIUploaded, setIsLOIUploaded] = useState(false);
   const [property, setProperty] = useState(null);
   const [approvalDate, setApprovalDate] = useState(null);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const multipleFileInputRef = useRef(null);
+
+  // All restrictions removed - all users have full access
 
   // Load property data from localStorage (from BusinessApproval or original submission)
   useEffect(() => {
@@ -52,6 +54,13 @@ export default function LegalWorkflow() {
           setApprovalDate(new Date(submissionDateData));
         }
       }
+
+      // Check if LOI is already uploaded
+      const storedLOI = localStorage.getItem("uploadedSignedLOI");
+      if (storedLOI) {
+        setIsLOIUploaded(true);
+      }
+
     } catch (error) {
       console.error("Error loading property data:", error);
     }
@@ -278,8 +287,6 @@ export default function LegalWorkflow() {
 
   const displayProperty = propertyWithDefaults;
 
-  // All restrictions removed - all users have full access
-
   // Format file size
   const formatFileSize = (bytes) => {
     if (bytes === 0) return "0 Bytes";
@@ -386,8 +393,8 @@ export default function LegalWorkflow() {
     setUploadedFiles((prev) => prev.filter((fileObj) => fileObj.id !== fileId));
   };
 
-  // Check if submit is enabled (at least 3 files uploaded)
-  const isSubmitEnabled = uploadedFiles.length >= 3;
+  // Submit is always enabled - no document upload required
+  const isSubmitEnabled = true;
 
   // Handle submit
   const handleSubmit = async () => {
@@ -428,21 +435,16 @@ export default function LegalWorkflow() {
       // Store all documents in localStorage
       localStorage.setItem("uploadedLegalDocuments", JSON.stringify(documentsToStore));
 
-      // Create notification for Legal Due team
-      const fileNames = uploadedFiles.map(f => f.name).join(", ");
-      const notificationMessage = uploadedFiles.length === 1
-        ? `Legal document "${fileNames}" has been submitted and approved for review`
-        : `${uploadedFiles.length} legal documents have been submitted and approved for review`;
-
-      createNotification(
-        notificationMessage,
-        "info",
-        "/legal-due",
-        "Legal due"
-      );
-
       // Show success message
       alert(`Successfully submitted ${uploadedFiles.length} document(s)! The documents are now available in the Legal Due page.`);
+
+      // Send notification to Legal Team
+      createNotification(
+        "Legal documents submitted for approval by Business Team",
+        "info",
+        "/legal-due-diligence",
+        "Legal due"
+      );
     } catch (error) {
       console.error("Error processing files:", error);
       alert("Error processing files. Please try again.");
@@ -949,35 +951,19 @@ export default function LegalWorkflow() {
 
                         // Store in localStorage
                         localStorage.setItem("uploadedSignedLOI", JSON.stringify(fileData));
-
                         // Update upload status
                         setIsLOIUploaded(true);
-                        // Create notifications for Legal Due, Site Measurement, and IT teams
-                        const notificationMessage = `Signed LOI document "${file.name}" has been uploaded and is ready for review`;
 
-                        // Create notification for Legal Due team
-                        createNotification(
-                          notificationMessage,
-                          "info",
-                          "/legal-due",
-                          "Legal due"
-                        );
-
-                        // Create notification for Site Measurement team
-                        createNotification(
-                          notificationMessage,
-                          "info",
-                          "/post-loi-activities",
-                          "Site measurement"
-                        );
-
-                        // Create notification for IT team
-                        createNotification(
-                          notificationMessage,
-                          "info",
-                          "/dashboard",
-                          "IT team"
-                        );
+                        // Send notifications to multiple teams
+                        const rolesToNotify = ["Vendor", "Site measurement", "Legal due", "IT team"];
+                        rolesToNotify.forEach(role => {
+                          createNotification(
+                            "LOI has been uploaded by Business Team",
+                            "info",
+                            "/post-loi-activities",
+                            role
+                          );
+                        });
 
                         // Show success message
                         alert(`File "${file.name}" uploaded successfully! The document is now available in Post-LOI Activities and Legal Due pages.`);
@@ -993,11 +979,9 @@ export default function LegalWorkflow() {
                 <button
                   className={isLOIUploaded ? "decision-button" : "decision-button approve-button"}
                   onClick={() => {
-                    if (!isLOIUploaded) {
-                      fileInputRef.current?.click();
-                    }
+                    fileInputRef.current?.click();
                   }}
-                  disabled={isLOIUploaded}
+                  disabled={false}
                   style={{
                     padding: "14px 32px",
                     fontSize: "16px",
@@ -1007,8 +991,8 @@ export default function LegalWorkflow() {
                     gap: "10px",
                     backgroundColor: isLOIUploaded ? "#10b981" : undefined,
                     color: isLOIUploaded ? "#ffffff" : undefined,
-                    cursor: isLOIUploaded ? "default" : "pointer",
-                    opacity: isLOIUploaded ? 1 : undefined
+                    cursor: "pointer",
+                    opacity: 1
                   }}
                 >
                   {isLOIUploaded ? (
@@ -1028,7 +1012,7 @@ export default function LegalWorkflow() {
                           strokeLinejoin="round"
                         />
                       </svg>
-                      Uploaded
+                      Uploaded (Click to Change)
                     </>
                   ) : (
                     <>
@@ -1180,6 +1164,9 @@ export default function LegalWorkflow() {
                       </button>
                       <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "12px", fontStyle: "italic" }}>
                         Select multiple files (Ctrl/Cmd + Click) or drag and drop
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#ef4444", marginTop: "4px", fontWeight: "600" }}>
+                        * Upload maximum of three documents
                       </div>
                     </div>
 
@@ -1363,8 +1350,8 @@ export default function LegalWorkflow() {
             </div>
 
           </div>
-        </main>
-      </div>
-    </div>
+        </main >
+      </div >
+    </div >
   );
 }

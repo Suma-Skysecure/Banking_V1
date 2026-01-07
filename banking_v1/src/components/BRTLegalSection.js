@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import ToastNotification from "@/components/ToastNotification";
+import { useNotifications } from "@/contexts/NotificationContext";
 import "@/css/businessApproval.css";
 
 /**
@@ -14,6 +15,7 @@ import LegalDocumentsView from "@/components/legal/LegalDocumentsView";
 // ... existing imports
 
 export default function BRTLegalSection() {
+  const { createNotification } = useNotifications();
   const SHARED_STORAGE_KEY = "legalBrtCallStatus_PROP-MIA-2024-002";
   const ACTIVITY_ID = "1";
 
@@ -94,8 +96,8 @@ export default function BRTLegalSection() {
   const legalActivities = [
     {
       id: "1",
-      propertyName: "ABC Mall",
-      propertyAddress: "123 Main St, Springfield, TX",
+      propertyName: "Downtown Art Plaza",
+      propertyAddress: "1450 Biscayne Boulevard, Miami, FL 33132",
       document: "Legal.pdf",
       documentId: "legal-doc-1",
     },
@@ -111,27 +113,61 @@ export default function BRTLegalSection() {
   };
 
   const handleApprove = (activityId) => {
-    const status = "approved";
-    setApprovalStatus((prev) => ({ ...prev, [activityId]: status }));
-    localStorage.setItem(SHARED_STORAGE_KEY, status);
-    window.dispatchEvent(new CustomEvent('legalBrtStatusUpdate', { detail: { status } }));
+    // console.log("Approved legal clearance for:", activityId);
 
-    setNotificationMessage("Legal clearance approved. Notification sent to Legal team.");
+    // Update local state and trigger event
+    const newStatus = "approved";
+    setApprovalStatus(prev => ({ ...prev, [activityId]: newStatus }));
+
+    // Dispatch custom event for cross-component communication
+    window.dispatchEvent(new CustomEvent("legalBrtStatusUpdate", {
+      detail: { status: newStatus }
+    }));
+
+    // Update localStorage for persistence
+    localStorage.setItem(SHARED_STORAGE_KEY, newStatus);
+
+    // Notify Legal Team
+    createNotification(
+      "BRT has approved the legal clearance.",
+      "success",
+      "/legal-due-diligence",
+      "Legal due"
+    );
+
+    // Show toast
+    setNotificationMessage("Legal clearance approved successfully");
     setNotificationType("success");
     setShowNotification(true);
-    console.log("Approved legal clearance for:", activityId);
   };
 
   const handleDisapprove = (activityId) => {
-    const status = "rejected"; // standardized to "rejected"
-    setApprovalStatus((prev) => ({ ...prev, [activityId]: status }));
-    localStorage.setItem(SHARED_STORAGE_KEY, status);
-    window.dispatchEvent(new CustomEvent('legalBrtStatusUpdate', { detail: { status } }));
+    // console.log("Disapproved legal clearance for:", activityId);
 
-    setNotificationMessage("Legal clearance disapproved. Notification sent to Legal team.");
+    // Update local state and trigger event
+    const newStatus = "disapproved";
+    setApprovalStatus(prev => ({ ...prev, [activityId]: newStatus }));
+
+    // Dispatch custom event for cross-component communication
+    window.dispatchEvent(new CustomEvent("legalBrtStatusUpdate", {
+      detail: { status: newStatus }
+    }));
+
+    // Update localStorage for persistence
+    localStorage.setItem(SHARED_STORAGE_KEY, newStatus);
+
+    // Notify Legal Team
+    createNotification(
+      "BRT has disapproved the legal clearance.",
+      "error",
+      "/legal-due-diligence",
+      "Legal due"
+    );
+
+    // Show toast
+    setNotificationMessage("Legal clearance disapproved");
     setNotificationType("error");
     setShowNotification(true);
-    console.log("Disapproved legal clearance for:", activityId);
   };
 
   const handleViewDocument = (document, e) => {
@@ -258,20 +294,43 @@ startxref
                       </button>
                     </td>
                     <td style={{ padding: "16px" }}>
-                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                        <button onClick={() => handleDisapprove(activity.id)} disabled={isApproved} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", backgroundColor: isApproved ? "#f3f4f6" : "#ef4444", color: isApproved ? "#9ca3af" : "white", border: "none", borderRadius: "6px", fontSize: "13px", fontWeight: "600", cursor: isApproved ? "not-allowed" : "pointer", transition: "background-color 0.2s", opacity: isApproved ? 0.6 : 1 }} onMouseEnter={(e) => { if (!isApproved) { e.target.style.backgroundColor = "#dc2626"; } }} onMouseLeave={(e) => { if (!isApproved) { e.target.style.backgroundColor = "#ef4444"; } }}>
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      {!status ? (
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                          <button onClick={() => handleDisapprove(activity.id)} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", backgroundColor: "#ef4444", color: "white", border: "none", borderRadius: "6px", fontSize: "13px", fontWeight: "600", cursor: "pointer", transition: "background-color 0.2s" }} onMouseEnter={(e) => { e.target.style.backgroundColor = "#dc2626"; }} onMouseLeave={(e) => { e.target.style.backgroundColor = "#ef4444"; }}>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                              <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                            </svg>
+                            Disapprove
+                          </button>
+                          <button onClick={() => handleApprove(activity.id)} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", backgroundColor: "#10b981", color: "white", border: "none", borderRadius: "6px", fontSize: "13px", fontWeight: "600", cursor: "pointer", transition: "background-color 0.2s" }} onMouseEnter={(e) => { e.target.style.backgroundColor = "#059669"; }} onMouseLeave={(e) => { e.target.style.backgroundColor = "#10b981"; }}>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                              <path d="M13 4L6 11L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Approve
+                          </button>
+                        </div>
+                      ) : (
+                        <span style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          padding: "6px 12px",
+                          backgroundColor: isApproved ? "#d1fae5" : "#fee2e2",
+                          color: isApproved ? "#065f46" : "#991b1b",
+                          borderRadius: "20px",
+                          fontSize: "13px",
+                          fontWeight: "600"
+                        }}>
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                            {isApproved ? (
+                              <path d="M13 4L6 11L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            ) : (
+                              <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                            )}
                           </svg>
-                          Disapprove
-                        </button>
-                        <button onClick={() => handleApprove(activity.id)} disabled={isDisapproved} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", backgroundColor: isDisapproved ? "#f3f4f6" : "#10b981", color: isDisapproved ? "#9ca3af" : "white", border: "none", borderRadius: "6px", fontSize: "13px", fontWeight: "600", cursor: isDisapproved ? "not-allowed" : "pointer", transition: "background-color 0.2s", opacity: isDisapproved ? 0.6 : 1 }} onMouseEnter={(e) => { if (!isDisapproved) { e.target.style.backgroundColor = "#059669"; } }} onMouseLeave={(e) => { if (!isDisapproved) { e.target.style.backgroundColor = "#10b981"; } }}>
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M13 4L6 11L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          Approve
-                        </button>
-                      </div>
+                          {isApproved ? "Approved" : "Disapproved"}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 const SECTIONS = [
   { id: "network", title: "Network & Connectivity" },
@@ -13,6 +14,7 @@ const SECTIONS = [
 ];
 
 export default function ITFeasibilitySection() {
+  const { createNotification } = useNotifications();
   const [searchQuery, setSearchQuery] = useState("");
   const [notification, setNotification] = useState(null);
   const [selectedBranch, setSelectedBranch] = useState(null);
@@ -117,20 +119,15 @@ export default function ITFeasibilitySection() {
 
     localStorage.setItem("itStatuses", JSON.stringify(statuses));
 
-    // Create Notification
-    const newNotification = {
-      id: Date.now(),
-      title: `IT Assessment ${newStatus === 'Completed' ? 'Approved' : 'Rejected'}`,
-      message: `BRT Team has ${newStatus === 'Completed' ? 'approved' : 'rejected'} the assessment for ${targetBranch.name}.`,
-      time: "Just now",
-      read: false,
-      type: newStatus === "Completed" ? "success" : "error"
-    };
+    // Create Notification using Context
+    createNotification(
+      `BRT Team has ${newStatus === 'Completed' ? 'approved' : 'rejected'} the assessment for ${targetBranch.name}.`,
+      newStatus === "Completed" ? "success" : "error",
+      "/it-assessment",
+      "IT team"
+    );
 
-    const existingNotes = JSON.parse(localStorage.getItem("userNotifications") || "[]");
-    localStorage.setItem("userNotifications", JSON.stringify([newNotification, ...existingNotes]));
-
-    // Dispatch custom event for same-tab updates
+    // Dispatch custom event for same-tab updates (existing logic)
     window.dispatchEvent(new Event("notification-update"));
 
     setNotification(successMessage);
@@ -243,7 +240,7 @@ export default function ITFeasibilitySection() {
 
                 <div className="flex gap-2">
                   {/* Action Buttons for Pending Approval */}
-                  {(branch.status === "Pending Approval" || branch.status === "Pending IT Assessment") && (
+                  {branch.status === "Pending Approval" && (
                     <>
                       <button
                         onClick={() => handleApprove(branch)}

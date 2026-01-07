@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Business Management System - Login",
+  title: "Branch Management System",
   description:
-    "Business Management System - Streamlining every step of your business journey",
+    "Branch Management System - Streamlining every step of your business journey",
 };
 
 export default function RootLayout({ children }) {

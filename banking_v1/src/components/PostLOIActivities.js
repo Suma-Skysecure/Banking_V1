@@ -14,9 +14,11 @@ import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/postLOIActivities.css";
 import "@/css/businessApproval.css";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 export default function PostLOIActivities() {
   const { user } = useAuth();
+  const { createNotification } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
@@ -26,7 +28,7 @@ export default function PostLOIActivities() {
   const propertyValue = 5800000;
   const stampDutyRate = 0.7;
   const totalStampDuty = (propertyValue * stampDutyRate) / 100;
-  
+
   // TSA (Security Deposit) state
   const depositPercentage = 10;
   const securityDepositAmount = (propertyValue * depositPercentage) / 100;
@@ -66,10 +68,10 @@ export default function PostLOIActivities() {
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { 
-      year: "numeric", 
-      month: "short", 
-      day: "numeric" 
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
     });
   };
 
@@ -153,97 +155,97 @@ export default function PostLOIActivities() {
               </div>
               <div style={{ padding: "20px" }}>
                 {uploadedLOI ? (
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "16px",
-                  backgroundColor: "#f9fafb",
-                  borderRadius: "8px",
-                  border: "1px solid #e5e7eb"
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
-                    <div style={{
-                      width: "40px",
-                      height: "40px",
-                      backgroundColor: "#fee2e2",
-                      borderRadius: "6px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0
-                    }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "16px",
+                    backgroundColor: "#f9fafb",
+                    borderRadius: "8px",
+                    border: "1px solid #e5e7eb"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
+                      <div style={{
+                        width: "40px",
+                        height: "40px",
+                        backgroundColor: "#fee2e2",
+                        borderRadius: "6px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0
+                      }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
+                            stroke="#ef4444"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M14 2V8H20"
+                            stroke="#ef4444"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M16 13H8M16 17H8M10 9H8"
+                            stroke="#ef4444"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "14px", fontWeight: "600", color: "#111827", marginBottom: "4px" }}>
+                          {uploadedLOI.name}
+                        </div>
+                        <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                          Uploaded on {formatDate(uploadedLOI.uploadDate)} • {formatFileSize(uploadedLOI.size)}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "10px 20px",
+                        backgroundColor: "#1e3a8a",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "6px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        transition: "background-color 0.2s",
+                        flexShrink: 0
+                      }}
+                      onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
+                      onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
+                      onClick={handleViewDocument}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path
-                          d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
-                          stroke="#ef4444"
-                          strokeWidth="2"
+                          d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
-                        <path
-                          d="M14 2V8H20"
-                          stroke="#ef4444"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M16 13H8M16 17H8M10 9H8"
-                          stroke="#ef4444"
-                          strokeWidth="2"
-                          strokeLinecap="round"
+                        <circle
+                          cx="8"
+                          cy="8"
+                          r="2"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
                         />
                       </svg>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "14px", fontWeight: "600", color: "#111827", marginBottom: "4px" }}>
-                          {uploadedLOI.name}
-                      </div>
-                      <div style={{ fontSize: "12px", color: "#6b7280" }}>
-                          Uploaded on {formatDate(uploadedLOI.uploadDate)} • {formatFileSize(uploadedLOI.size)}
-                      </div>
-                    </div>
+                      View Document
+                    </button>
                   </div>
-                  <button
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "10px 20px",
-                      backgroundColor: "#1e3a8a",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      transition: "background-color 0.2s",
-                      flexShrink: 0
-                    }}
-                    onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
-                    onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
-                      onClick={handleViewDocument}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <circle
-                        cx="8"
-                        cy="8"
-                        r="2"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                      />
-                    </svg>
-                    View Document
-                  </button>
-                </div>
                 ) : (
                   <div style={{
                     display: "flex",
@@ -316,9 +318,9 @@ export default function PostLOIActivities() {
                         {stampDutyRate}%
                       </span>
                     </div>
-                    <div style={{ 
-                      display: "flex", 
-                      justifyContent: "space-between", 
+                    <div style={{
+                      display: "flex",
+                      justifyContent: "space-between",
                       alignItems: "center",
                       padding: "12px",
                       backgroundColor: "#dbeafe",
@@ -383,9 +385,9 @@ export default function PostLOIActivities() {
                 </div>
 
                 {/* Additional Information and Payment Details */}
-                <div style={{ 
-                  display: "grid", 
-                  gridTemplateColumns: "1fr 1fr", 
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
                   gap: "24px",
                   marginBottom: "24px"
                 }}>
@@ -501,6 +503,15 @@ export default function PostLOIActivities() {
                   <button
                     onClick={() => {
                       console.log("Submitting stamp duty for account");
+
+                      // Notify Accounts Team
+                      createNotification(
+                        "Stamp Duty submitted for approval",
+                        "info",
+                        "/accounts-approval", // Assuming a route exists or generic
+                        "Account"
+                      );
+
                       setNotificationMessage("Stamp duty submitted successfully");
                       setShowNotification(true);
                     }}
@@ -551,32 +562,32 @@ export default function PostLOIActivities() {
               }}>
                 {/* Left Panel: Vendor Details */}
                 <div className="business-details-card">
-              <div className="card-header">
-                <svg
-                  width="20"
-                  height="20"
+                  <div className="card-header">
+                    <svg
+                      width="20"
+                      height="20"
                       viewBox="0 0 16 16"
-                  fill="none"
-                  className="card-icon"
-                >
-                  <path
+                      fill="none"
+                      className="card-icon"
+                    >
+                      <path
                         d="M8 8C10.2091 8 12 6.20914 12 4C12 1.79086 10.2091 0 8 0C5.79086 0 4 1.79086 4 4C4 6.20914 5.79086 8 8 8Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
                         d="M8 10C4.68629 10 2 12.6863 2 16H14C14 12.6863 11.3137 10 8 10Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                     <h3 className="card-title">Vendor Details</h3>
-              </div>
-              <div style={{ padding: "20px" }}>
+                  </div>
+                  <div style={{ padding: "20px" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                       {/* Vendor Type */}
                       <div>
@@ -780,25 +791,25 @@ export default function PostLOIActivities() {
                               </svg>
                               <span style={{ fontSize: "14px", color: "#111827" }}>PAN_Card.pdf</span>
                             </div>
-                  <button
+                            <button
                               style={{
                                 backgroundColor: "transparent",
                                 border: "none",
                                 color: "#ef4444",
                                 cursor: "pointer",
                                 padding: "4px"
-                    }}
-                  >
+                              }}
+                            >
                               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
+                                <path
                                   d="M12 4L4 12M4 4L12 12"
-                        stroke="currentColor"
+                                  stroke="currentColor"
                                   strokeWidth="1.5"
-                        strokeLinecap="round"
+                                  strokeLinecap="round"
                                   strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
+                                />
+                              </svg>
+                            </button>
                           </div>
                           <div style={{
                             display: "flex",
@@ -821,25 +832,25 @@ export default function PostLOIActivities() {
                               </svg>
                               <span style={{ fontSize: "14px", color: "#111827" }}>Cancelled_Cheque.jpg</span>
                             </div>
-                  <button
+                            <button
                               style={{
                                 backgroundColor: "transparent",
                                 border: "none",
                                 color: "#ef4444",
                                 cursor: "pointer",
                                 padding: "4px"
-                    }}
-                  >
+                              }}
+                            >
                               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
+                                <path
                                   d="M12 4L4 12M4 4L12 12"
                                   stroke="currentColor"
                                   strokeWidth="1.5"
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
+                                />
+                              </svg>
+                            </button>
                           </div>
                         </div>
                         <div style={{ marginTop: "12px" }}>
@@ -867,9 +878,9 @@ export default function PostLOIActivities() {
                           </a>
                         </div>
                       </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
                 {/* Right Panel: Vendor Request Summary */}
                 <div className="business-details-card">
@@ -942,8 +953,8 @@ export default function PostLOIActivities() {
                           cursor: "pointer",
                           transition: "background-color 0.2s"
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f3f4f6"}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#f9fafb"}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f3f4f6"}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#f9fafb"}
                         >
                           <div style={{
                             display: "flex",
@@ -951,7 +962,7 @@ export default function PostLOIActivities() {
                             gap: "8px"
                           }}>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path
+                              <path
                                 d="M13 4L6 11L3 8"
                                 stroke="#10b981"
                                 strokeWidth="2"
@@ -970,10 +981,10 @@ export default function PostLOIActivities() {
                             <path
                               d="M6 12L10 8L6 4"
                               stroke="#6b7280"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
                           </svg>
                         </div>
                         <div style={{
@@ -986,8 +997,8 @@ export default function PostLOIActivities() {
                           cursor: "pointer",
                           transition: "background-color 0.2s"
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f3f4f6"}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#f9fafb"}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f3f4f6"}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#f9fafb"}
                         >
                           <div style={{
                             display: "flex",
@@ -995,7 +1006,7 @@ export default function PostLOIActivities() {
                             gap: "8px"
                           }}>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path
+                              <path
                                 d="M13 4L6 11L3 8"
                                 stroke="#10b981"
                                 strokeWidth="2"
@@ -1014,12 +1025,12 @@ export default function PostLOIActivities() {
                             <path
                               d="M6 12L10 8L6 4"
                               stroke="#6b7280"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
                               strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
+                            />
+                          </svg>
+                        </div>
                         <div style={{
                           display: "flex",
                           alignItems: "center",
@@ -1030,8 +1041,8 @@ export default function PostLOIActivities() {
                           cursor: "pointer",
                           transition: "background-color 0.2s"
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f3f4f6"}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#f9fafb"}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f3f4f6"}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#f9fafb"}
                         >
                           <div style={{
                             display: "flex",
@@ -1039,14 +1050,14 @@ export default function PostLOIActivities() {
                             gap: "8px"
                           }}>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
+                              <path
                                 d="M13 4L6 11L3 8"
                                 stroke="#10b981"
-                        strokeWidth="2"
-                        strokeLinecap="round"
+                                strokeWidth="2"
+                                strokeLinecap="round"
                                 strokeLinejoin="round"
-                      />
-                    </svg>
+                              />
+                            </svg>
                             <span style={{
                               fontSize: "14px",
                               color: "#111827"
@@ -1097,9 +1108,9 @@ export default function PostLOIActivities() {
                 <h3 className="card-title">TSA (Security Deposit)</h3>
               </div>
               <div style={{ padding: "20px" }}>
-                <div style={{ 
-                  display: "grid", 
-                  gridTemplateColumns: "1fr 1fr", 
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
                   gap: "24px"
                 }}>
                   {/* Deposit Details (Left Column) */}
@@ -1120,9 +1131,9 @@ export default function PostLOIActivities() {
                           {depositPercentage}%
                         </span>
                       </div>
-                      <div style={{ 
-                        display: "flex", 
-                        justifyContent: "space-between", 
+                      <div style={{
+                        display: "flex",
+                        justifyContent: "space-between",
                         alignItems: "center",
                         padding: "12px",
                         backgroundColor: "#dbeafe",
@@ -1208,10 +1219,10 @@ export default function PostLOIActivities() {
                           <path
                             d="M12 18H12.01"
                             stroke={paymentMethod === "upi" ? "#1e3a8a" : "#6b7280"}
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
+                        </svg>
                         <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827", flex: 1 }}>
                           Pay by UPI
                         </span>

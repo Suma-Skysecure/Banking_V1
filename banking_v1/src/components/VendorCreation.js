@@ -11,11 +11,13 @@ import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/agreementExecution.css";
 import "@/css/businessApproval.css";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 export default function VendorCreation() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { createNotification } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Use existing project data - default vendor information
@@ -34,7 +36,7 @@ export default function VendorCreation() {
   const [ifscCode, setIfscCode] = useState("");
   const [registeredAddress, setRegisteredAddress] = useState("");
   const [loiDocument, setLoiDocument] = useState(null);
-  
+
   // Document state management
   const [uploadedDocuments, setUploadedDocuments] = useState({
     panCard: [],
@@ -116,7 +118,7 @@ export default function VendorCreation() {
         type: file.type,
         uploadDate: new Date().toISOString()
       }));
-      
+
       setUploadedDocuments(prev => ({
         ...prev,
         [category]: [...prev[category], ...fileObjects]
@@ -142,7 +144,7 @@ export default function VendorCreation() {
       ...prev,
       [category]: prev[category].filter(doc => doc.id !== docId)
     }));
-    
+
     // Update modal documents if modal is open for this category
     setViewDocumentModal(prevModal => {
       if (prevModal.open && prevModal.category === category) {
@@ -175,7 +177,17 @@ export default function VendorCreation() {
 
   const handleSubmitForVerification = () => {
     console.log("Submitting for verification...");
+
+    // Send notification to Site Measurement Team
+    createNotification(
+      `New Vendor "${legalName}" Created`,
+      "info",
+      "/site-measurement",
+      "Site measurement"
+    );
+
     // Implement submission logic
+    alert("Vendor created and submitted for verification. Notification sent to Site Measurement Team.");
   };
 
   return (
@@ -316,7 +328,7 @@ export default function VendorCreation() {
                       fontSize: "14px",
                       color: "#6b7280"
                     }}>
-                      {loiDocument.uploadDate 
+                      {loiDocument.uploadDate
                         ? `Uploaded on ${new Date(loiDocument.uploadDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
                         : "Uploaded on Jan 6, 2026"} • {formatFileSize(loiDocument.size || 113680)}
                     </div>
@@ -850,7 +862,7 @@ export default function VendorCreation() {
                       flexDirection: "column",
                       gap: "8px"
                     }}>
-                      <div 
+                      <div
                         onClick={() => handleViewDocuments("panCard")}
                         style={{
                           display: "flex",
@@ -896,7 +908,7 @@ export default function VendorCreation() {
                           />
                         </svg>
                       </div>
-                      <div 
+                      <div
                         onClick={() => handleViewDocuments("bankDetails")}
                         style={{
                           display: "flex",
@@ -942,7 +954,7 @@ export default function VendorCreation() {
                           />
                         </svg>
                       </div>
-                      <div 
+                      <div
                         onClick={() => handleViewDocuments("gstOthers")}
                         style={{
                           display: "flex",
@@ -1220,19 +1232,19 @@ export default function VendorCreation() {
                         type: file.type,
                         uploadDate: new Date().toISOString()
                       }));
-                      
+
                       // Update uploaded documents state
                       setUploadedDocuments(prev => ({
                         ...prev,
                         [viewDocumentModal.category]: [...(prev[viewDocumentModal.category] || []), ...fileObjects]
                       }));
-                      
+
                       // Update modal documents
                       setViewDocumentModal(prev => ({
                         ...prev,
                         documents: [...(prev.documents || []), ...fileObjects]
                       }));
-                      
+
                       // Reset input
                       e.target.value = "";
                     }

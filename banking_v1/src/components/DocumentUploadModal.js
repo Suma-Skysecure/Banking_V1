@@ -258,6 +258,9 @@ export default function DocumentUploadModal({ isOpen, onClose, onSubmit }) {
                 <div className="upload-hint">
                   Select multiple files (Ctrl/Cmd + Click) or drag and drop
                 </div>
+                <div style={{ fontSize: "11px", color: "#ef4444", marginTop: "4px", fontWeight: "600" }}>
+                  * Upload minimum of three documents
+                </div>
               </div>
 
               {/* File List */}

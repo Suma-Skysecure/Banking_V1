@@ -18,21 +18,11 @@ export default function LegalClearance() {
   const [callConfirmed, setCallConfirmed] = useState(false);
 
   const handleApprove = () => {
-    setApprovalStatus("approved");
-    setCallConfirmed(true);
-    setNotificationMessage("Legal clearance approved and call confirmed successfully");
-    setNotificationType("success");
-    setShowNotification(true);
-    console.log("Legal clearance approved");
+    // console.log("Legal clearance approved");
   };
 
   const handleDisapprove = () => {
-    setApprovalStatus("disapproved");
-    setCallConfirmed(false);
-    setNotificationMessage("Legal clearance disapproved");
-    setNotificationType("error");
-    setShowNotification(true);
-    console.log("Legal clearance disapproved");
+    // console.log("Legal clearance disapproved");
   };
 
   return (
@@ -67,7 +57,7 @@ export default function LegalClearance() {
 
           {/* Status Display */}
           {approvalStatus && (
-            <div style={{ 
+            <div style={{
               marginBottom: "24px",
               padding: "16px",
               borderRadius: "8px",
@@ -96,13 +86,13 @@ export default function LegalClearance() {
                   />
                 )}
               </svg>
-              <span style={{ 
-                fontSize: "14px", 
+              <span style={{
+                fontSize: "14px",
                 fontWeight: "600",
                 color: approvalStatus === "approved" ? "#065f46" : "#991b1b"
               }}>
-                {approvalStatus === "approved" 
-                  ? "Legal Clearance Approved - Call Confirmed" 
+                {approvalStatus === "approved"
+                  ? "Legal Clearance Approved - Call Confirmed"
                   : "Legal Clearance Disapproved"}
               </span>
             </div>

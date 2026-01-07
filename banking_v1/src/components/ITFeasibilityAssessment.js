@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 /* ===================== CHECKLIST ===================== */
 
@@ -51,6 +52,7 @@ const SECTIONS = [
 
 export default function ITFeasibilityAssessment({ params }) {
   const { user } = useAuth();
+  const { createNotification } = useNotifications();
 
   // ✅ SAFE branchId
   const branchId = params?.branchId ?? null;
@@ -152,6 +154,14 @@ export default function ITFeasibilityAssessment({ params }) {
 
     updateDashboard("Pending Approval", 65);
     setSentToBRT(true);
+
+    createNotification(
+      `IT Team has updated the assessment form for ${branchName} and sent it for BRT approval`,
+      "info",
+      "/brt-details",
+      "BRT"
+    );
+
     alert("Sent to BRT Team");
   };
 

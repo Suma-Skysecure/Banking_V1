@@ -124,6 +124,36 @@ const ALL_BRANCHES = [
     pendingAction: "active",
     category: "business",
   },
+  // Account Role - Budget Approval
+  {
+    id: 41,
+    name: "New York Financial District",
+    stage: "Budget approval",
+    stageColor: "yellow",
+    progress: 10,
+    pendingAction: "active",
+    category: "business",
+  },
+  // Account Role - Stamp Duty Approval
+  {
+    id: 42,
+    name: "New York Financial District",
+    stage: "Stampduty approval",
+    stageColor: "orange",
+    progress: 20,
+    pendingAction: "active",
+    category: "business",
+  },
+  // Account Role - Advance to fit_out Vendor
+  {
+    id: 43,
+    name: "Austin Tech Campus",
+    stage: "Advance to fit_out Vendor",
+    stageColor: "blue",
+    progress: 45,
+    pendingAction: "active",
+    category: "commercial",
+  },
 ];
 
 export default function BranchTracker() {

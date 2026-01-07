@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import ToastNotification from "@/components/ToastNotification";
 import PageHeader from "@/components/PageHeader";
 import DashboardHeader from "@/components/DashboardHeader";
 import PropertySummaryCard from "@/components/PropertySummaryCard";
@@ -16,6 +17,9 @@ export default function BudgetApproval() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [comments, setComments] = useState("");
   const [budgetStatus, setBudgetStatus] = useState("Pending Approval");
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success");
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-IN", {
@@ -32,15 +36,24 @@ export default function BudgetApproval() {
 
   const handleApprove = () => {
     setBudgetStatus("Approved");
+    setToastMessage("Budget approval is successful");
+    setToastType("success");
+    setShowToast(true);
     console.log("Budget approved", { comments });
   };
 
   const handleReject = () => {
     setBudgetStatus("Rejected");
+    setToastMessage("Budget has been rejected");
+    setToastType("error");
+    setShowToast(true);
     console.log("Budget rejected", { comments });
   };
 
   const handleUpdateDecision = () => {
+    setToastMessage("Decision updated successfully");
+    setToastType("info");
+    setShowToast(true);
     console.log("Updating decision", { status: budgetStatus, comments });
   };
 
@@ -74,11 +87,11 @@ export default function BudgetApproval() {
 
             {/* Layout Measurement Details Section */}
             <div style={{ marginTop: "24px" }}>
-              <div style={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: "12px", 
-                marginBottom: "20px" 
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                marginBottom: "20px"
               }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                   <path
@@ -95,11 +108,11 @@ export default function BudgetApproval() {
                     strokeLinecap="round"
                   />
                 </svg>
-                <h2 style={{ 
-                  fontSize: "20px", 
-                  fontWeight: "600", 
-                  color: "#111827", 
-                  margin: 0 
+                <h2 style={{
+                  fontSize: "20px",
+                  fontWeight: "600",
+                  color: "#111827",
+                  margin: 0
                 }}>
                   Layout Measurement Details
                 </h2>
@@ -253,10 +266,10 @@ export default function BudgetApproval() {
                         <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>
                           Condition
                         </div>
-                        <div style={{ 
-                          fontSize: "16px", 
-                          fontWeight: "600", 
-                          color: "#065f46" 
+                        <div style={{
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: "#065f46"
                         }}>
                           Excellent
                         </div>
@@ -406,9 +419,9 @@ export default function BudgetApproval() {
                 <h3 className="card-title">Budget Approval Decision</h3>
               </div>
               <div style={{ padding: "20px" }}>
-                <div style={{ 
-                  display: "grid", 
-                  gridTemplateColumns: "1fr 1fr", 
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
                   gap: "24px"
                 }}>
                   {/* Left Column - Approval Summary & Budget Breakdown */}
@@ -430,9 +443,9 @@ export default function BudgetApproval() {
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontSize: "14px", color: "#6b7280" }}>Budget Status:</span>
-                          <span style={{ 
-                            fontSize: "14px", 
-                            fontWeight: "600", 
+                          <span style={{
+                            fontSize: "14px",
+                            fontWeight: "600",
                             color: "#f97316",
                             backgroundColor: "#fff7ed",
                             padding: "4px 12px",
@@ -626,6 +639,13 @@ export default function BudgetApproval() {
           </div>
         </main>
       </div>
+
+      <ToastNotification
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 }

@@ -1,81 +1,26 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 /**
  * NotificationDropdown Component
  * 
  * Displays notification bell icon with badge and dropdown menu
- * Shows all notifications with mark all as read functionality
+ * Shows real notifications from NotificationContext
  */
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-
-  useEffect(() => {
-    const loadNotifications = () => {
-      const stored = JSON.parse(localStorage.getItem("userNotifications") || "[]");
-      const defaults = [
-        {
-          id: 1,
-          title: "Legal Clearance Required",
-          message: "New property requires legal due diligence review",
-          time: "2 minutes ago",
-          read: false,
-          type: "info",
-        },
-        {
-          id: 2,
-          title: "Document Uploaded",
-          message: "Sales Deed document has been uploaded",
-          time: "15 minutes ago",
-          read: false,
-          type: "success",
-        },
-        {
-          id: 3,
-          title: "BRT Confirmation Pending",
-          message: "BRT confirmation is required for legal call",
-          time: "1 hour ago",
-          read: false,
-          type: "warning",
-        },
-        {
-          id: 4,
-          title: "Legal Clearance Approved",
-          message: "Legal clearance has been granted for Downtown Arts Plaza",
-          time: "2 hours ago",
-          read: true,
-          type: "success",
-        },
-        {
-          id: 5,
-          title: "Compliance Status Updated",
-          message: "Compliance status has been updated to completed",
-          time: "3 hours ago",
-          read: true,
-          type: "info",
-        },
-      ];
-
-      // Merge stored notifications (newest) with defaults
-      // Ensure IDs are unique if possible, but for UI demo it's fine
-      setNotifications([...stored, ...defaults]);
-    };
-
-    loadNotifications();
-    window.addEventListener("storage", loadNotifications);
-    window.addEventListener("focus", loadNotifications);
-    window.addEventListener("notification-update", loadNotifications);
-
-    return () => {
-      window.removeEventListener("storage", loadNotifications);
-      window.removeEventListener("focus", loadNotifications);
-      window.removeEventListener("notification-update", loadNotifications);
-    };
-  }, []);
-
   const dropdownRef = useRef(null);
+
+  // Use the notification context instead of local state
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    handleNotificationClick: onNotificationClick
+  } = useNotifications();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -94,28 +39,9 @@ export default function NotificationDropdown() {
     };
   }, [isOpen]);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((notification) => ({ ...notification, read: true }))
-    );
-  };
-
-  const handleMarkAsRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    );
-  };
-
   const handleNotificationClick = (notification) => {
-    if (!notification.read) {
-      handleMarkAsRead(notification.id);
-    }
-    // Handle notification click action here
-    console.log("Notification clicked:", notification);
+    onNotificationClick(notification);
+    setIsOpen(false);
   };
 
   const getNotificationIcon = (type) => {
@@ -162,6 +88,12 @@ export default function NotificationDropdown() {
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <circle cx="8" cy="8" r="6" stroke="#3b82f6" strokeWidth="1.5" fill="#dbeafe" />
             <path
+              d="M8 4V8M8 12H12" // Modified path to look like an 'i' or similar
+              stroke="#3b82f6"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+            <path
               d="M8 4V8M8 12H8.01"
               stroke="#3b82f6"
               strokeWidth="1.5"
@@ -170,6 +102,18 @@ export default function NotificationDropdown() {
           </svg>
         );
     }
+  };
+
+  // Helper to derive a title if missing
+  const getTitle = (notification) => {
+    if (notification.title) return notification.title;
+    const typeTitles = {
+      success: "Success",
+      warning: "Attention Needed",
+      error: "Error",
+      info: "Information"
+    };
+    return typeTitles[notification.type] || "Notification";
   };
 
   return (
@@ -275,7 +219,7 @@ export default function NotificationDropdown() {
             </h3>
             {unreadCount > 0 && (
               <button
-                onClick={handleMarkAllAsRead}
+                onClick={markAllAsRead}
                 style={{
                   background: "none",
                   border: "none",
@@ -368,16 +312,17 @@ export default function NotificationDropdown() {
                         marginBottom: "4px",
                       }}
                     >
-                      <h4
+                      <p
                         style={{
                           fontSize: "14px",
-                          fontWeight: notification.read ? "500" : "600",
+                          fontWeight: notification.read ? "400" : "600",
                           color: "#111827",
-                          margin: 0,
+                          margin: "0",
+                          lineHeight: "1.4",
                         }}
                       >
-                        {notification.title}
-                      </h4>
+                        {notification.message}
+                      </p>
                       {!notification.read && (
                         <div
                           style={{
@@ -387,21 +332,11 @@ export default function NotificationDropdown() {
                             backgroundColor: "#3b82f6",
                             flexShrink: 0,
                             marginLeft: "8px",
-                            marginTop: "4px",
+                            marginTop: "6px",
                           }}
                         />
                       )}
                     </div>
-                    <p
-                      style={{
-                        fontSize: "13px",
-                        color: "#6b7280",
-                        margin: "0 0 8px 0",
-                        lineHeight: "1.4",
-                      }}
-                    >
-                      {notification.message}
-                    </p>
                     <span
                       style={{
                         fontSize: "12px",
@@ -437,7 +372,7 @@ export default function NotificationDropdown() {
                   padding: "4px 8px",
                 }}
               >
-                View all notifications
+                Close
               </button>
             </div>
           )}
@@ -446,4 +381,3 @@ export default function NotificationDropdown() {
     </div>
   );
 }
-

@@ -62,8 +62,51 @@ export default function LegalDueDiligencePage() {
   const [businessDecisionStatus, setBusinessDecisionStatus] = useState("pending");
   const [complianceConfirmed, setComplianceConfirmed] = useState(false);
   const [isFinalized, setIsFinalized] = useState(false);
+  const [isAgreementsSubmitted, setIsAgreementsSubmitted] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+
+  // Load saved state from localStorage
+  useEffect(() => {
+    try {
+      const savedState = localStorage.getItem("legalProcessState");
+      if (savedState) {
+        const parsed = JSON.parse(savedState);
+        setCallRequired(parsed.callRequired ?? null);
+        setLegalClearanceGranted(parsed.legalClearanceGranted ?? false);
+        setBrtConfirmed(parsed.brtConfirmed ?? false);
+        setBusinessDecisionStatus(parsed.businessDecisionStatus ?? "pending");
+        setComplianceConfirmed(parsed.complianceConfirmed ?? false);
+        setIsFinalized(parsed.isFinalized ?? false);
+        setIsAgreementsSubmitted(parsed.isAgreementsSubmitted ?? false);
+
+        // Update tasks if finalized
+        if (parsed.isFinalized || parsed.legalClearanceGranted) {
+          setTasks((prev) =>
+            prev.map(t => t.id === "1" ? { ...t, status: "Approved" } : t)
+          );
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load legal process state", e);
+    }
+  }, []);
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    const stateToSave = {
+      callRequired,
+      legalClearanceGranted,
+      brtConfirmed,
+      businessDecisionStatus,
+      complianceConfirmed,
+      isFinalized,
+      isAgreementsSubmitted
+    };
+    localStorage.setItem("legalProcessState", JSON.stringify(stateToSave));
+  }, [callRequired, legalClearanceGranted, brtConfirmed, businessDecisionStatus, complianceConfirmed, isFinalized, isAgreementsSubmitted]);
+
+
 
   // State for IT Assessment Display
   const [itAssessmentData, setItAssessmentData] = useState(null);
@@ -126,6 +169,17 @@ export default function LegalDueDiligencePage() {
     setTasks((prevTasks) =>
       prevTasks.map((task) =>
         task.id === "1" ? { ...task, status: "Approved" } : task
+      )
+    );
+  };
+
+  const handleRejectClearance = () => {
+    setLegalClearanceGranted(false);
+    setIsFinalized(true);
+    // Update task status
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === "1" ? { ...task, status: "Rejected" } : task
       )
     );
   };
@@ -203,6 +257,9 @@ export default function LegalDueDiligencePage() {
 
   // Determine final status
   const getFinalStatus = () => {
+    if (isAgreementsSubmitted) {
+      return "completed";
+    }
     if (isFinalized && legalClearanceGranted) {
       if (callRequired === "no") {
         return "completed";
@@ -511,10 +568,12 @@ export default function LegalDueDiligencePage() {
               callRequired={callRequired}
               onCallRequiredChange={handleCallRequiredChange}
               onGrantClearance={handleGrantClearance}
+              onRejectClearance={handleRejectClearance}
               isFinalized={isFinalized}
               onShowToast={handleShowToast}
               onBrtConfirmed={handleBrtConfirmed}
               onBusinessDecisionComplete={handleBusinessDecisionComplete}
+              onSubmitted={setIsAgreementsSubmitted}
             />
 
             {/* Compliance Status */}

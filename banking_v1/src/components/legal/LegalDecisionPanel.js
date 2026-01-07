@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import PermissionWrapper from "@/components/PermissionWrapper";
 import LegalCallPanel from "./LegalCallPanel";
 import DocumentUploadModal from "@/components/DocumentUploadModal";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 /**
  * LegalDecisionPanel Component
@@ -22,26 +23,41 @@ export default function LegalDecisionPanel({
   callRequired,
   onCallRequiredChange,
   onGrantClearance,
+  onRejectClearance,
   isFinalized,
   onShowToast,
   onBrtConfirmed,
   onBusinessDecisionComplete,
+  onSubmitted,
 }) {
+  const { createNotification } = useNotifications();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Check if already submitted on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const branches = JSON.parse(localStorage.getItem("agreementReadyBranches") || "[]");
-      const isReady = branches.some(b => b.id === "PROP-MIA-2024-002");
-      setIsSubmitted(isReady);
-    }
-  }, []);
+
 
   const handleCallRequiredChange = (value) => {
     if (isFinalized) return;
+
+    // Check if value is actually changing to avoid unnecessary resets
+    if (value === callRequired) return;
+
     onCallRequiredChange(value);
+
+    if (value === 'yes') {
+      // Reset any previous BRT confirmation/rejection only if changing from 'no' or null
+      // Do not reset if we are just re-initializing or if it was already yes (though the guard above handles that)
+      const SHARED_STORAGE_KEY = "legalBrtCallStatus_PROP-MIA-2024-002";
+      // Commented out to prevent losing status on toggle, as per user request for persistence
+      // localStorage.removeItem(SHARED_STORAGE_KEY);
+
+      createNotification(
+        "Legal Team has requested for a call.",
+        "warning",
+        "/brt-details",
+        "BRT"
+      );
+    }
   };
 
   const handleGrantClearance = () => {
@@ -127,6 +143,7 @@ export default function LegalDecisionPanel({
     window.dispatchEvent(new Event('agreementBranchesUpdated'));
 
     setIsSubmitted(true);
+    if (onSubmitted) onSubmitted(true);
 
     if (onShowToast) {
       onShowToast("Submitted to Agreement Execution", "success");
@@ -239,29 +256,46 @@ export default function LegalDecisionPanel({
         {callRequired === "no" && (
           <div style={{ marginTop: "24px" }}>
             <PermissionWrapper page="legalDueDiligence" action="approve">
-              <button
-                className="decision-button approve-button"
-                onClick={handleGrantClearance}
-                disabled={isFinalized}
-                style={{
-                  opacity: isFinalized ? 0.6 : 1,
-                  cursor: isFinalized ? "not-allowed" : "pointer",
-                }}
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  className="button-icon"
+              {!isFinalized ? (
+                <button
+                  className="decision-button approve-button"
+                  onClick={handleGrantClearance}
+                  style={{
+                    cursor: "pointer",
+                  }}
                 >
-                  <path
-                    d="M16.7071 5.29289C17.0976 5.68342 17.0976 6.31658 16.7071 6.70711L8.70711 14.7071C8.31658 15.0976 7.68342 15.0976 7.29289 14.7071L3.29289 10.7071C2.90237 10.3166 2.90237 9.68342 3.29289 9.29289C3.68342 8.90237 4.31658 8.90237 4.70711 9.29289L8 12.5858L15.2929 5.29289C15.6834 4.90237 16.3166 4.90237 16.7071 5.29289Z"
-                    fill="currentColor"
-                  />
-                </svg>
-                Grant Legal Clearance
-              </button>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    className="button-icon"
+                  >
+                    <path
+                      d="M16.7071 5.29289C17.0976 5.68342 17.0976 6.31658 16.7071 6.70711L8.70711 14.7071C8.31658 15.0976 7.68342 15.0976 7.29289 14.7071L3.29289 10.7071C2.90237 10.3166 2.90237 9.68342 3.29289 9.29289C3.68342 8.90237 4.31658 8.90237 4.70711 9.29289L8 12.5858L15.2929 5.29289C15.6834 4.90237 16.3166 4.90237 16.7071 5.29289Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  Grant Legal Clearance
+                </button>
+              ) : (
+                <div style={{
+                  padding: "12px",
+                  backgroundColor: "#d1fae5",
+                  color: "#065f46",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M16.7071 5.29289L8.70711 14.7071L3.29289 10.7071" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Legal Clearance Granted
+                </div>
+              )}
             </PermissionWrapper>
           </div>
         )}
@@ -272,6 +306,8 @@ export default function LegalDecisionPanel({
               isFinalized={isFinalized}
               onShowToast={onShowToast}
               onBrtConfirmed={onBrtConfirmed}
+              onGrantClearance={onGrantClearance}
+              onRejectClearance={onRejectClearance}
               onBusinessDecisionComplete={onBusinessDecisionComplete}
             />
           </div>
