@@ -11,18 +11,52 @@ import "@/css/businessApproval.css";
  * BRT Legal Clearance dashboard view - Review documents and approve/disapprove
  */
 export default function LegalClearance() {
-  const [approvalStatus, setApprovalStatus] = useState(null); // null, "approved", "disapproved"
+  const SHARED_STORAGE_KEY = "legalBrtCallStatus_PROP-MIA-2024-002";
+  const [approvalStatus, setApprovalStatus] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(SHARED_STORAGE_KEY) || null;
+    }
+    return null;
+  }); // null, "approved", "rejected"
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
   const [notificationType, setNotificationType] = useState("success");
   const [callConfirmed, setCallConfirmed] = useState(false);
 
+  // Sync state with localStorage
+  const updateStatus = (status) => {
+    setApprovalStatus(status);
+    if (status) {
+      localStorage.setItem(SHARED_STORAGE_KEY, status);
+    } else {
+      localStorage.removeItem(SHARED_STORAGE_KEY);
+    }
+
+    // Dispatch custom event for real-time update in other components
+    window.dispatchEvent(new CustomEvent('legalBrtStatusUpdate', {
+      detail: { status: status }
+    }));
+  };
+
   const handleApprove = () => {
-    // console.log("Legal clearance approved");
+    updateStatus("approved");
+    setNotificationMessage("Legal clearance approved and call confirmed.");
+    setNotificationType("success");
+    setShowNotification(true);
   };
 
   const handleDisapprove = () => {
-    // console.log("Legal clearance disapproved");
+    updateStatus("rejected");
+    setNotificationMessage("Legal clearance disapproved.");
+    setNotificationType("error");
+    setShowNotification(true);
+  };
+
+  const handleRedo = () => {
+    updateStatus(null);
+    setNotificationMessage("Decision has been reset.");
+    setNotificationType("info");
+    setShowNotification(true);
   };
 
   return (
@@ -95,6 +129,31 @@ export default function LegalClearance() {
                   ? "Legal Clearance Approved - Call Confirmed"
                   : "Legal Clearance Disapproved"}
               </span>
+
+              <button
+                onClick={handleRedo}
+                title="Redo Decision"
+                style={{
+                  marginLeft: "auto",
+                  background: "none",
+                  border: "none",
+                  padding: "4px",
+                  cursor: "pointer",
+                  color: approvalStatus === "approved" ? "#065f46" : "#991b1b",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "4px",
+                  transition: "background-color 0.2s"
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = "rgba(0,0,0,0.05)"}
+                onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 4v6h6" />
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                </svg>
+              </button>
             </div>
           )}
 
