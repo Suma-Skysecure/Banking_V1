@@ -18,14 +18,10 @@ export default function LegalCallPanel({
   isFinalized,
   onShowToast,
   onBrtConfirmed,
-  onGrantClearance,
-  onRejectClearance,
   onBusinessDecisionComplete
 }) {
   const router = useRouter();
   const SHARED_STORAGE_KEY = "legalBrtCallStatus_PROP-MIA-2024-002";
-  const NOTES_STORAGE_KEY = "legalCallNotes_PROP-MIA-2024-002";
-  const BUSINESS_APPROVAL_STORAGE_KEY = "legalShowBusinessApproval_PROP-MIA-2024-002";
 
   // Initialize from localStorage to check for saved status
   const [brtConfirmation, setBrtConfirmation] = useState(() => {
@@ -57,7 +53,7 @@ export default function LegalCallPanel({
     // Polling interval to ensure synchronization
     const intervalId = setInterval(() => {
       const current = localStorage.getItem(SHARED_STORAGE_KEY);
-      if (current && current !== brtConfirmation) {
+      if (current !== brtConfirmation) {
         setBrtConfirmation(current);
       }
     }, 1000);
@@ -71,26 +67,8 @@ export default function LegalCallPanel({
 
 
 
-  const [legalCallNotes, setLegalCallNotes] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(NOTES_STORAGE_KEY) || "";
-    }
-    return "";
-  });
-
-  const [showBusinessApproval, setShowBusinessApproval] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(BUSINESS_APPROVAL_STORAGE_KEY) === "true";
-    }
-    return false;
-  });
-
-  // Save notes whenever they change
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(NOTES_STORAGE_KEY, legalCallNotes);
-    }
-  }, [legalCallNotes]);
+  const [legalCallNotes, setLegalCallNotes] = useState("");
+  const [showBusinessApproval, setShowBusinessApproval] = useState(false);
 
   const handleBrtConfirmation = (decision) => {
     if (isFinalized) return;
@@ -118,32 +96,11 @@ export default function LegalCallPanel({
 
   const handleLegalClearance = () => {
     if (isFinalized || brtConfirmation !== "approved") return;
-
     if (onShowToast) {
       onShowToast("Legal clearance granted", "success");
     }
-
-    // Call parent handler to update overall status and isFinalized
-    if (onGrantClearance) {
-      onGrantClearance();
-    }
-
-    // Trigger business approval and persist
+    // Trigger business approval
     setShowBusinessApproval(true);
-    localStorage.setItem(BUSINESS_APPROVAL_STORAGE_KEY, "true");
-  };
-
-  const handleLegalRejection = () => {
-    if (isFinalized || (brtConfirmation !== "rejected" && brtConfirmation !== "disapproved")) return;
-
-    if (onShowToast) {
-      onShowToast("Legal clearance rejected", "error");
-    }
-
-    // Call parent handler to update overall status and isFinalized
-    if (onRejectClearance) {
-      onRejectClearance();
-    }
   };
 
   return (
@@ -321,87 +278,33 @@ export default function LegalCallPanel({
             </div>
 
             <PermissionWrapper page="legalDueDiligence" action="approve">
-              {!isFinalized && brtConfirmation === "approved" && !showBusinessApproval && (
-                <button
-                  className="decision-button approve-button"
-                  onClick={handleLegalClearance}
-                  disabled={isFinalized || !legalCallNotes.trim()}
-                  style={{
-                    marginTop: "16px",
-                    opacity: isFinalized || !legalCallNotes.trim() ? 0.6 : 1,
-                    cursor:
-                      isFinalized || !legalCallNotes.trim()
-                        ? "not-allowed"
-                        : "pointer",
-                  }}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    className="button-icon"
-                  >
-                    <path
-                      d="M16.7071 5.29289C17.0976 5.68342 17.0976 6.31658 16.7071 6.70711L8.70711 14.7071C8.31658 15.0976 7.68342 15.0976 7.29289 14.7071L3.29289 10.7071C2.90237 10.3166 2.90237 9.68342 3.29289 9.29289C3.68342 8.90237 4.31658 8.90237 4.70711 9.29289L8 12.5858L15.2929 5.29289C15.6834 4.90237 16.3166 4.90237 16.7071 5.29289Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                  Grant Legal Clearance
-                </button>
-              )}
-              {(isFinalized || showBusinessApproval) && brtConfirmation === "approved" && (
-                <div style={{
+              <button
+                className="decision-button approve-button"
+                onClick={handleLegalClearance}
+                disabled={isFinalized || !legalCallNotes.trim()}
+                style={{
                   marginTop: "16px",
-                  padding: "12px",
-                  backgroundColor: "#d1fae5",
-                  color: "#065f46",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px"
-                }}>
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M16.7071 5.29289L8.70711 14.7071L3.29289 10.7071" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  Legal Clearance Granted
-                </div>
-              )}
-
-              {!isFinalized && (brtConfirmation === "rejected" || brtConfirmation === "disapproved") && (
-                <button
-                  className="decision-button reject-button"
-                  onClick={handleLegalRejection}
-                  style={{ marginTop: "16px" }}
+                  opacity: isFinalized || !legalCallNotes.trim() ? 0.6 : 1,
+                  cursor:
+                    isFinalized || !legalCallNotes.trim()
+                      ? "not-allowed"
+                      : "pointer",
+                }}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  className="button-icon"
                 >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="button-icon">
-                    <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                  Register Legal Disapproval
-                </button>
-              )}
-
-              {isFinalized && (brtConfirmation === "rejected" || brtConfirmation === "disapproved") && (
-                <div style={{
-                  marginTop: "16px",
-                  padding: "12px",
-                  backgroundColor: "#fee2e2",
-                  color: "#991b1b",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px"
-                }}>
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                  Legal Clearance Rejected
-                </div>
-              )}
+                  <path
+                    d="M16.7071 5.29289C17.0976 5.68342 17.0976 6.31658 16.7071 6.70711L8.70711 14.7071C8.31658 15.0976 7.68342 15.0976 7.29289 14.7071L3.29289 10.7071C2.90237 10.3166 2.90237 9.68342 3.29289 9.29289C3.68342 8.90237 4.31658 8.90237 4.70711 9.29289L8 12.5858L15.2929 5.29289C15.6834 4.90237 16.3166 4.90237 16.7071 5.29289Z"
+                    fill="currentColor"
+                  />
+                </svg>
+                Grant Legal Clearance
+              </button>
             </PermissionWrapper>
           </div>
         </div>

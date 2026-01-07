@@ -173,17 +173,6 @@ export default function LegalDueDiligencePage() {
     );
   };
 
-  const handleRejectClearance = () => {
-    setLegalClearanceGranted(false);
-    setIsFinalized(true);
-    // Update task status
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === "1" ? { ...task, status: "Rejected" } : task
-      )
-    );
-  };
-
   const handleBrtConfirmed = (confirmed) => {
     setBrtConfirmed(confirmed);
   };
@@ -568,7 +557,6 @@ export default function LegalDueDiligencePage() {
               callRequired={callRequired}
               onCallRequiredChange={handleCallRequiredChange}
               onGrantClearance={handleGrantClearance}
-              onRejectClearance={handleRejectClearance}
               isFinalized={isFinalized}
               onShowToast={handleShowToast}
               onBrtConfirmed={handleBrtConfirmed}

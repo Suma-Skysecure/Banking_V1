@@ -145,7 +145,7 @@ export default function BRTLegalSection() {
     // console.log("Disapproved legal clearance for:", activityId);
 
     // Update local state and trigger event
-    const newStatus = "disapproved";
+    const newStatus = "rejected";
     setApprovalStatus(prev => ({ ...prev, [activityId]: newStatus }));
 
     // Dispatch custom event for cross-component communication
@@ -167,6 +167,27 @@ export default function BRTLegalSection() {
     // Show toast
     setNotificationMessage("Legal clearance disapproved");
     setNotificationType("error");
+    setShowNotification(true);
+  };
+
+  const handleRedo = (activityId) => {
+    const newStatus = null;
+    setApprovalStatus(prev => {
+      const updated = { ...prev };
+      delete updated[activityId];
+      return updated;
+    });
+
+    // Update localStorage
+    localStorage.removeItem(SHARED_STORAGE_KEY);
+
+    // Dispatch custom event
+    window.dispatchEvent(new CustomEvent("legalBrtStatusUpdate", {
+      detail: { status: null }
+    }));
+
+    setNotificationMessage("Decision reset successfully");
+    setNotificationType("info");
     setShowNotification(true);
   };
 
@@ -294,7 +315,58 @@ startxref
                       </button>
                     </td>
                     <td style={{ padding: "16px" }}>
-                      {!status ? (
+                      {status ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                          <span style={{
+                            fontSize: "13px",
+                            fontWeight: "600",
+                            color: isApproved ? "#059669" : "#dc2626",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px"
+                          }}>
+                            {isApproved ? (
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M13 4L6 11L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            ) : (
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                              </svg>
+                            )}
+                            {isApproved ? "Approved" : "Rejected"}
+                          </span>
+                          <button
+                            onClick={() => handleRedo(activity.id)}
+                            title="Redo Decision"
+                            style={{
+                              background: "none",
+                              border: "none",
+                              padding: "4px",
+                              cursor: "pointer",
+                              color: "#6b7280",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              borderRadius: "4px",
+                              transition: "all 0.2s"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = "#f3f4f6";
+                              e.currentTarget.style.color = "#111827";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = "transparent";
+                              e.currentTarget.style.color = "#6b7280";
+                            }}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M1 4v6h6" />
+                              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
                         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                           <button onClick={() => handleDisapprove(activity.id)} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", backgroundColor: "#ef4444", color: "white", border: "none", borderRadius: "6px", fontSize: "13px", fontWeight: "600", cursor: "pointer", transition: "background-color 0.2s" }} onMouseEnter={(e) => { e.target.style.backgroundColor = "#dc2626"; }} onMouseLeave={(e) => { e.target.style.backgroundColor = "#ef4444"; }}>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -309,27 +381,6 @@ startxref
                             Approve
                           </button>
                         </div>
-                      ) : (
-                        <span style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          padding: "6px 12px",
-                          backgroundColor: isApproved ? "#d1fae5" : "#fee2e2",
-                          color: isApproved ? "#065f46" : "#991b1b",
-                          borderRadius: "20px",
-                          fontSize: "13px",
-                          fontWeight: "600"
-                        }}>
-                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                            {isApproved ? (
-                              <path d="M13 4L6 11L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            ) : (
-                              <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                            )}
-                          </svg>
-                          {isApproved ? "Approved" : "Disapproved"}
-                        </span>
                       )}
                     </td>
                   </tr>
