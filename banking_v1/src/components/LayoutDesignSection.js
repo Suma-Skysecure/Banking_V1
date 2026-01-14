@@ -43,6 +43,21 @@ export default function LayoutDesignSection() {
         return;
       }
       setUploadedFile(file);
+      
+      // Save to localStorage as base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const fileData = {
+          name: file.name,
+          fileName: file.name,
+          size: file.size,
+          type: file.type,
+          uploadDate: new Date().toISOString(),
+          data: reader.result // base64 data URL
+        };
+        localStorage.setItem("layoutDesignDocument", JSON.stringify(fileData));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -74,11 +89,27 @@ export default function LayoutDesignSection() {
         return;
       }
       setUploadedFile(file);
+      
+      // Save to localStorage as base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const fileData = {
+          name: file.name,
+          fileName: file.name,
+          size: file.size,
+          type: file.type,
+          uploadDate: new Date().toISOString(),
+          data: reader.result // base64 data URL
+        };
+        localStorage.setItem("layoutDesignDocument", JSON.stringify(fileData));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleRemoveFile = () => {
     setUploadedFile(null);
+    localStorage.removeItem("layoutDesignDocument");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }

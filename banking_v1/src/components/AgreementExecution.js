@@ -22,6 +22,16 @@ export default function AgreementExecution() {
   const [itApprovalData, setItApprovalData] = useState(null);
   const [property, setProperty] = useState(null);
   const [submissionDate, setSubmissionDate] = useState(null);
+  
+  // Modal states
+  const [showLayoutModal, setShowLayoutModal] = useState(false);
+  const [showVendorModal, setShowVendorModal] = useState(false);
+  const [showLegalModal, setShowLegalModal] = useState(false);
+  const [showITModal, setShowITModal] = useState(false);
+  
+  // Data states
+  const [layoutDesignDocument, setLayoutDesignDocument] = useState(null);
+  const [vendorDetails, setVendorDetails] = useState(null);
 
   // Load property data from localStorage
   useEffect(() => {
@@ -53,7 +63,9 @@ export default function AgreementExecution() {
       if (downtownBranch && downtownBranch.documents) {
         setLegalDocuments(downtownBranch.documents);
       } else {
-        setLegalDocuments([]);
+        // Also check uploadedLegalDocuments as fallback
+        const uploadedDocs = JSON.parse(localStorage.getItem("uploadedLegalDocuments") || "[]");
+        setLegalDocuments(uploadedDocs);
       }
 
       // 2. Check IT Assessment Status
@@ -84,6 +96,49 @@ export default function AgreementExecution() {
     return () => {
       window.removeEventListener('agreementBranchesUpdated', checkStatus);
       window.removeEventListener('storage', checkStatus);
+    };
+  }, []);
+
+  // Load layout design document
+  useEffect(() => {
+    try {
+      const storedLayout = localStorage.getItem("layoutDesignDocument");
+      if (storedLayout) {
+        setLayoutDesignDocument(JSON.parse(storedLayout));
+      }
+    } catch (error) {
+      console.error("Error loading layout design document:", error);
+    }
+  }, []);
+
+  // Load vendor details
+  useEffect(() => {
+    try {
+      const storedVendor = localStorage.getItem("vendorCreationData");
+      if (storedVendor) {
+        setVendorDetails(JSON.parse(storedVendor));
+      }
+    } catch (error) {
+      console.error("Error loading vendor details:", error);
+    }
+    
+    // Listen for vendor data updates
+    const handleVendorUpdate = () => {
+      const storedVendor = localStorage.getItem("vendorCreationData");
+      if (storedVendor) {
+        setVendorDetails(JSON.parse(storedVendor));
+      }
+    };
+    
+    window.addEventListener("vendorDataUpdated", handleVendorUpdate);
+    window.addEventListener("storage", (e) => {
+      if (e.key === "vendorCreationData") {
+        handleVendorUpdate();
+      }
+    });
+    
+    return () => {
+      window.removeEventListener("vendorDataUpdated", handleVendorUpdate);
     };
   }, []);
 
@@ -277,6 +332,43 @@ export default function AgreementExecution() {
     if (!displayProperty?.status) return "Available Now";
     const match = displayProperty.status.match(/(\d+)\s*days?/i);
     return match ? `${match[1]} days` : "Available Now";
+  };
+
+  // Format file size
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
+  };
+
+  // Handle view document
+  const handleViewDocument = (documentData) => {
+    if (documentData && documentData.data) {
+      const newWindow = window.open();
+      if (newWindow) {
+        newWindow.document.write(`
+          <html>
+            <head><title>${documentData.name || documentData.fileName || "Document"}</title></head>
+            <body style="margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh;">
+              <iframe src="${documentData.data}" style="width:100%; height:100%; border:none;"></iframe>
+            </body>
+          </html>
+        `);
+      }
+    }
   };
 
   return (
@@ -587,9 +679,7 @@ export default function AgreementExecution() {
                   }}
                   onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
                   onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
-                  onClick={() => {
-                    console.log("View Layout Design Document");
-                  }}
+                  onClick={() => setShowLayoutModal(true)}
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path
@@ -741,9 +831,7 @@ export default function AgreementExecution() {
                   }}
                   onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
                   onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
-                  onClick={() => {
-                    console.log("View Vendor Details");
-                  }}
+                  onClick={() => setShowVendorModal(true)}
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path
@@ -890,9 +978,7 @@ export default function AgreementExecution() {
                   }}
                   onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
                   onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
-                  onClick={() => {
-                    console.log("View Legal Documents");
-                  }}
+                  onClick={() => setShowLegalModal(true)}
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path
@@ -1030,9 +1116,7 @@ export default function AgreementExecution() {
                   }}
                   onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
                   onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
-                  onClick={() => {
-                    console.log("View IT Assessment");
-                  }}
+                  onClick={() => setShowITModal(true)}
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path
@@ -1698,6 +1782,505 @@ export default function AgreementExecution() {
           </div>
         </main>
       </div>
+
+      {/* Layout Design Document Modal */}
+      {showLayoutModal && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+          backdropFilter: "blur(4px)"
+        }} onClick={() => setShowLayoutModal(false)}>
+          <div style={{
+            background: "#fff",
+            borderRadius: "12px",
+            width: "90%",
+            maxWidth: "800px",
+            maxHeight: "90vh",
+            overflow: "auto",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.2)"
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "20px 24px",
+              borderBottom: "1px solid #e5e7eb"
+            }}>
+              <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600", color: "#111827" }}>
+                Layout Design Document
+              </h3>
+              <button onClick={() => setShowLayoutModal(false)} style={{
+                background: "none",
+                border: "none",
+                fontSize: "24px",
+                cursor: "pointer",
+                color: "#6b7280"
+              }}>×</button>
+            </div>
+            <div style={{ padding: "24px" }}>
+              {layoutDesignDocument ? (
+                <div>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "16px",
+                    backgroundColor: "#f9fafb",
+                    borderRadius: "8px",
+                    marginBottom: "16px"
+                  }}>
+                    <div style={{
+                      width: "48px",
+                      height: "48px",
+                      backgroundColor: "#fee2e2",
+                      borderRadius: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M14 2V8H20" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "4px" }}>
+                        {layoutDesignDocument.name || layoutDesignDocument.fileName || "Layout Design Document"}
+                      </div>
+                      <div style={{ fontSize: "14px", color: "#6b7280" }}>
+                        {formatFileSize(layoutDesignDocument.size)} • {formatDate(layoutDesignDocument.uploadDate)}
+                      </div>
+                    </div>
+                    {layoutDesignDocument.data && (
+                      <button onClick={() => handleViewDocument(layoutDesignDocument)} style={{
+                        padding: "10px 20px",
+                        backgroundColor: "#1e3a8a",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "6px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        cursor: "pointer"
+                      }}>
+                        View Document
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  textAlign: "center",
+                  padding: "40px",
+                  color: "#6b7280"
+                }}>
+                  <p>No layout design document uploaded yet.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Vendor Details Modal */}
+      {showVendorModal && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+          backdropFilter: "blur(4px)"
+        }} onClick={() => setShowVendorModal(false)}>
+          <div style={{
+            background: "#fff",
+            borderRadius: "12px",
+            width: "90%",
+            maxWidth: "900px",
+            maxHeight: "90vh",
+            overflow: "auto",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.2)"
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "20px 24px",
+              borderBottom: "1px solid #e5e7eb"
+            }}>
+              <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600", color: "#111827" }}>
+                Vendor Details
+              </h3>
+              <button onClick={() => setShowVendorModal(false)} style={{
+                background: "none",
+                border: "none",
+                fontSize: "24px",
+                cursor: "pointer",
+                color: "#6b7280"
+              }}>×</button>
+            </div>
+            <div style={{ padding: "24px" }}>
+              {vendorDetails ? (
+                <div style={{ display: "grid", gap: "20px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>Vendor Type</div>
+                      <div style={{ fontSize: "16px", fontWeight: "600", color: "#111827" }}>
+                        {vendorDetails.vendorType || "N/A"}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>Legal Name</div>
+                      <div style={{ fontSize: "16px", fontWeight: "600", color: "#111827" }}>
+                        {vendorDetails.legalName || "N/A"}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>PAN Number</div>
+                      <div style={{ fontSize: "16px", fontWeight: "600", color: "#111827" }}>
+                        {vendorDetails.panNumber || "N/A"}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>GST Number</div>
+                      <div style={{ fontSize: "16px", fontWeight: "600", color: "#111827" }}>
+                        {vendorDetails.gstNumber || "N/A"}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>Bank Account Number</div>
+                      <div style={{ fontSize: "16px", fontWeight: "600", color: "#111827" }}>
+                        {vendorDetails.bankAccountNumber || "N/A"}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>IFSC Code</div>
+                      <div style={{ fontSize: "16px", fontWeight: "600", color: "#111827" }}>
+                        {vendorDetails.ifscCode || "N/A"}
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>Registered Address</div>
+                    <div style={{ fontSize: "16px", fontWeight: "500", color: "#111827" }}>
+                      {vendorDetails.registeredAddress || "N/A"}
+                    </div>
+                  </div>
+                  {vendorDetails.documents && Object.keys(vendorDetails.documents).length > 0 && (
+                    <div>
+                      <div style={{ fontSize: "14px", fontWeight: "600", color: "#111827", marginBottom: "12px" }}>
+                        Uploaded Documents
+                      </div>
+                      <div style={{ display: "grid", gap: "12px" }}>
+                        {Object.entries(vendorDetails.documents).map(([category, docs]) => (
+                          docs && docs.length > 0 && (
+                            <div key={category} style={{
+                              padding: "12px",
+                              backgroundColor: "#f9fafb",
+                              borderRadius: "8px"
+                            }}>
+                              <div style={{ fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "8px", textTransform: "capitalize" }}>
+                                {category.replace(/([A-Z])/g, ' $1').trim()}
+                              </div>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                                {docs.map((doc, idx) => (
+                                  <div key={idx} style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    padding: "8px 12px",
+                                    backgroundColor: "white",
+                                    borderRadius: "6px",
+                                    border: "1px solid #e5e7eb"
+                                  }}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                      <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#6b7280" strokeWidth="1.5" />
+                                    </svg>
+                                    <span style={{ fontSize: "13px", color: "#374151" }}>
+                                      {doc.name || doc.fileName || `Document ${idx + 1}`}
+                                    </span>
+                                    {doc.data && (
+                                      <button onClick={() => handleViewDocument(doc)} style={{
+                                        padding: "4px 8px",
+                                        backgroundColor: "#1e3a8a",
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "4px",
+                                        fontSize: "11px",
+                                        cursor: "pointer"
+                                      }}>
+                                        View
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{
+                  textAlign: "center",
+                  padding: "40px",
+                  color: "#6b7280"
+                }}>
+                  <p>No vendor details available yet.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Legal Documents Modal */}
+      {showLegalModal && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+          backdropFilter: "blur(4px)"
+        }} onClick={() => setShowLegalModal(false)}>
+          <div style={{
+            background: "#fff",
+            borderRadius: "12px",
+            width: "90%",
+            maxWidth: "900px",
+            maxHeight: "90vh",
+            overflow: "auto",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.2)"
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "20px 24px",
+              borderBottom: "1px solid #e5e7eb"
+            }}>
+              <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600", color: "#111827" }}>
+                Legal Documents
+              </h3>
+              <button onClick={() => setShowLegalModal(false)} style={{
+                background: "none",
+                border: "none",
+                fontSize: "24px",
+                cursor: "pointer",
+                color: "#6b7280"
+              }}>×</button>
+            </div>
+            <div style={{ padding: "24px" }}>
+              {legalDocuments && legalDocuments.length > 0 ? (
+                <div style={{ display: "grid", gap: "16px" }}>
+                  {legalDocuments.map((doc, idx) => (
+                    <div key={doc.id || idx} style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "16px",
+                      backgroundColor: "#f9fafb",
+                      borderRadius: "8px",
+                      border: "1px solid #e5e7eb"
+                    }}>
+                      <div style={{
+                        width: "48px",
+                        height: "48px",
+                        backgroundColor: "#fee2e2",
+                        borderRadius: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M14 2V8H20" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "4px" }}>
+                          {doc.name || doc.fileName || `Legal Document ${idx + 1}`}
+                        </div>
+                        <div style={{ fontSize: "14px", color: "#6b7280" }}>
+                          {formatFileSize(doc.size)} • {formatDate(doc.uploadDate)} • {doc.status || "Verified"}
+                        </div>
+                      </div>
+                      {doc.data && (
+                        <button onClick={() => handleViewDocument(doc)} style={{
+                          padding: "10px 20px",
+                          backgroundColor: "#1e3a8a",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          cursor: "pointer"
+                        }}>
+                          View Document
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{
+                  textAlign: "center",
+                  padding: "40px",
+                  color: "#6b7280"
+                }}>
+                  <p>No legal documents uploaded yet.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IT Assessment Modal */}
+      {showITModal && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+          backdropFilter: "blur(4px)"
+        }} onClick={() => setShowITModal(false)}>
+          <div style={{
+            background: "#fff",
+            borderRadius: "12px",
+            width: "90%",
+            maxWidth: "900px",
+            maxHeight: "90vh",
+            overflow: "auto",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.2)"
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "20px 24px",
+              borderBottom: "1px solid #e5e7eb"
+            }}>
+              <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600", color: "#111827" }}>
+                IT Assessment
+              </h3>
+              <button onClick={() => setShowITModal(false)} style={{
+                background: "none",
+                border: "none",
+                fontSize: "24px",
+                cursor: "pointer",
+                color: "#6b7280"
+              }}>×</button>
+            </div>
+            <div style={{ padding: "24px" }}>
+              {itAssessmentData ? (
+                <div style={{ display: "grid", gap: "20px" }}>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    paddingBottom: "16px",
+                    borderBottom: "1px solid #e5e7eb"
+                  }}>
+                    <div>
+                      <div style={{ fontSize: "14px", fontWeight: "600", color: "#111827", marginBottom: "4px" }}>
+                        Assessment Status
+                      </div>
+                      <div style={{ fontSize: "13px", color: "#6b7280" }}>
+                        {itApprovalData?.status === "approved" ? "BRT Approved" : "Pending"}
+                      </div>
+                    </div>
+                    {itApprovalData?.status === "approved" && (
+                      <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "6px 12px",
+                        backgroundColor: "#d1fae5",
+                        color: "#065f46",
+                        borderRadius: "20px",
+                        fontSize: "13px",
+                        fontWeight: "600"
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                          <path d="M13 4L6 11L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        Approved
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>Infrastructure Needs</div>
+                      <div style={{ fontSize: "14px", color: "#111827", padding: "12px", backgroundColor: "#f9fafb", borderRadius: "6px" }}>
+                        {itAssessmentData.assessment?.infrastructureNeeds || "N/A"}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>Estimated Budget</div>
+                      <div style={{ fontSize: "14px", color: "#111827", padding: "12px", backgroundColor: "#f9fafb", borderRadius: "6px" }}>
+                        {itAssessmentData.assessment?.estimatedBudget ? `$${itAssessmentData.assessment.estimatedBudget}` : "N/A"}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>Technical Requirements</div>
+                      <div style={{ fontSize: "14px", color: "#111827", padding: "12px", backgroundColor: "#f9fafb", borderRadius: "6px" }}>
+                        {itAssessmentData.assessment?.technicalRequirements || "N/A"}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>Implementation Timeline</div>
+                      <div style={{ fontSize: "14px", color: "#111827", padding: "12px", backgroundColor: "#f9fafb", borderRadius: "6px" }}>
+                        {itAssessmentData.assessment?.implementationTimeline || "N/A"}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>Budget Allocation Teams</div>
+                      <div style={{ fontSize: "14px", color: "#111827", padding: "12px", backgroundColor: "#f9fafb", borderRadius: "6px" }}>
+                        {itAssessmentData.assessment?.budgetAllocationTeams || "N/A"}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>Risk Assessment</div>
+                      <div style={{ fontSize: "14px", color: "#111827", padding: "12px", backgroundColor: "#f9fafb", borderRadius: "6px" }}>
+                        {itAssessmentData.assessment?.riskAssessment || "N/A"}
+                      </div>
+                    </div>
+                    <div style={{ gridColumn: "span 2" }}>
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>Additional Recommendations</div>
+                      <div style={{ fontSize: "14px", color: "#111827", padding: "12px", backgroundColor: "#f9fafb", borderRadius: "6px" }}>
+                        {itAssessmentData.assessment?.recommendations || "N/A"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  textAlign: "center",
+                  padding: "40px",
+                  color: "#6b7280"
+                }}>
+                  <p>No IT assessment data available yet.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

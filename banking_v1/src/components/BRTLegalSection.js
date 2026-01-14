@@ -32,6 +32,12 @@ export default function BRTLegalSection() {
   // State for IT Assessment Display
   const [itAssessmentData, setItAssessmentData] = useState(null);
   const [itApprovalData, setItApprovalData] = useState(null);
+  
+  // State for Legal Documents
+  const [legalDocuments, setLegalDocuments] = useState([]);
+  
+  // State for Property Data
+  const [property, setProperty] = useState(null);
 
   // Load IT Assessment Data
   useEffect(() => {
@@ -56,6 +62,87 @@ export default function BRTLegalSection() {
     loadITData();
     window.addEventListener('storage', loadITData);
     return () => window.removeEventListener('storage', loadITData);
+  }, []);
+
+  // Load Property Data from localStorage
+  useEffect(() => {
+    const loadPropertyData = () => {
+      if (typeof window === 'undefined') return;
+      try {
+        const propertyData = localStorage.getItem("propertyForBusinessApproval");
+        if (propertyData) {
+          const parsedProperty = JSON.parse(propertyData);
+          setProperty(parsedProperty);
+        }
+      } catch (error) {
+        console.error("Error loading property data:", error);
+      }
+    };
+
+    loadPropertyData();
+    
+    // Listen for storage changes
+    const handleStorageChange = (e) => {
+      if (e.key === "propertyForBusinessApproval") {
+        loadPropertyData();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // Load Legal Documents from localStorage
+  useEffect(() => {
+    const loadLegalDocuments = () => {
+      if (typeof window === 'undefined') return;
+      try {
+        const storedDocuments = localStorage.getItem("uploadedLegalDocuments");
+        if (storedDocuments) {
+          const parsed = JSON.parse(storedDocuments);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setLegalDocuments(parsed);
+            return;
+          }
+        }
+        // Also check agreementReadyBranches for documents
+        const branches = JSON.parse(localStorage.getItem("agreementReadyBranches") || "[]");
+        const downtownBranch = branches.find(b => b.id === "PROP-MIA-2024-002");
+        if (downtownBranch && downtownBranch.documents && Array.isArray(downtownBranch.documents)) {
+          setLegalDocuments(downtownBranch.documents);
+        } else {
+          setLegalDocuments([]);
+        }
+      } catch (error) {
+        console.error("Error loading legal documents:", error);
+        setLegalDocuments([]);
+      }
+    };
+
+    loadLegalDocuments();
+    
+    // Listen for storage changes
+    const handleStorageChange = (e) => {
+      if (e.key === "uploadedLegalDocuments" || e.key === "agreementReadyBranches") {
+        loadLegalDocuments();
+      }
+    };
+    
+    // Listen for custom events
+    const handleLegalDocumentsUpdate = () => {
+      loadLegalDocuments();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('legalDocumentsUpdated', handleLegalDocumentsUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('legalDocumentsUpdated', handleLegalDocumentsUpdate);
+    };
   }, []);
 
   // Listen for updates
@@ -92,8 +179,16 @@ export default function BRTLegalSection() {
   const [notificationMessage, setNotificationMessage] = useState("");
   const [notificationType, setNotificationType] = useState("success");
 
-  // Sample legal clearance activities data
-  const legalActivities = [
+  // Dynamic legal clearance activities data based on property
+  const legalActivities = property ? [
+    {
+      id: "1",
+      propertyName: property.name || property.propertyName || "Property",
+      propertyAddress: property.address || property.propertyAddress || "Address not available",
+      document: legalDocuments.length > 0 ? `${legalDocuments.length} Document(s)` : "No documents",
+      documentId: "legal-doc-1",
+    },
+  ] : [
     {
       id: "1",
       propertyName: "Downtown Art Plaza",
@@ -506,18 +601,8 @@ startxref
       )}
 
       <div style={{ marginTop: "24px" }}>
-        <h4 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "16px", color: "#111827" }}>Relevant Documents</h4>
-        <LegalDocumentsView documents={[
-          {
-            id: "img-doc-1",
-            name: "image.jpg",
-            fileName: "image.jpg",
-            uploadDate: "2026-01-06",
-            size: 7854,
-            type: "image/jpeg",
-            status: "Verified"
-          }
-        ]} />
+        <h4 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "16px", color: "#111827" }}></h4>
+        <LegalDocumentsView documents={legalDocuments} />
       </div>
 
       {/* Toast Notification */}

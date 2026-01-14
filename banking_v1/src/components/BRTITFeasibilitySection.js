@@ -23,59 +23,6 @@ export default function ITFeasibilitySection() {
   const [branches, setBranches] = useState([]);
   const [recentSubmission, setRecentSubmission] = useState(null);
 
-  // Load data from localStorage
-  useEffect(() => {
-    // Define base branches (simulating database)
-    const baseBranches = [
-      { id: 1, name: "Downtown Manhattan Branch", location: "New York, NY", size: "5,000 sq ft", stage: "Legal Workflow" },
-      { id: 2, name: "Beverly Hills Boutique", location: "Los Angeles, CA", size: "3,200 sq ft", stage: "Project Execution" },
-      { id: 3, name: "Chicago River North Site", location: "Chicago, IL", size: "4,100 sq ft", stage: "Business Approval" },
-      { id: 4, name: "Miami South Beach Location", location: "Miami, FL", size: "3,800 sq ft", stage: "Business Approval" },
-    ];
-
-    const statuses = JSON.parse(localStorage.getItem("itStatuses") || "{}");
-
-    // enhance branches with status
-    const enhancedBranches = baseBranches.map(b => {
-      const statusData = statuses[b.id] || {};
-      const status = statusData.status || "Pending IT Assessment";
-
-      let statusColor = "gray";
-      if (status === "In Progress") statusColor = "yellow";
-      if (status === "Completed") statusColor = "green";
-      if (status === "Pending Approval") statusColor = "orange";
-      if (status === "Rejected") statusColor = "red";
-
-      // Load assessment data if exists
-      const assessmentData = JSON.parse(localStorage.getItem(`itAssessment_${b.id}`) || "null");
-
-      return {
-        ...b,
-        status,
-        statusColor,
-        assessment: assessmentData
-      };
-    });
-
-    setBranches(enhancedBranches);
-
-    // Find most recent submission
-    const submissions = enhancedBranches
-      .filter(b => b.assessment && b.assessment.submitted)
-      .sort((a, b) => new Date(b.assessment.submittedAt) - new Date(a.assessment.submittedAt));
-
-    if (submissions.length > 0) {
-      const latest = submissions[0];
-      setRecentSubmission({
-        branchName: latest.name,
-        submittedBy: latest.assessment.submittedBy,
-        timestamp: new Date(latest.assessment.submittedAt).toLocaleString(),
-        // Collect a summary of checked items
-        feasibilityItems: collectFeasibilitySummary(latest.assessment.data)
-      });
-    }
-  }, []);
-
   const collectFeasibilitySummary = (data) => {
     if (!data) return [];
     const items = [];
@@ -88,6 +35,92 @@ export default function ITFeasibilitySection() {
     });
     return items.slice(0, 5); // Return top 5 checked items
   };
+
+  // Load data from localStorage
+  useEffect(() => {
+    // Load property data from localStorage (same as Legal Due page)
+    const loadPropertyData = () => {
+      try {
+        const propertyData = localStorage.getItem("propertyForBusinessApproval");
+        if (!propertyData) {
+          setBranches([]);
+          return;
+        }
+
+        const property = JSON.parse(propertyData);
+        const statuses = JSON.parse(localStorage.getItem("itStatuses") || "{}");
+        
+        // Use branch ID 1 as default (or extract from property if available)
+        const branchId = 1;
+        const statusData = statuses[branchId] || {};
+        const status = statusData.status || "Pending IT Assessment";
+
+        let statusColor = "gray";
+        if (status === "In Progress") statusColor = "yellow";
+        if (status === "Completed") statusColor = "green";
+        if (status === "Pending Approval") statusColor = "orange";
+        if (status === "Rejected") statusColor = "red";
+
+        // Load assessment data if exists
+        const assessmentData = JSON.parse(localStorage.getItem(`itAssessment_${branchId}`) || "null");
+
+        // Create single branch from property data
+        const singleBranch = {
+          id: branchId,
+          name: property.name || property.propertyName || "Property",
+          location: property.address || property.propertyAddress || "Location not available",
+          size: property.totalArea || property.size || "Size not available",
+          stage: "Legal Workflow",
+          status,
+          statusColor,
+          assessment: assessmentData
+        };
+
+        setBranches([singleBranch]);
+      } catch (error) {
+        console.error("Error loading property data:", error);
+        setBranches([]);
+      }
+    };
+
+    loadPropertyData();
+
+    // Listen for property changes
+    const handleStorageChange = (e) => {
+      if (e.key === "propertyForBusinessApproval" || e.key === "itStatuses" || e.key?.startsWith("itAssessment_")) {
+        loadPropertyData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // Update recent submission when branches change
+  useEffect(() => {
+    if (branches.length > 0) {
+      const submissions = branches
+        .filter(b => b.assessment && b.assessment.submitted)
+        .sort((a, b) => new Date(b.assessment.submittedAt) - new Date(a.assessment.submittedAt));
+
+      if (submissions.length > 0) {
+        const latest = submissions[0];
+        setRecentSubmission({
+          branchName: latest.name,
+          submittedBy: latest.assessment.submittedBy,
+          timestamp: new Date(latest.assessment.submittedAt).toLocaleString(),
+          feasibilityItems: collectFeasibilitySummary(latest.assessment.data)
+        });
+      } else {
+        setRecentSubmission(null);
+      }
+    } else {
+      setRecentSubmission(null);
+    }
+  }, [branches]);
 
   const getStatusBadgeColor = (statusColor) => {
     const colorMap = {
