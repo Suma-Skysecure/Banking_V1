@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
+import DashboardHeader from "@/components/DashboardHeader";
 import ToastNotification from "@/components/ToastNotification";
 import NotificationDropdown from "@/components/NotificationDropdown";
-import LegalDueDashboard from "./LegalDueDashboard";
 import LegalDecisionPanel from "./LegalDecisionPanel";
 import LegalComplianceStatus from "./LegalComplianceStatus";
 import LegalDueDetailsModal from "./LegalDueDetailsModal";
@@ -23,6 +24,27 @@ export default function LegalDueDiligencePage() {
   const [notificationMessage, setNotificationMessage] = useState("");
   const [notificationType, setNotificationType] = useState("success");
   const [uploadedLOI, setUploadedLOI] = useState(null);
+  const [property, setProperty] = useState(null);
+  const [submissionDate, setSubmissionDate] = useState(null);
+
+  // Load property data from localStorage
+  useEffect(() => {
+    try {
+      const propertyData = localStorage.getItem("propertyForBusinessApproval");
+      const submissionDateData = localStorage.getItem("propertySubmissionDate");
+      
+      if (propertyData) {
+        const parsedProperty = JSON.parse(propertyData);
+        setProperty(parsedProperty);
+      }
+      
+      if (submissionDateData) {
+        setSubmissionDate(new Date(submissionDateData));
+      }
+    } catch (error) {
+      console.error("Error loading property data:", error);
+    }
+  }, []);
 
   // Load uploaded LOI document from localStorage
   useEffect(() => {
@@ -55,6 +77,198 @@ export default function LegalDueDiligencePage() {
     });
   };
 
+  // Helper function to check if a value is empty/missing
+  const isEmpty = (value) => {
+    return value === null || value === undefined || value === "" || 
+           (typeof value === "string" && value.trim() === "");
+  };
+
+  // Helper function to generate default values ONLY for missing property fields
+  const generateDefaultPropertyFields = (property) => {
+    if (!property) return {};
+    
+    const defaults = {};
+    const areaMatch = (property.size || property.totalArea || "").match(/[\d,]+/);
+    const areaNum = areaMatch ? parseInt(areaMatch[0].replace(/,/g, "")) : 0;
+    
+    if (isEmpty(property.floorLevel)) {
+      if (property.type?.toLowerCase().includes("industrial")) {
+        defaults.floorLevel = areaNum > 10000 ? "Ground Floor + Warehouse" : "Ground Floor";
+      } else if (property.type?.toLowerCase().includes("retail")) {
+        defaults.floorLevel = "Ground Floor";
+      } else if (areaNum > 5000) {
+        defaults.floorLevel = "Multiple Floors Available";
+      } else {
+        defaults.floorLevel = "Ground Floor + Mezzanine";
+      }
+    }
+    
+    if (isEmpty(property.parkingSpaces)) {
+      const spaces = Math.max(2, Math.floor(areaNum / 500));
+      defaults.parkingSpaces = `${spaces} Reserved Spaces`;
+    }
+    
+    if (isEmpty(property.yearBuilt)) {
+      const currentYear = new Date().getFullYear();
+      const baseYear = property.type?.toLowerCase().includes("industrial") ? 2015 : 2018;
+      defaults.yearBuilt = String(Math.max(baseYear, currentYear - 6));
+    }
+    
+    if (isEmpty(property.vendorName)) {
+      const address = property.address || "";
+      if (address.includes("Brickell")) defaults.vendorName = "Brickell Development Group";
+      else if (address.includes("Downtown")) defaults.vendorName = "Downtown Properties LLC";
+      else if (address.includes("South Beach")) defaults.vendorName = "South Beach Realty Partners";
+      else if (address.includes("Westside")) defaults.vendorName = "Westside Commercial Holdings";
+      else if (address.includes("North Miami")) defaults.vendorName = "North Miami Development Corp";
+      else if (address.includes("Eastside")) defaults.vendorName = "Eastside Business Ventures";
+      else if (address.includes("Marina")) defaults.vendorName = "Marina Commercial Realty";
+      else defaults.vendorName = "Miami Commercial Realty Group";
+    }
+    
+    if (isEmpty(property.vendorContact)) {
+      const areaCode = property.address?.match(/FL (\d{5})/)?.[1]?.substring(0, 3) || "305";
+      const propIdNum = parseInt(String(property.id || property.propertyId || "0").replace(/\D/g, "")) || 0;
+      const lastFour = String((propIdNum % 9000) + 1000).padStart(4, '0');
+      defaults.vendorContact = `+1 (${areaCode}) 555-${lastFour}`;
+    }
+    
+    if (isEmpty(property.vendorEmail)) {
+      const vendorName = (property.vendorName || defaults.vendorName || "Miami Commercial Realty Group")
+        .toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
+      defaults.vendorEmail = `info@${vendorName}.com`;
+    }
+    
+    if (isEmpty(property.listingStatus)) {
+      defaults.listingStatus = property.statusType === "available" ? "Active Listing" : "Pending Listing";
+    }
+    
+    if (isEmpty(property.zoning)) {
+      const type = property.type?.toLowerCase() || "";
+      if (type.includes("commercial office")) defaults.zoning = "Commercial/Office";
+      else if (type.includes("retail")) defaults.zoning = "Commercial/Retail";
+      else if (type.includes("industrial")) defaults.zoning = "Industrial";
+      else if (type.includes("mixed use")) defaults.zoning = "Mixed Use";
+      else defaults.zoning = "Commercial";
+    }
+    
+    if (isEmpty(property.lastInspection)) {
+      if (property.lastInspectionDate) {
+        defaults.lastInspection = new Date(property.lastInspectionDate).toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      } else {
+        const months = ["January", "February", "March", "April", "May", "June", 
+                        "July", "August", "September", "October", "November", "December"];
+        const currentDate = new Date();
+        const inspectionDate = new Date(currentDate);
+        inspectionDate.setMonth(currentDate.getMonth() - 2);
+        defaults.lastInspection = `${months[inspectionDate.getMonth()]} ${inspectionDate.getDate()}, ${inspectionDate.getFullYear()}`;
+      }
+    }
+    
+    return defaults;
+  };
+
+  const defaultProperty = {
+    id: "PROP-MIA-2024-002",
+    name: "Downtown Arts Plaza",
+    address: "1450 Biscayne Boulevard, Miami, FL 33132",
+    status: "Available in 30 days",
+    statusType: "pending",
+    price: 5800000,
+    pricePerSqft: 1381,
+    type: "Mixed Use",
+    totalArea: "4,200 sq ft",
+    floorLevel: "Ground Floor + Mezzanine",
+    parkingSpaces: "8 Reserved Spaces",
+    yearBuilt: "2019",
+    vendorName: "Biscayne Development Group",
+    vendorContact: "+1 (305) 555-0198",
+    listingStatus: "Active Listing",
+    zoning: "Commercial/Retail",
+    lastInspection: "December 10, 2024",
+  };
+
+  const propertyWithDefaults = property ? (() => {
+    const defaults = generateDefaultPropertyFields(property);
+    const merged = { ...property };
+    
+    Object.keys(defaults).forEach(key => {
+      if (isEmpty(merged[key])) {
+        merged[key] = defaults[key];
+      }
+    });
+    
+    if (isEmpty(merged.id)) {
+      merged.id = merged.propertyId || `PROP-MIA-2024-${String(property.id || Date.now()).padStart(3, '0')}`;
+    }
+    if (isEmpty(merged.name)) merged.name = "Property";
+    if (isEmpty(merged.address)) merged.address = "Address not available";
+    if (isEmpty(merged.type)) merged.type = "Commercial";
+    if (isEmpty(merged.totalArea) && isEmpty(merged.size)) {
+      merged.totalArea = "";
+    } else if (isEmpty(merged.totalArea) && !isEmpty(merged.size)) {
+      merged.totalArea = merged.size;
+    }
+    if (isEmpty(merged.status)) merged.status = "Available";
+    if (isEmpty(merged.statusType)) merged.statusType = "pending";
+    if (merged.price === null || merged.price === undefined) merged.price = 0;
+    if (merged.pricePerSqft === null || merged.pricePerSqft === undefined) merged.pricePerSqft = 0;
+    
+    return merged;
+  })() : defaultProperty;
+  
+  const displayProperty = propertyWithDefaults;
+
+  const formatPrice = (price) => {
+    if (!price && price !== 0) return "₹0";
+    const inrPrice = displayProperty?.isImported && displayProperty?.priceUSD 
+      ? displayProperty.priceUSD * 83.5 
+      : (price * 83.5);
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(inrPrice);
+  };
+
+  const formatPricePerSqft = () => {
+    if (!displayProperty) return "₹0 per sq ft";
+    if (displayProperty.isImported && displayProperty.pricePerSqft) {
+      return `₹${displayProperty.pricePerSqft.toLocaleString('en-IN')} per sq ft`;
+    }
+    if (displayProperty.pricePerSqft) {
+      return `₹${(displayProperty.pricePerSqft * 83.5).toLocaleString('en-IN')} per sq ft`;
+    }
+    return "₹0 per sq ft";
+  };
+
+  const formatSubmissionDate = () => {
+    if (!submissionDate) {
+      const now = new Date();
+      return now.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    }
+    return submissionDate.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const getAvailabilityDays = () => {
+    if (!displayProperty?.status) return "Available Now";
+    const match = displayProperty.status.match(/(\d+)\s*days?/i);
+    return match ? `${match[1]} days` : "Available Now";
+  };
+
   // State for legal due diligence process
   const [callRequired, setCallRequired] = useState(null);
   const [legalClearanceGranted, setLegalClearanceGranted] = useState(false);
@@ -80,12 +294,6 @@ export default function LegalDueDiligencePage() {
         setIsFinalized(parsed.isFinalized ?? false);
         setIsAgreementsSubmitted(parsed.isAgreementsSubmitted ?? false);
 
-        // Update tasks if finalized
-        if (parsed.isFinalized || parsed.legalClearanceGranted) {
-          setTasks((prev) =>
-            prev.map(t => t.id === "1" ? { ...t, status: "Approved" } : t)
-          );
-        }
       }
     } catch (e) {
       console.error("Failed to load legal process state", e);
@@ -137,16 +345,6 @@ export default function LegalDueDiligencePage() {
     return () => window.removeEventListener('storage', loadITData);
   }, []);
 
-  // Sample tasks data
-  const [tasks, setTasks] = useState([
-    {
-      id: "1",
-      taskName: "Legal Due Diligence Review",
-      status: "Pending",
-      owner: "Legal Team",
-      lastUpdated: "Dec 18, 2024",
-    },
-  ]);
 
   const handleShowToast = (message, type = "success") => {
     setNotificationMessage(message);
@@ -165,12 +363,6 @@ export default function LegalDueDiligencePage() {
   const handleGrantClearance = () => {
     setLegalClearanceGranted(true);
     setIsFinalized(true);
-    // Update task status
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === "1" ? { ...task, status: "Approved" } : task
-      )
-    );
   };
 
   const handleBrtConfirmed = (confirmed) => {
@@ -218,31 +410,6 @@ export default function LegalDueDiligencePage() {
     URL.revokeObjectURL(url);
   };
 
-  const handleViewDetails = (e, task) => {
-    e.preventDefault();
-    console.log("View details clicked for task:", task);
-
-    // Check if this is the "Legal Due Diligence Review" task
-    // The task object from DashboardTable has 'name' property (from transformed task)
-    // Also check the original task data to find the first task
-    const taskName = task.name || "";
-    const taskId = task.id || "";
-
-    const isLegalDueDiligenceReview =
-      taskName === "Legal Due Diligence Review" ||
-      taskId === "1" ||
-      taskId === "Legal Due Diligence Review" ||
-      taskName.includes("Legal Due Diligence Review") ||
-      taskName.includes("Legal Due Diligence");
-
-    if (isLegalDueDiligenceReview) {
-      console.log("Opening Legal Due Details Modal for task:", task);
-      setSelectedTask(task);
-      setIsDetailsModalOpen(true);
-    } else {
-      console.log("Task is not Legal Due Diligence Review:", task);
-    }
-  };
 
   // Determine final status
   const getFinalStatus = () => {
@@ -306,6 +473,167 @@ export default function LegalDueDiligencePage() {
               title="Legal Due Diligence"
               subtitle="Step 5.2 - Legal Clearance Activities"
             />
+
+            {/* Back to Dashboard Link */}
+            <Link href="/dashboard" className="back-to-property-details">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                className="back-arrow"
+              >
+                <path
+                  d="M10 12L6 8L10 4"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Back to Dashboard
+            </Link>
+
+            {/* Property Overview Card */}
+            <div className="property-overview-card">
+              <div className="property-overview-left">
+                <h2 className="property-name-large">{displayProperty.name}</h2>
+                <div className="property-address-large">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    className="map-pin-icon-large"
+                  >
+                    <path
+                      d="M8 8C9.10457 8 10 7.10457 10 6C10 4.89543 9.10457 4 8 4C6.89543 4 6 4.89543 6 6C6 7.10457 6.89543 8 8 8Z"
+                      fill="#ef4444"
+                    />
+                    <path
+                      d="M8 1C5.23858 1 3 3.23858 3 6C3 10 8 15 8 15C8 15 13 10 13 6C13 3.23858 10.7614 1 8 1Z"
+                      stroke="#ef4444"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span>{displayProperty.address}</span>
+                </div>
+                <div className="property-status-section">
+                  <div className="property-status-tag pending">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className="status-icon"
+                    >
+                      <circle
+                        cx="8"
+                        cy="8"
+                        r="7"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      />
+                      <path
+                        d="M8 4V8L10.5 10.5"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Pending Approval
+                  </div>
+                  <div className="submitted-date">Submitted on {formatSubmissionDate()}</div>
+                </div>
+              </div>
+              <div className="property-overview-right">
+                <div className="property-price-large">{formatPrice(displayProperty.price)}</div>
+                <div className="property-price-per-sqft-large">{formatPricePerSqft()}</div>
+              </div>
+            </div>
+
+            {/* Property Details Summary Card */}
+            <div className="business-details-card">
+              <div className="card-header">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  className="card-icon"
+                >
+                  <path
+                    d="M2 4H14V12H2V4Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M6 4V12M10 4V12"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <h3 className="card-title">Property Details Summary</h3>
+              </div>
+              <div className="details-grid">
+                <div className="detail-item">
+                  <span className="detail-label">Property ID</span>
+                  <span className="detail-value">{displayProperty.id}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Parking Spaces</span>
+                  <span className="detail-value">{displayProperty.parkingSpaces}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Zoning</span>
+                  <span className="detail-value">{displayProperty.zoning}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Property Type</span>
+                  <span className="detail-value">{displayProperty.type}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Year Built</span>
+                  <span className="detail-value">{displayProperty.yearBuilt}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Listing Status</span>
+                  <span className="detail-value">
+                    <span className="status-badge active">{displayProperty.listingStatus}</span>
+                  </span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Total Area</span>
+                  <span className="detail-value">{displayProperty.totalArea || displayProperty.size || ""}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Vendor Name</span>
+                  <span className="detail-value">{displayProperty.vendorName}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Availability</span>
+                  <span className="detail-value">{getAvailabilityDays()}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Floor Level</span>
+                  <span className="detail-value">{displayProperty.floorLevel}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Vendor Contact</span>
+                  <span className="detail-value">{displayProperty.vendorContact}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Last Inspection</span>
+                  <span className="detail-value">{displayProperty.lastInspection}</span>
+                </div>
+              </div>
+            </div>
 
             {/* NEW: IT Assessment Section (Only if approved) */}
             {itApprovalData && (
@@ -547,8 +875,6 @@ export default function LegalDueDiligencePage() {
             </div>
 
             {/* Legal Due Diligence Dashboard */}
-            <LegalDueDashboard tasks={tasks} onViewDetails={handleViewDetails} />
-
             {/* Legal Documents View */}
             <LegalDocumentsView />
 

@@ -309,8 +309,8 @@ export default function BusinessApproval() {
               subtitle="Review and approve property based on defined business criteria."
             />
 
-            {/* Back to Property Details Link */}
-            <Link href="/property-details" className="back-to-property-details">
+            {/* Back to Dashboard Link */}
+            <Link href="/dashboard" className="back-to-property-details">
               <svg
                 width="16"
                 height="16"
@@ -326,7 +326,7 @@ export default function BusinessApproval() {
                   strokeLinejoin="round"
                 />
               </svg>
-              Back to Property Details
+              Back to Dashboard
             </Link>
 
             {/* Property Overview Card */}
@@ -414,7 +414,7 @@ export default function BusinessApproval() {
                     strokeLinecap="round"
                   />
                 </svg>
-                <h3 className="card-title">Business Details Summary</h3>
+                <h3 className="card-title">Property Details Summary</h3>
               </div>
               <div className="details-grid">
                 <div className="detail-item">

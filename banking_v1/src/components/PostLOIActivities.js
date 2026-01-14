@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import DashboardHeader from "@/components/DashboardHeader";
@@ -23,16 +24,11 @@ export default function PostLOIActivities() {
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
   const [uploadedLOI, setUploadedLOI] = useState(null);
-
-  // TSA (Stamp Duty) state
-  const propertyValue = 5800000;
-  const stampDutyRate = 0.7;
-  const totalStampDuty = (propertyValue * stampDutyRate) / 100;
-
-  // TSA (Security Deposit) state
-  const depositPercentage = 10;
-  const securityDepositAmount = (propertyValue * depositPercentage) / 100;
+  const [property, setProperty] = useState(null);
+  const [submissionDate, setSubmissionDate] = useState(null);
+  const [vendorData, setVendorData] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("card");
+  const [viewDocumentModal, setViewDocumentModal] = useState({ open: false, category: null, documents: [] });
 
   // Format currency helper
   const formatCurrencyTSA = (amount) => {
@@ -43,6 +39,64 @@ export default function PostLOIActivities() {
       maximumFractionDigits: 0,
     }).format(amount * 83.5);
   };
+
+  // Load property data from localStorage
+  useEffect(() => {
+    try {
+      const propertyData = localStorage.getItem("propertyForBusinessApproval");
+      const submissionDateData = localStorage.getItem("propertySubmissionDate");
+      
+      if (propertyData) {
+        const parsedProperty = JSON.parse(propertyData);
+        setProperty(parsedProperty);
+      }
+      
+      if (submissionDateData) {
+        setSubmissionDate(new Date(submissionDateData));
+      }
+    } catch (error) {
+      console.error("Error loading property data:", error);
+    }
+  }, []);
+
+  // Load vendor data from localStorage and listen for updates
+  useEffect(() => {
+    const loadVendorData = () => {
+      try {
+        const storedVendorData = localStorage.getItem("vendorCreationData");
+        if (storedVendorData) {
+          const parsedVendorData = JSON.parse(storedVendorData);
+          setVendorData(parsedVendorData);
+        }
+      } catch (error) {
+        console.error("Error loading vendor data:", error);
+      }
+    };
+
+    // Load initially
+    loadVendorData();
+
+    // Listen for storage changes (when vendor updates data in another tab/window)
+    const handleStorageChange = (e) => {
+      if (e.key === "vendorCreationData") {
+        loadVendorData();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    // Also listen for custom events (for same-tab updates)
+    const handleCustomStorage = () => {
+      loadVendorData();
+    };
+
+    window.addEventListener("vendorDataUpdated", handleCustomStorage);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("vendorDataUpdated", handleCustomStorage);
+    };
+  }, []);
 
   // Load uploaded LOI document from localStorage
   useEffect(() => {
@@ -58,11 +112,51 @@ export default function PostLOIActivities() {
 
   // Format file size
   const formatFileSize = (bytes) => {
-    if (bytes === 0) return "0 Bytes";
+    if (!bytes || bytes === 0) return "0 Bytes";
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  };
+
+  // Handle view documents
+  const handleViewDocuments = (category) => {
+    if (vendorData?.documents?.[category]) {
+      setViewDocumentModal({
+        open: true,
+        category: category,
+        documents: vendorData.documents[category] || []
+      });
+    }
+  };
+
+  // Handle view document
+  const handleViewDocument = (doc) => {
+    if (doc.data) {
+      // If document has data URL, open it
+      const blob = dataURLToBlob(doc.data);
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+    } else if (doc.file) {
+      // If document has file object, open it
+      const url = URL.createObjectURL(doc.file);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+    }
+  };
+
+  // Convert data URL to Blob
+  const dataURLToBlob = (dataURL) => {
+    const arr = dataURL.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
   };
 
   // Format date
@@ -75,8 +169,209 @@ export default function PostLOIActivities() {
     });
   };
 
-  // Handle view document
-  const handleViewDocument = () => {
+  // Helper function to check if a value is empty/missing
+  const isEmpty = (value) => {
+    return value === null || value === undefined || value === "" || 
+           (typeof value === "string" && value.trim() === "");
+  };
+
+  // Helper function to generate default values ONLY for missing property fields
+  const generateDefaultPropertyFields = (property) => {
+    if (!property) return {};
+    
+    const defaults = {};
+    const areaMatch = (property.size || property.totalArea || "").match(/[\d,]+/);
+    const areaNum = areaMatch ? parseInt(areaMatch[0].replace(/,/g, "")) : 0;
+    
+    if (isEmpty(property.floorLevel)) {
+      if (property.type?.toLowerCase().includes("industrial")) {
+        defaults.floorLevel = areaNum > 10000 ? "Ground Floor + Warehouse" : "Ground Floor";
+      } else if (property.type?.toLowerCase().includes("retail")) {
+        defaults.floorLevel = "Ground Floor";
+      } else if (areaNum > 5000) {
+        defaults.floorLevel = "Multiple Floors Available";
+      } else {
+        defaults.floorLevel = "Ground Floor + Mezzanine";
+      }
+    }
+    
+    if (isEmpty(property.parkingSpaces)) {
+      const spaces = Math.max(2, Math.floor(areaNum / 500));
+      defaults.parkingSpaces = `${spaces} Reserved Spaces`;
+    }
+    
+    if (isEmpty(property.yearBuilt)) {
+      const currentYear = new Date().getFullYear();
+      const baseYear = property.type?.toLowerCase().includes("industrial") ? 2015 : 2018;
+      defaults.yearBuilt = String(Math.max(baseYear, currentYear - 6));
+    }
+    
+    if (isEmpty(property.vendorName)) {
+      const address = property.address || "";
+      if (address.includes("Brickell")) defaults.vendorName = "Brickell Development Group";
+      else if (address.includes("Downtown")) defaults.vendorName = "Downtown Properties LLC";
+      else if (address.includes("South Beach")) defaults.vendorName = "South Beach Realty Partners";
+      else if (address.includes("Westside")) defaults.vendorName = "Westside Commercial Holdings";
+      else if (address.includes("North Miami")) defaults.vendorName = "North Miami Development Corp";
+      else if (address.includes("Eastside")) defaults.vendorName = "Eastside Business Ventures";
+      else if (address.includes("Marina")) defaults.vendorName = "Marina Commercial Realty";
+      else defaults.vendorName = "Miami Commercial Realty Group";
+    }
+    
+    if (isEmpty(property.vendorContact)) {
+      const areaCode = property.address?.match(/FL (\d{5})/)?.[1]?.substring(0, 3) || "305";
+      const propIdNum = parseInt(String(property.id || property.propertyId || "0").replace(/\D/g, "")) || 0;
+      const lastFour = String((propIdNum % 9000) + 1000).padStart(4, '0');
+      defaults.vendorContact = `+1 (${areaCode}) 555-${lastFour}`;
+    }
+    
+    if (isEmpty(property.vendorEmail)) {
+      const vendorName = (property.vendorName || defaults.vendorName || "Miami Commercial Realty Group")
+        .toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
+      defaults.vendorEmail = `info@${vendorName}.com`;
+    }
+    
+    if (isEmpty(property.listingStatus)) {
+      defaults.listingStatus = property.statusType === "available" ? "Active Listing" : "Pending Listing";
+    }
+    
+    if (isEmpty(property.zoning)) {
+      const type = property.type?.toLowerCase() || "";
+      if (type.includes("commercial office")) defaults.zoning = "Commercial/Office";
+      else if (type.includes("retail")) defaults.zoning = "Commercial/Retail";
+      else if (type.includes("industrial")) defaults.zoning = "Industrial";
+      else if (type.includes("mixed use")) defaults.zoning = "Mixed Use";
+      else defaults.zoning = "Commercial";
+    }
+    
+    if (isEmpty(property.lastInspection)) {
+      if (property.lastInspectionDate) {
+        defaults.lastInspection = new Date(property.lastInspectionDate).toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      } else {
+        const months = ["January", "February", "March", "April", "May", "June", 
+                        "July", "August", "September", "October", "November", "December"];
+        const currentDate = new Date();
+        const inspectionDate = new Date(currentDate);
+        inspectionDate.setMonth(currentDate.getMonth() - 2);
+        defaults.lastInspection = `${months[inspectionDate.getMonth()]} ${inspectionDate.getDate()}, ${inspectionDate.getFullYear()}`;
+      }
+    }
+    
+    return defaults;
+  };
+
+  const defaultProperty = {
+    id: "PROP-MIA-2024-002",
+    name: "Downtown Arts Plaza",
+    address: "1450 Biscayne Boulevard, Miami, FL 33132",
+    status: "Available in 30 days",
+    statusType: "pending",
+    price: 5800000,
+    pricePerSqft: 1381,
+    type: "Mixed Use",
+    totalArea: "4,200 sq ft",
+    floorLevel: "Ground Floor + Mezzanine",
+    parkingSpaces: "8 Reserved Spaces",
+    yearBuilt: "2019",
+    vendorName: "Biscayne Development Group",
+    vendorContact: "+1 (305) 555-0198",
+    listingStatus: "Active Listing",
+    zoning: "Commercial/Retail",
+    lastInspection: "December 10, 2024",
+  };
+
+  const propertyWithDefaults = property ? (() => {
+    const defaults = generateDefaultPropertyFields(property);
+    const merged = { ...property };
+    
+    Object.keys(defaults).forEach(key => {
+      if (isEmpty(merged[key])) {
+        merged[key] = defaults[key];
+      }
+    });
+    
+    if (isEmpty(merged.id)) {
+      merged.id = merged.propertyId || `PROP-MIA-2024-${String(property.id || Date.now()).padStart(3, '0')}`;
+    }
+    if (isEmpty(merged.name)) merged.name = "Property";
+    if (isEmpty(merged.address)) merged.address = "Address not available";
+    if (isEmpty(merged.type)) merged.type = "Commercial";
+    if (isEmpty(merged.totalArea) && isEmpty(merged.size)) {
+      merged.totalArea = "";
+    } else if (isEmpty(merged.totalArea) && !isEmpty(merged.size)) {
+      merged.totalArea = merged.size;
+    }
+    if (isEmpty(merged.status)) merged.status = "Available";
+    if (isEmpty(merged.statusType)) merged.statusType = "pending";
+    if (merged.price === null || merged.price === undefined) merged.price = 0;
+    if (merged.pricePerSqft === null || merged.pricePerSqft === undefined) merged.pricePerSqft = 0;
+    
+    return merged;
+  })() : defaultProperty;
+  
+  const displayProperty = propertyWithDefaults;
+
+  // TSA (Stamp Duty) state - use property price if available
+  const propertyValue = displayProperty?.price || 5800000;
+  const stampDutyRate = 0.7;
+  const totalStampDuty = (propertyValue * stampDutyRate) / 100;
+
+  // TSA (Security Deposit) state
+  const depositPercentage = 10;
+  const securityDepositAmount = (propertyValue * depositPercentage) / 100;
+
+  const formatPrice = (price) => {
+    if (!price && price !== 0) return "₹0";
+    const inrPrice = displayProperty?.isImported && displayProperty?.priceUSD 
+      ? displayProperty.priceUSD * 83.5 
+      : (price * 83.5);
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(inrPrice);
+  };
+
+  const formatPricePerSqft = () => {
+    if (!displayProperty) return "₹0 per sq ft";
+    if (displayProperty.isImported && displayProperty.pricePerSqft) {
+      return `₹${displayProperty.pricePerSqft.toLocaleString('en-IN')} per sq ft`;
+    }
+    if (displayProperty.pricePerSqft) {
+      return `₹${(displayProperty.pricePerSqft * 83.5).toLocaleString('en-IN')} per sq ft`;
+    }
+    return "₹0 per sq ft";
+  };
+
+  const formatSubmissionDate = () => {
+    if (!submissionDate) {
+      const now = new Date();
+      return now.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    }
+    return submissionDate.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const getAvailabilityDays = () => {
+    if (!displayProperty?.status) return "Available Now";
+    const match = displayProperty.status.match(/(\d+)\s*days?/i);
+    return match ? `${match[1]} days` : "Available Now";
+  };
+
+  // Handle view LOI document
+  const handleViewLOIDocument = () => {
     if (uploadedLOI && uploadedLOI.data) {
       // Open the document in a new window
       const newWindow = window.open();
@@ -109,23 +404,166 @@ export default function PostLOIActivities() {
               subtitle="Accounts Team - Payment Approvals"
             />
 
-            {/* Property Summary Card */}
-            <PropertySummaryCard
-              propertyName="Downtown Arts Plaza"
-              address="1450 Biscayne Boulevard, Miami, FL 33132"
-              propertyId="PROP-MIA-2024-002"
-              propertyValue={new Intl.NumberFormat("en-IN", {
-                style: "currency",
-                currency: "INR",
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              }).format(5800000 * 83.5)}
-              badgeText="Pending Payment Approval"
-              badgeIcon="clock"
-              rightLabel="LOI Circulated on Dec 18, 2024"
-              showValue={true}
-              mapPinColor="#ef4444"
-            />
+            {/* Back to Dashboard Link */}
+            <Link href="/dashboard" className="back-to-property-details">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                className="back-arrow"
+              >
+                <path
+                  d="M10 12L6 8L10 4"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Back to Dashboard
+            </Link>
+
+            {/* Property Overview Card */}
+            <div className="property-overview-card">
+              <div className="property-overview-left">
+                <h2 className="property-name-large">{displayProperty.name}</h2>
+                <div className="property-address-large">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    className="map-pin-icon-large"
+                  >
+                    <path
+                      d="M8 8C9.10457 8 10 7.10457 10 6C10 4.89543 9.10457 4 8 4C6.89543 4 6 4.89543 6 6C6 7.10457 6.89543 8 8 8Z"
+                      fill="#ef4444"
+                    />
+                    <path
+                      d="M8 1C5.23858 1 3 3.23858 3 6C3 10 8 15 8 15C8 15 13 10 13 6C13 3.23858 10.7614 1 8 1Z"
+                      stroke="#ef4444"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span>{displayProperty.address}</span>
+                </div>
+                <div className="property-status-section">
+                  <div className="property-status-tag pending">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className="status-icon"
+                    >
+                      <circle
+                        cx="8"
+                        cy="8"
+                        r="7"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      />
+                      <path
+                        d="M8 4V8L10.5 10.5"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Pending Approval
+                  </div>
+                  <div className="submitted-date">Submitted on {formatSubmissionDate()}</div>
+                </div>
+              </div>
+              <div className="property-overview-right">
+                <div className="property-price-large">{formatPrice(displayProperty.price)}</div>
+                <div className="property-price-per-sqft-large">{formatPricePerSqft()}</div>
+              </div>
+            </div>
+
+            {/* Property Details Summary Card */}
+            <div className="business-details-card">
+              <div className="card-header">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  className="card-icon"
+                >
+                  <path
+                    d="M2 4H14V12H2V4Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M6 4V12M10 4V12"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <h3 className="card-title">Property Details Summary</h3>
+              </div>
+              <div className="details-grid">
+                <div className="detail-item">
+                  <span className="detail-label">Property ID</span>
+                  <span className="detail-value">{displayProperty.id}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Parking Spaces</span>
+                  <span className="detail-value">{displayProperty.parkingSpaces}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Zoning</span>
+                  <span className="detail-value">{displayProperty.zoning}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Property Type</span>
+                  <span className="detail-value">{displayProperty.type}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Year Built</span>
+                  <span className="detail-value">{displayProperty.yearBuilt}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Listing Status</span>
+                  <span className="detail-value">
+                    <span className="status-badge active">{displayProperty.listingStatus}</span>
+                  </span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Total Area</span>
+                  <span className="detail-value">{displayProperty.totalArea || displayProperty.size || ""}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Vendor Name</span>
+                  <span className="detail-value">{displayProperty.vendorName}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Availability</span>
+                  <span className="detail-value">{getAvailabilityDays()}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Floor Level</span>
+                  <span className="detail-value">{displayProperty.floorLevel}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Vendor Contact</span>
+                  <span className="detail-value">{displayProperty.vendorContact}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Last Inspection</span>
+                  <span className="detail-value">{displayProperty.lastInspection}</span>
+                </div>
+              </div>
+            </div>
 
             {/* LOI Document Card */}
             <div className="business-details-card" style={{ marginBottom: "24px" }}>
@@ -225,7 +663,7 @@ export default function PostLOIActivities() {
                       }}
                       onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
                       onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
-                      onClick={handleViewDocument}
+                      onClick={handleViewLOIDocument}
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path
@@ -553,534 +991,281 @@ export default function PostLOIActivities() {
               </div>
             </div>
 
-            {/* Vendor Details Section - Show after TSA (Stamp Duty) */}
-            <div style={{ marginTop: "24px", marginBottom: "24px" }}>
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "24px"
-              }}>
-                {/* Left Panel: Vendor Details */}
-                <div className="business-details-card">
-                  <div className="card-header">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      className="card-icon"
-                    >
-                      <path
-                        d="M8 8C10.2091 8 12 6.20914 12 4C12 1.79086 10.2091 0 8 0C5.79086 0 4 1.79086 4 4C4 6.20914 5.79086 8 8 8Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M8 10C4.68629 10 2 12.6863 2 16H14C14 12.6863 11.3137 10 8 10Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+            {/* Vendor Details Section - View Only (Created by Vendor, Viewed by Site Measurement Team) */}
+            {vendorData && (
+              <div className="business-details-card" style={{ marginTop: "24px", marginBottom: "24px" }}>
+                <div className="card-header">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    className="card-icon"
+                  >
+                    <path
+                      d="M8 8C9.10457 8 10 7.10457 10 6C10 4.89543 9.10457 4 8 4C6.89543 4 6 4.89543 6 6C6 7.10457 6.89543 8 8 8Z"
+                      fill="currentColor"
+                    />
+                    <path
+                      d="M8 1C5.23858 1 3 3.23858 3 6C3 10 8 15 8 15C8 15 13 10 13 6C13 3.23858 10.7614 1 8 1Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
                     <h3 className="card-title">Vendor Details</h3>
-                  </div>
-                  <div style={{ padding: "20px" }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                      {/* Vendor Type */}
-                      <div>
-                        <label style={{
-                          display: "block",
-                          fontSize: "14px",
-                          color: "#374151",
-                          fontWeight: "500",
-                          marginBottom: "8px"
-                        }}>
-                          Vendor Type
-                        </label>
-                        <div style={{
-                          width: "100%",
-                          padding: "10px 12px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          color: "#111827",
-                          backgroundColor: "#f9fafb"
-                        }}>
-                          Landlord (Property Owner)
-                        </div>
-                      </div>
-
-                      {/* Legal Name */}
-                      <div>
-                        <label style={{
-                          display: "block",
-                          fontSize: "14px",
-                          color: "#374151",
-                          fontWeight: "500",
-                          marginBottom: "8px"
-                        }}>
-                          Legal Name <span style={{ color: "#dc2626" }}>*</span>
-                        </label>
-                        <div style={{
-                          width: "100%",
-                          padding: "10px 12px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          color: "#111827",
-                          backgroundColor: "#f9fafb"
-                        }}>
-                          Biscayne Development Group
-                        </div>
-                      </div>
-
-                      {/* PAN Number */}
-                      <div>
-                        <label style={{
-                          display: "block",
-                          fontSize: "14px",
-                          color: "#374151",
-                          fontWeight: "500",
-                          marginBottom: "8px"
-                        }}>
-                          PAN Number <span style={{ color: "#dc2626" }}>*</span>
-                        </label>
-                        <div style={{
-                          width: "100%",
-                          padding: "10px 12px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          color: "#111827",
-                          backgroundColor: "#f9fafb"
-                        }}>
-                          AADCB1234F
-                        </div>
-                      </div>
-
-                      {/* GST Number */}
-                      <div>
-                        <label style={{
-                          display: "block",
-                          fontSize: "14px",
-                          color: "#374151",
-                          fontWeight: "500",
-                          marginBottom: "8px"
-                        }}>
-                          GST Number (if applicable)
-                        </label>
-                        <div style={{
-                          width: "100%",
-                          padding: "10px 12px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          color: "#111827",
-                          backgroundColor: "#f9fafb"
-                        }}>
-                          27AADCB1234F1ZC
-                        </div>
-                      </div>
-
-                      {/* Bank Account Number */}
-                      <div>
-                        <label style={{
-                          display: "block",
-                          fontSize: "14px",
-                          color: "#374151",
-                          fontWeight: "500",
-                          marginBottom: "8px"
-                        }}>
-                          Bank Account Number
-                        </label>
-                        <div style={{
-                          width: "100%",
-                          padding: "10px 12px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          color: "#111827",
-                          backgroundColor: "#f9fafb"
-                        }}>
-                          123456789012
-                        </div>
-                      </div>
-
-                      {/* IFSC Code */}
-                      <div>
-                        <label style={{
-                          display: "block",
-                          fontSize: "14px",
-                          color: "#374151",
-                          fontWeight: "500",
-                          marginBottom: "8px"
-                        }}>
-                          IFSC Code <span style={{ color: "#dc2626" }}>*</span>
-                        </label>
-                        <div style={{
-                          width: "100%",
-                          padding: "10px 12px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          color: "#111827",
-                          backgroundColor: "#f9fafb"
-                        }}>
-                          ICIC0001234
-                        </div>
-                      </div>
-
-                      {/* Registered Address */}
-                      <div>
-                        <label style={{
-                          display: "block",
-                          fontSize: "14px",
-                          color: "#374151",
-                          fontWeight: "500",
-                          marginBottom: "8px"
-                        }}>
-                          Registered Address
-                        </label>
-                        <div style={{
-                          width: "100%",
-                          padding: "10px 12px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          color: "#111827",
-                          backgroundColor: "#f9fafb",
-                          minHeight: "60px"
-                        }}>
-                          Miami, FL 33131
-                        </div>
-                      </div>
-
-                      {/* Uploaded Documents */}
-                      <div>
-                        <label style={{
-                          display: "block",
-                          fontSize: "14px",
-                          color: "#374151",
-                          fontWeight: "500",
-                          marginBottom: "8px"
-                        }}>
-                          Uploaded Documents
-                        </label>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                          <div style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            padding: "10px 12px",
-                            backgroundColor: "#f9fafb",
-                            borderRadius: "6px",
-                            border: "1px solid #e5e7eb"
-                          }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                              <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-                                <path
-                                  d="M3 2C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V5L10 2H3Z"
-                                  stroke="#6b7280"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                              <span style={{ fontSize: "14px", color: "#111827" }}>PAN_Card.pdf</span>
-                            </div>
-                            <button
-                              style={{
-                                backgroundColor: "transparent",
-                                border: "none",
-                                color: "#ef4444",
-                                cursor: "pointer",
-                                padding: "4px"
-                              }}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path
-                                  d="M12 4L4 12M4 4L12 12"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                          <div style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            padding: "10px 12px",
-                            backgroundColor: "#f9fafb",
-                            borderRadius: "6px",
-                            border: "1px solid #e5e7eb"
-                          }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                              <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-                                <path
-                                  d="M3 2C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V5L10 2H3Z"
-                                  stroke="#6b7280"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                              <span style={{ fontSize: "14px", color: "#111827" }}>Cancelled_Cheque.jpg</span>
-                            </div>
-                            <button
-                              style={{
-                                backgroundColor: "transparent",
-                                border: "none",
-                                color: "#ef4444",
-                                cursor: "pointer",
-                                padding: "4px"
-                              }}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path
-                                  d="M12 4L4 12M4 4L12 12"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                        <div style={{ marginTop: "12px" }}>
-                          <a
-                            href="#"
-                            style={{
-                              fontSize: "14px",
-                              color: "#1e3a8a",
-                              fontWeight: "500",
-                              textDecoration: "none",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: "6px"
-                            }}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path
-                                d="M8 4V12M4 8H12"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                            Add Documents
-                          </a>
-                        </div>
-                      </div>
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "4px 12px",
+                      backgroundColor: "#dbeafe",
+                      borderRadius: "12px",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      color: "#1e40af"
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                        <path
+                          d="M8 2V8M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14Z"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      Created by Vendor
                     </div>
                   </div>
                 </div>
-
-                {/* Right Panel: Vendor Request Summary */}
-                <div className="business-details-card">
+                <div style={{ padding: "20px" }}>
+                  {/* Info Banner */}
                   <div style={{
-                    marginBottom: "24px",
-                    paddingBottom: "16px",
-                    borderBottom: "1px solid #e5e7eb"
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "12px 16px",
+                    backgroundColor: "#eff6ff",
+                    border: "1px solid #93c5fd",
+                    borderRadius: "8px",
+                    marginBottom: "24px"
                   }}>
-                    <h3 className="card-title" style={{ margin: 0 }}>Vendor Request Summary</h3>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <circle cx="10" cy="10" r="9" stroke="#2563eb" strokeWidth="1.5" />
+                      <path
+                        d="M10 6V10M10 14H10.01"
+                        stroke="#2563eb"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span style={{ fontSize: "14px", color: "#1e40af", fontWeight: "500" }}>
+                      This information was created by the Vendor and is being viewed by the Site Measurement Team
+                    </span>
                   </div>
-                  <div style={{ padding: "0 20px 20px 20px" }}>
-                    {/* Vendor Name */}
-                    <div style={{
-                      fontSize: "18px",
-                      fontWeight: "700",
-                      color: "#111827",
-                      marginBottom: "20px"
-                    }}>
-                      Biscayne Development Group
-                    </div>
 
-                    {/* Vendor Information Card */}
-                    <div style={{
-                      backgroundColor: "#f9fafb",
-                      borderRadius: "8px",
-                      padding: "20px",
-                      border: "1px solid #e5e7eb",
-                      marginBottom: "20px"
-                    }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ fontSize: "14px", color: "#6b7280" }}>Vendor Name:</span>
-                          <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827" }}>
-                            Biscayne Development Group
-                          </span>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ fontSize: "14px", color: "#6b7280" }}>Vendor Type:</span>
-                          <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827" }}>
-                            Landlord (Property Owner)
-                          </span>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ fontSize: "14px", color: "#6b7280" }}>Purpose:</span>
-                          <span style={{ fontSize: "14px", fontWeight: "500", color: "#111827" }}>
-                            New Branch Setup
-                          </span>
-                        </div>
+                  {/* Vendor Details Grid */}
+                  <div className="details-grid">
+                    <div className="detail-item">
+                      <span className="detail-label">Vendor Type</span>
+                      <span className="detail-value">{vendorData.vendorType || "N/A"}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Legal Name</span>
+                      <span className="detail-value">{vendorData.legalName || "N/A"}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">PAN Number</span>
+                      <span className="detail-value">{vendorData.panNumber || "N/A"}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">GST Number</span>
+                      <span className="detail-value">{vendorData.gstNumber || "Not provided"}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Bank Account Number</span>
+                      <span className="detail-value">{vendorData.bankAccountNumber || "N/A"}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">IFSC Code</span>
+                      <span className="detail-value">{vendorData.ifscCode || "N/A"}</span>
+                    </div>
+                    <div className="detail-item" style={{ gridColumn: "1 / -1" }}>
+                      <span className="detail-label">Registered Address</span>
+                      <span className="detail-value" style={{ whiteSpace: "pre-wrap" }}>
+                        {vendorData.registeredAddress || "N/A"}
+                      </span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Purpose</span>
+                      <span className="detail-value">{vendorData.purpose || "N/A"}</span>
+                    </div>
+                    {vendorData.submittedDate && (
+                      <div className="detail-item">
+                        <span className="detail-label">Submitted Date</span>
+                        <span className="detail-value">
+                          {new Date(vendorData.submittedDate).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true
+                          })}
+                        </span>
                       </div>
-                    </div>
+                    )}
+                    {vendorData.submittedBy && (
+                      <div className="detail-item">
+                        <span className="detail-label">Submitted By</span>
+                        <span className="detail-value">{vendorData.submittedBy}</span>
+                      </div>
+                    )}
+                  </div>
 
-                    {/* Documents */}
-                    <div>
-                      <div style={{
+                  {/* Documents Summary */}
+                  {vendorData.documents && (
+                    <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid #e5e7eb" }}>
+                      <h4 style={{
                         fontSize: "16px",
-                        fontWeight: "700",
+                        fontWeight: "600",
                         color: "#111827",
                         marginBottom: "16px"
                       }}>
-                        Documents
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                        <div style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: "8px 12px",
-                          backgroundColor: "#f9fafb",
-                          borderRadius: "6px",
-                          cursor: "pointer",
-                          transition: "background-color 0.2s"
-                        }}
+                        Uploaded Documents
+                      </h4>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <div
+                          onClick={() => handleViewDocuments("panCard")}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "12px",
+                            backgroundColor: "#f9fafb",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            transition: "background-color 0.2s"
+                          }}
                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f3f4f6"}
                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#f9fafb"}
                         >
-                          <div style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px"
-                          }}>
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>PAN Card Documents</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                              {vendorData.documents.panCard?.length || 0} file(s)
+                            </span>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                               <path
-                                d="M13 4L6 11L3 8"
-                                stroke="#10b981"
-                                strokeWidth="2"
+                                d="M6 12L10 8L6 4"
+                                stroke="#6b7280"
+                                strokeWidth="1.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               />
                             </svg>
-                            <span style={{
-                              fontSize: "14px",
-                              color: "#111827"
-                            }}>
-                              PAN_Card.pdf
-                            </span>
                           </div>
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path
-                              d="M6 12L10 8L6 4"
-                              stroke="#6b7280"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
                         </div>
-                        <div style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: "8px 12px",
-                          backgroundColor: "#f9fafb",
-                          borderRadius: "6px",
-                          cursor: "pointer",
-                          transition: "background-color 0.2s"
-                        }}
+                        <div
+                          onClick={() => handleViewDocuments("bankDetails")}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "12px",
+                            backgroundColor: "#f9fafb",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            transition: "background-color 0.2s"
+                          }}
                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f3f4f6"}
                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#f9fafb"}
                         >
-                          <div style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px"
-                          }}>
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>Bank Details Documents</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                              {vendorData.documents.bankDetails?.length || 0} file(s)
+                            </span>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                               <path
-                                d="M13 4L6 11L3 8"
-                                stroke="#10b981"
-                                strokeWidth="2"
+                                d="M6 12L10 8L6 4"
+                                stroke="#6b7280"
+                                strokeWidth="1.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               />
                             </svg>
-                            <span style={{
-                              fontSize: "14px",
-                              color: "#111827"
-                            }}>
-                              Cancelled_Cheque.jpg
-                            </span>
                           </div>
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path
-                              d="M6 12L10 8L6 4"
-                              stroke="#6b7280"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
                         </div>
-                        <div style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: "8px 12px",
-                          backgroundColor: "#f9fafb",
-                          borderRadius: "6px",
-                          cursor: "pointer",
-                          transition: "background-color 0.2s"
-                        }}
+                        <div
+                          onClick={() => handleViewDocuments("gstOthers")}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "12px",
+                            backgroundColor: "#f9fafb",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            transition: "background-color 0.2s"
+                          }}
                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f3f4f6"}
                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#f9fafb"}
                         >
-                          <div style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px"
-                          }}>
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>GST & Other Documents</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                              {vendorData.documents.gstOthers?.length || 0} file(s)
+                            </span>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                               <path
-                                d="M13 4L6 11L3 8"
-                                stroke="#10b981"
-                                strokeWidth="2"
+                                d="M6 12L10 8L6 4"
+                                stroke="#6b7280"
+                                strokeWidth="1.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               />
                             </svg>
-                            <span style={{
-                              fontSize: "14px",
-                              color: "#111827"
-                            }}>
-                              GST_Certificate.pdf
-                            </span>
                           </div>
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path
-                              d="M6 12L10 8L6 4"
-                              stroke="#6b7280"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
+                        </div>
+                        <div
+                          onClick={() => handleViewDocuments("addressProof")}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "12px",
+                            backgroundColor: "#f9fafb",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            transition: "background-color 0.2s"
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f3f4f6"}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#f9fafb"}
+                        >
+                          <span style={{ fontSize: "14px", color: "#6b7280" }}>Address Proof Documents</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>
+                              {vendorData.documents.addressProof?.length || 0} file(s)
+                            </span>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                              <path
+                                d="M6 12L10 8L6 4"
+                                stroke="#6b7280"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
 
             {/* TSA (Security Deposit) Section */}
             <div className="business-details-card" style={{ marginTop: "24px", marginBottom: "24px" }}>
@@ -1347,6 +1532,200 @@ export default function PostLOIActivities() {
         type="success"
         onClose={() => setShowNotification(false)}
       />
+
+      {/* Document View Modal */}
+      {viewDocumentModal.open && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={() => setViewDocumentModal({ open: false, category: null, documents: [] })}
+        >
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              borderRadius: "8px",
+              padding: "24px",
+              width: "90%",
+              maxWidth: "700px",
+              maxHeight: "80vh",
+              overflow: "auto",
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "24px"
+            }}>
+              <h2 style={{
+                fontSize: "20px",
+                fontWeight: "600",
+                color: "#111827",
+                margin: 0
+              }}>
+                {viewDocumentModal.category === "panCard" && "PAN Card Documents"}
+                {viewDocumentModal.category === "bankDetails" && "Bank Details Documents"}
+                {viewDocumentModal.category === "gstOthers" && "GST & Other Documents"}
+                {viewDocumentModal.category === "addressProof" && "Address Proof Documents"}
+              </h2>
+              <button
+                onClick={() => setViewDocumentModal({ open: false, category: null, documents: [] })}
+                style={{
+                  backgroundColor: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M18 6L6 18M6 6L18 18"
+                    stroke="#6b7280"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {viewDocumentModal.documents.length === 0 ? (
+              <div style={{
+                textAlign: "center",
+                padding: "40px",
+                color: "#6b7280"
+              }}>
+                <svg
+                  width="64"
+                  height="64"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style={{ margin: "0 auto 16px", opacity: 0.5 }}
+                >
+                  <path
+                    d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M14 2V8H20"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <p style={{ fontSize: "16px", margin: 0, marginBottom: "8px" }}>No documents uploaded yet</p>
+              </div>
+            ) : (
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px"
+              }}>
+                {viewDocumentModal.documents.map((doc, index) => (
+                  <div
+                    key={doc.id || index}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "16px",
+                      backgroundColor: "#f9fafb",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      transition: "all 0.2s"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f3f4f6";
+                      e.currentTarget.style.borderColor = "#d1d5db";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f9fafb";
+                      e.currentTarget.style.borderColor = "#e5e7eb";
+                    }}
+                  >
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      flex: 1
+                    }}>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
+                          stroke="#3b82f6"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M14 2V8H20"
+                          stroke="#3b82f6"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <div style={{ flex: 1 }}>
+                        <div style={{
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          color: "#111827",
+                          marginBottom: "4px"
+                        }}>
+                          {doc.name || `Document ${index + 1}`}
+                        </div>
+                        <div style={{
+                          fontSize: "12px",
+                          color: "#6b7280"
+                        }}>
+                          {formatFileSize(doc.size)} • {doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString() : "Unknown date"}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleViewDocument(doc)}
+                      style={{
+                        padding: "8px 16px",
+                        backgroundColor: "#1e40af",
+                        color: "#ffffff",
+                        border: "none",
+                        borderRadius: "6px",
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        cursor: "pointer",
+                        transition: "background-color 0.2s"
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = "#1e3a8a"}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = "#1e40af"}
+                    >
+                      View
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

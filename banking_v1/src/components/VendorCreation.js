@@ -7,6 +7,7 @@ import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import DashboardHeader from "@/components/DashboardHeader";
 import { useAuth } from "@/contexts/AuthContext";
+import ToastNotification from "@/components/ToastNotification";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/agreementExecution.css";
@@ -19,6 +20,11 @@ export default function VendorCreation() {
   const { user } = useAuth();
   const { createNotification } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [property, setProperty] = useState(null);
+  const [submissionDate, setSubmissionDate] = useState(null);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationType, setNotificationType] = useState("success");
 
   // Use existing project data - default vendor information
   const defaultVendorData = {
@@ -52,6 +58,25 @@ export default function VendorCreation() {
     addressProof: useRef(null)
   };
 
+  // Load property data from localStorage
+  useEffect(() => {
+    try {
+      const propertyData = localStorage.getItem("propertyForBusinessApproval");
+      const submissionDateData = localStorage.getItem("propertySubmissionDate");
+      
+      if (propertyData) {
+        const parsedProperty = JSON.parse(propertyData);
+        setProperty(parsedProperty);
+      }
+      
+      if (submissionDateData) {
+        setSubmissionDate(new Date(submissionDateData));
+      }
+    } catch (error) {
+      console.error("Error loading property data:", error);
+    }
+  }, []);
+
   // Load LOI document from localStorage on component mount
   useEffect(() => {
     try {
@@ -78,10 +103,22 @@ export default function VendorCreation() {
     }
   }, [legalName]);
 
-  // Save documents to localStorage whenever they change
+  // Save documents to localStorage whenever they change (for draft saving)
+  // Note: File objects are stored separately and converted to base64 only on submit
   useEffect(() => {
     if (legalName) {
-      localStorage.setItem(`vendorDocuments_${legalName}`, JSON.stringify(uploadedDocuments));
+      // Store document metadata only (File objects can't be serialized)
+      const documentMetadata = {};
+      for (const [category, files] of Object.entries(uploadedDocuments)) {
+        documentMetadata[category] = files.map(doc => ({
+          id: doc.id,
+          name: doc.name,
+          size: doc.size,
+          type: doc.type,
+          uploadDate: doc.uploadDate
+        }));
+      }
+      localStorage.setItem(`vendorDocuments_${legalName}`, JSON.stringify(documentMetadata));
     }
   }, [uploadedDocuments, legalName]);
 
@@ -92,6 +129,231 @@ export default function VendorCreation() {
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  };
+
+  // Helper function to check if a value is empty/missing
+  const isEmpty = (value) => {
+    return value === null || value === undefined || value === "" || 
+           (typeof value === "string" && value.trim() === "");
+  };
+
+  // Helper function to generate default values ONLY for missing property fields
+  const generateDefaultPropertyFields = (property) => {
+    if (!property) return {};
+    
+    const defaults = {};
+    
+    // Extract area number from size string (e.g., "3,500 sq ft" -> 3500)
+    const areaMatch = (property.size || property.totalArea || "").match(/[\d,]+/);
+    const areaNum = areaMatch ? parseInt(areaMatch[0].replace(/,/g, "")) : 0;
+    
+    // Only generate floor level if missing
+    if (isEmpty(property.floorLevel)) {
+      if (property.type?.toLowerCase().includes("industrial")) {
+        defaults.floorLevel = areaNum > 10000 ? "Ground Floor + Warehouse" : "Ground Floor";
+      } else if (property.type?.toLowerCase().includes("retail")) {
+        defaults.floorLevel = "Ground Floor";
+      } else if (areaNum > 5000) {
+        defaults.floorLevel = "Multiple Floors Available";
+      } else {
+        defaults.floorLevel = "Ground Floor + Mezzanine";
+      }
+    }
+    
+    // Only generate parking spaces if missing
+    if (isEmpty(property.parkingSpaces)) {
+      const spaces = Math.max(2, Math.floor(areaNum / 500));
+      defaults.parkingSpaces = `${spaces} Reserved Spaces`;
+    }
+    
+    // Only generate year built if missing
+    if (isEmpty(property.yearBuilt)) {
+      const currentYear = new Date().getFullYear();
+      const baseYear = property.type?.toLowerCase().includes("industrial") ? 2015 : 2018;
+      defaults.yearBuilt = String(Math.max(baseYear, currentYear - 6));
+    }
+    
+    // Only generate vendor name if missing
+    if (isEmpty(property.vendorName)) {
+      const address = property.address || "";
+      if (address.includes("Brickell")) defaults.vendorName = "Brickell Development Group";
+      else if (address.includes("Downtown")) defaults.vendorName = "Downtown Properties LLC";
+      else if (address.includes("South Beach")) defaults.vendorName = "South Beach Realty Partners";
+      else if (address.includes("Westside")) defaults.vendorName = "Westside Commercial Holdings";
+      else if (address.includes("North Miami")) defaults.vendorName = "North Miami Development Corp";
+      else if (address.includes("Eastside")) defaults.vendorName = "Eastside Business Ventures";
+      else if (address.includes("Marina")) defaults.vendorName = "Marina Commercial Realty";
+      else defaults.vendorName = "Miami Commercial Realty Group";
+    }
+    
+    // Only generate vendor contact if missing
+    if (isEmpty(property.vendorContact)) {
+      const areaCode = property.address?.match(/FL (\d{5})/)?.[1]?.substring(0, 3) || "305";
+      const propIdNum = parseInt(String(property.id || property.propertyId || "0").replace(/\D/g, "")) || 0;
+      const lastFour = String((propIdNum % 9000) + 1000).padStart(4, '0');
+      defaults.vendorContact = `+1 (${areaCode}) 555-${lastFour}`;
+    }
+    
+    // Only generate vendor email if missing
+    if (isEmpty(property.vendorEmail)) {
+      const vendorName = (property.vendorName || defaults.vendorName || "Miami Commercial Realty Group")
+        .toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
+      defaults.vendorEmail = `info@${vendorName}.com`;
+    }
+    
+    // Only generate listing status if missing
+    if (isEmpty(property.listingStatus)) {
+      defaults.listingStatus = property.statusType === "available" ? "Active Listing" : "Pending Listing";
+    }
+    
+    // Only generate zoning if missing
+    if (isEmpty(property.zoning)) {
+      const type = property.type?.toLowerCase() || "";
+      if (type.includes("commercial office")) defaults.zoning = "Commercial/Office";
+      else if (type.includes("retail")) defaults.zoning = "Commercial/Retail";
+      else if (type.includes("industrial")) defaults.zoning = "Industrial";
+      else if (type.includes("mixed use")) defaults.zoning = "Mixed Use";
+      else defaults.zoning = "Commercial";
+    }
+    
+    // Only generate last inspection if missing
+    if (isEmpty(property.lastInspection)) {
+      if (property.lastInspectionDate) {
+        defaults.lastInspection = new Date(property.lastInspectionDate).toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      } else {
+        const months = ["January", "February", "March", "April", "May", "June", 
+                        "July", "August", "September", "October", "November", "December"];
+        const currentDate = new Date();
+        const inspectionDate = new Date(currentDate);
+        inspectionDate.setMonth(currentDate.getMonth() - 2);
+        defaults.lastInspection = `${months[inspectionDate.getMonth()]} ${inspectionDate.getDate()}, ${inspectionDate.getFullYear()}`;
+      }
+    }
+    
+    return defaults;
+  };
+
+  // Default property if none loaded
+  const defaultProperty = {
+    id: "PROP-MIA-2024-002",
+    name: "Downtown Arts Plaza",
+    address: "1450 Biscayne Boulevard, Miami, FL 33132",
+    status: "Available in 30 days",
+    statusType: "pending",
+    price: 5800000,
+    pricePerSqft: 1381,
+    type: "Mixed Use",
+    totalArea: "4,200 sq ft",
+    floorLevel: "Ground Floor + Mezzanine",
+    parkingSpaces: "8 Reserved Spaces",
+    yearBuilt: "2019",
+    vendorName: "Biscayne Development Group",
+    vendorContact: "+1 (305) 555-0198",
+    listingStatus: "Active Listing",
+    zoning: "Commercial/Retail",
+    lastInspection: "December 10, 2024",
+  };
+
+  // Generate defaults ONLY for missing fields and merge with property data
+  const propertyWithDefaults = property ? (() => {
+    const defaults = generateDefaultPropertyFields(property);
+    const merged = { ...property };
+    
+    // Only apply defaults for fields that are truly missing/empty
+    Object.keys(defaults).forEach(key => {
+      if (isEmpty(merged[key])) {
+        merged[key] = defaults[key];
+      }
+    });
+    
+    // Ensure essential fields are present (only if missing)
+    if (isEmpty(merged.id)) {
+      merged.id = merged.propertyId || `PROP-MIA-2024-${String(property.id || Date.now()).padStart(3, '0')}`;
+    }
+    if (isEmpty(merged.name)) {
+      merged.name = "Property";
+    }
+    if (isEmpty(merged.address)) {
+      merged.address = "Address not available";
+    }
+    if (isEmpty(merged.type)) {
+      merged.type = "Commercial";
+    }
+    if (isEmpty(merged.totalArea) && isEmpty(merged.size)) {
+      merged.totalArea = "";
+    } else if (isEmpty(merged.totalArea) && !isEmpty(merged.size)) {
+      merged.totalArea = merged.size;
+    }
+    if (isEmpty(merged.status)) {
+      merged.status = "Available";
+    }
+    if (isEmpty(merged.statusType)) {
+      merged.statusType = "pending";
+    }
+    if (merged.price === null || merged.price === undefined) {
+      merged.price = 0;
+    }
+    if (merged.pricePerSqft === null || merged.pricePerSqft === undefined) {
+      merged.pricePerSqft = 0;
+    }
+    
+    return merged;
+  })() : defaultProperty;
+  
+  const displayProperty = propertyWithDefaults;
+
+  // Format price for display
+  const formatPrice = (price) => {
+    if (!price && price !== 0) return "₹0";
+    const inrPrice = displayProperty?.isImported && displayProperty?.priceUSD 
+      ? displayProperty.priceUSD * 83.5 
+      : (price * 83.5);
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(inrPrice);
+  };
+
+  // Format price per sqft
+  const formatPricePerSqft = () => {
+    if (!displayProperty) return "₹0 per sq ft";
+    if (displayProperty.isImported && displayProperty.pricePerSqft) {
+      return `₹${displayProperty.pricePerSqft.toLocaleString('en-IN')} per sq ft`;
+    }
+    if (displayProperty.pricePerSqft) {
+      return `₹${(displayProperty.pricePerSqft * 83.5).toLocaleString('en-IN')} per sq ft`;
+    }
+    return "₹0 per sq ft";
+  };
+
+  // Format submission date
+  const formatSubmissionDate = () => {
+    if (!submissionDate) {
+      const now = new Date();
+      return now.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    }
+    return submissionDate.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  // Extract availability days from status
+  const getAvailabilityDays = () => {
+    if (!displayProperty?.status) return "Available Now";
+    const match = displayProperty.status.match(/(\d+)\s*days?/i);
+    return match ? `${match[1]} days` : "Available Now";
   };
 
   // Convert data URL to Blob
@@ -170,24 +432,135 @@ export default function VendorCreation() {
     // Implement IFSC validation logic
   };
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     console.log("Saving as draft...");
-    // Implement save as draft logic
+    
+    // Convert File objects to base64 for storage
+    const convertDocumentsForStorage = async (docs) => {
+      const convertedDocs = {};
+      for (const [category, files] of Object.entries(docs)) {
+        convertedDocs[category] = await Promise.all(
+          files.map(async (doc) => {
+            if (doc.file instanceof File) {
+              // Convert File to base64
+              return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  resolve({
+                    id: doc.id,
+                    name: doc.name,
+                    size: doc.size,
+                    type: doc.type,
+                    uploadDate: doc.uploadDate,
+                    data: reader.result // base64 data URL
+                  });
+                };
+                reader.readAsDataURL(doc.file);
+              });
+            }
+            // Already converted or has data
+            return doc;
+          })
+        );
+      }
+      return convertedDocs;
+    };
+
+    // Convert documents before saving
+    const convertedDocuments = await convertDocumentsForStorage(uploadedDocuments);
+
+    // Save vendor data to localStorage
+    const vendorData = {
+      vendorType,
+      legalName,
+      panNumber,
+      gstNumber,
+      bankAccountNumber,
+      ifscCode,
+      registeredAddress,
+      purpose: defaultVendorData.purpose,
+      submittedDate: new Date().toISOString(),
+      submittedBy: user?.name || user?.email || "Vendor",
+      documents: convertedDocuments
+    };
+    localStorage.setItem("vendorCreationData", JSON.stringify(vendorData));
+
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new Event("vendorDataUpdated"));
+
+    setNotificationMessage("Draft saved successfully!");
+    setNotificationType("success");
+    setShowNotification(true);
   };
 
-  const handleSubmitForVerification = () => {
+  const handleSubmitForVerification = async () => {
     console.log("Submitting for verification...");
+
+    // Convert File objects to base64 for storage
+    const convertDocumentsForStorage = async (docs) => {
+      const convertedDocs = {};
+      for (const [category, files] of Object.entries(docs)) {
+        convertedDocs[category] = await Promise.all(
+          files.map(async (doc) => {
+            if (doc.file instanceof File) {
+              // Convert File to base64
+              return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  resolve({
+                    id: doc.id,
+                    name: doc.name,
+                    size: doc.size,
+                    type: doc.type,
+                    uploadDate: doc.uploadDate,
+                    data: reader.result // base64 data URL
+                  });
+                };
+                reader.readAsDataURL(doc.file);
+              });
+            }
+            // Already converted or has data
+            return doc;
+          })
+        );
+      }
+      return convertedDocs;
+    };
+
+    // Convert documents before saving
+    const convertedDocuments = await convertDocumentsForStorage(uploadedDocuments);
+
+    // Save vendor data to localStorage
+    const vendorData = {
+      vendorType,
+      legalName,
+      panNumber,
+      gstNumber,
+      bankAccountNumber,
+      ifscCode,
+      registeredAddress,
+      purpose: defaultVendorData.purpose,
+      submittedDate: new Date().toISOString(),
+      submittedBy: user?.name || user?.email || "Vendor",
+      documents: convertedDocuments
+    };
+    localStorage.setItem("vendorCreationData", JSON.stringify(vendorData));
+
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new Event("vendorDataUpdated"));
 
     // Send notification to Site Measurement Team
     createNotification(
       `New Vendor "${legalName}" Created`,
       "info",
-      "/site-measurement",
+      "/post-loi-activities",
       "Site measurement"
     );
 
-    // Implement submission logic
-    alert("Vendor created and submitted for verification. Notification sent to Site Measurement Team.");
+    // Show success notification
+    setNotificationMessage("Vendor created and submitted for verification. Notification sent to Site Measurement Team.");
+    setNotificationType("success");
+    setShowNotification(true);
   };
 
   return (
@@ -199,21 +572,170 @@ export default function VendorCreation() {
 
         <main className="dashboard-main">
           <div className="main-content">
-            <div style={{ marginBottom: "24px" }}>
-              <h1 style={{
-                fontSize: "28px",
-                fontWeight: "700",
-                color: "#111827",
-                marginBottom: "8px"
-              }}>
-                Vendor Creation for New Branch
-              </h1>
-              <p style={{
-                fontSize: "16px",
-                color: "#6b7280"
-              }}>
-                Fill in the details to create vendor in ERP system for new branch setup.
-              </p>
+            <PageHeader
+              title="Vendor Creation"
+              subtitle="Create vendor profile for the approved property."
+            />
+
+            {/* Back to Dashboard Link */}
+            <Link href="/dashboard" className="back-to-property-details">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                className="back-arrow"
+              >
+                <path
+                  d="M10 12L6 8L10 4"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Back to Dashboard
+            </Link>
+
+            {/* Property Overview Card */}
+            <div className="property-overview-card">
+              <div className="property-overview-left">
+                <h2 className="property-name-large">{displayProperty.name}</h2>
+                <div className="property-address-large">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    className="map-pin-icon-large"
+                  >
+                    <path
+                      d="M8 8C9.10457 8 10 7.10457 10 6C10 4.89543 9.10457 4 8 4C6.89543 4 6 4.89543 6 6C6 7.10457 6.89543 8 8 8Z"
+                      fill="#ef4444"
+                    />
+                    <path
+                      d="M8 1C5.23858 1 3 3.23858 3 6C3 10 8 15 8 15C8 15 13 10 13 6C13 3.23858 10.7614 1 8 1Z"
+                      stroke="#ef4444"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span>{displayProperty.address}</span>
+                </div>
+                <div className="property-status-section">
+                  <div className="property-status-tag pending">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className="status-icon"
+                    >
+                      <circle
+                        cx="8"
+                        cy="8"
+                        r="7"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      />
+                      <path
+                        d="M8 4V8L10.5 10.5"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Pending Approval
+                  </div>
+                  <div className="submitted-date">Submitted on {formatSubmissionDate()}</div>
+                </div>
+              </div>
+              <div className="property-overview-right">
+                <div className="property-price-large">{formatPrice(displayProperty.price)}</div>
+                <div className="property-price-per-sqft-large">{formatPricePerSqft()}</div>
+              </div>
+            </div>
+
+            {/* Property Details Summary Card */}
+            <div className="business-details-card">
+              <div className="card-header">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  className="card-icon"
+                >
+                  <path
+                    d="M2 4H14V12H2V4Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M6 4V12M10 4V12"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <h3 className="card-title">Property Details Summary</h3>
+              </div>
+              <div className="details-grid">
+                <div className="detail-item">
+                  <span className="detail-label">Property ID</span>
+                  <span className="detail-value">{displayProperty.id}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Parking Spaces</span>
+                  <span className="detail-value">{displayProperty.parkingSpaces}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Zoning</span>
+                  <span className="detail-value">{displayProperty.zoning}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Property Type</span>
+                  <span className="detail-value">{displayProperty.type}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Year Built</span>
+                  <span className="detail-value">{displayProperty.yearBuilt}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Listing Status</span>
+                  <span className="detail-value">
+                    <span className="status-badge active">{displayProperty.listingStatus}</span>
+                  </span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Total Area</span>
+                  <span className="detail-value">{displayProperty.totalArea || displayProperty.size || ""}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Vendor Name</span>
+                  <span className="detail-value">{displayProperty.vendorName}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Availability</span>
+                  <span className="detail-value">{getAvailabilityDays()}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Floor Level</span>
+                  <span className="detail-value">{displayProperty.floorLevel}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Vendor Contact</span>
+                  <span className="detail-value">{displayProperty.vendorContact}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Last Inspection</span>
+                  <span className="detail-value">{displayProperty.lastInspection}</span>
+                </div>
+              </div>
             </div>
 
             {/* LOI Document Section - Only show for Vendor role and when LOI document exists */}
@@ -668,38 +1190,9 @@ export default function VendorCreation() {
                           backgroundColor: "#ffffff",
                           color: "#111827",
                           resize: "vertical",
-                          fontFamily: "inherit",
-                          marginBottom: "12px"
+                          fontFamily: "inherit"
                         }}
                       />
-                      <button
-                        type="button"
-                        onClick={() => document.getElementById("address-doc-upload")?.click()}
-                        style={{
-                          padding: "8px 16px",
-                          backgroundColor: "#f3f4f6",
-                          color: "#374151",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "6px",
-                          fontSize: "13px",
-                          fontWeight: "500",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px"
-                        }}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                          <path
-                            d="M8 2V14M2 8H14"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        Upload Documents
-                      </button>
                       <input
                         type="file"
                         id="address-doc-upload"
@@ -727,6 +1220,68 @@ export default function VendorCreation() {
                     >
                       + Add Documents
                     </button>
+                    {/* Display uploaded address proof documents */}
+                    {uploadedDocuments.addressProof && uploadedDocuments.addressProof.length > 0 && (
+                      <div style={{ marginTop: "12px" }}>
+                        <div style={{
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          color: "#111827",
+                          marginBottom: "8px"
+                        }}>
+                          Uploaded Documents ({uploadedDocuments.addressProof.length})
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                          {uploadedDocuments.addressProof.map((doc) => (
+                            <div
+                              key={doc.id}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                padding: "10px 12px",
+                                backgroundColor: "#f9fafb",
+                                borderRadius: "6px",
+                                border: "1px solid #e5e7eb"
+                              }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                                  <path
+                                    d="M3 2C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V5L10 2H3Z"
+                                    stroke="#6b7280"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                                <span style={{ fontSize: "14px", color: "#111827" }}>{doc.name}</span>
+                              </div>
+                              <button
+                                onClick={() => handleRemoveDocument("addressProof", doc.id)}
+                                style={{
+                                  backgroundColor: "transparent",
+                                  border: "none",
+                                  color: "#ef4444",
+                                  cursor: "pointer",
+                                  padding: "4px"
+                                }}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                  <path
+                                    d="M12 4L4 12M4 4L12 12"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1454,6 +2009,14 @@ export default function VendorCreation() {
           </div>
         </div>
       )}
+
+      {/* Toast Notification */}
+      <ToastNotification
+        show={showNotification}
+        message={notificationMessage}
+        type={notificationType}
+        onClose={() => setShowNotification(false)}
+      />
     </div>
   );
 }

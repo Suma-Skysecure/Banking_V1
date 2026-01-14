@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import DashboardHeader from "@/components/DashboardHeader";
+import ToastNotification from "@/components/ToastNotification";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import "@/css/branchTracker.css";
@@ -21,9 +22,13 @@ export default function LegalWorkflow() {
   const [isLOIUploaded, setIsLOIUploaded] = useState(false);
   const [property, setProperty] = useState(null);
   const [approvalDate, setApprovalDate] = useState(null);
+  const [submissionDate, setSubmissionDate] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const multipleFileInputRef = useRef(null);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationType, setNotificationType] = useState("success");
 
   // All restrictions removed - all users have full access
 
@@ -43,23 +48,23 @@ export default function LegalWorkflow() {
         setProperty(parsedProperty);
       }
 
+      // Get submission date (when property was originally submitted)
+      const submissionDateData = localStorage.getItem("propertySubmissionDate");
+      if (submissionDateData) {
+        setSubmissionDate(new Date(submissionDateData));
+      }
+
       // Get approval date (when Business approved it)
       const approvalDateData = localStorage.getItem("propertyApprovalDate");
       if (approvalDateData) {
         setApprovalDate(new Date(approvalDateData));
-      } else {
-        // Fallback to submission date
-        const submissionDateData = localStorage.getItem("propertySubmissionDate");
-        if (submissionDateData) {
-          setApprovalDate(new Date(submissionDateData));
-        }
+      } else if (submissionDateData) {
+        // Fallback to submission date if approval date not available
+        setApprovalDate(new Date(submissionDateData));
       }
 
-      // Check if LOI is already uploaded
-      const storedLOI = localStorage.getItem("uploadedSignedLOI");
-      if (storedLOI) {
-        setIsLOIUploaded(true);
-      }
+      // Check if LOI is already uploaded (but don't set state - let user upload fresh)
+      // We'll only set isLOIUploaded to true after a new upload in this session
 
     } catch (error) {
       console.error("Error loading property data:", error);
@@ -108,6 +113,30 @@ export default function LegalWorkflow() {
       month: "short",
       day: "numeric",
       year: "numeric",
+    });
+  };
+
+  // Format date with time (for timeline dates)
+  const formatDateTime = (date) => {
+    if (!date) {
+      // Default to current date/time if not available
+      const now = new Date();
+      return now.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    }
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   };
 
@@ -399,7 +428,9 @@ export default function LegalWorkflow() {
   // Handle submit
   const handleSubmit = async () => {
     if (!isSubmitEnabled) {
-      alert("Please upload at least 3 documents before proceeding.");
+      setNotificationMessage("Please upload at least 3 documents before proceeding.");
+      setNotificationType("error");
+      setShowNotification(true);
       return;
     }
     console.log("Submitting documents:", uploadedFiles);
@@ -435,8 +466,10 @@ export default function LegalWorkflow() {
       // Store all documents in localStorage
       localStorage.setItem("uploadedLegalDocuments", JSON.stringify(documentsToStore));
 
-      // Show success message
-      alert(`Successfully submitted ${uploadedFiles.length} document(s)! The documents are now available in the Legal Due page.`);
+      // Show toast notification instead of alert
+      setNotificationMessage(`Successfully submitted ${uploadedFiles.length} document(s)! The documents are now available in the Legal Due page.`);
+      setNotificationType("success");
+      setShowNotification(true);
 
       // Send notification to Legal Team
       createNotification(
@@ -447,13 +480,23 @@ export default function LegalWorkflow() {
       );
     } catch (error) {
       console.error("Error processing files:", error);
-      alert("Error processing files. Please try again.");
+      setNotificationMessage("Error processing files. Please try again.");
+      setNotificationType("error");
+      setShowNotification(true);
     }
   };
 
   return (
-    <div className="dashboard-container">
-      <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+    <>
+      <ToastNotification
+        show={showNotification}
+        message={notificationMessage}
+        type={notificationType}
+        onClose={() => setShowNotification(false)}
+        duration={3000}
+      />
+      <div className="dashboard-container">
+        <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="dashboard-content-wrapper">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -706,7 +749,7 @@ export default function LegalWorkflow() {
                     </div>
                     <div className="timeline-content">
                       <div className="timeline-title">Property Submitted</div>
-                      <div className="timeline-date">Dec 15, 2024 at 10:30 AM</div>
+                      <div className="timeline-date">{formatDateTime(submissionDate)}</div>
                     </div>
                   </div>
                   <div className="timeline-item">
@@ -729,7 +772,7 @@ export default function LegalWorkflow() {
                     </div>
                     <div className="timeline-content">
                       <div className="timeline-title">Business Review</div>
-                      <div className="timeline-date">Dec 15, 2024 at 11:00 AM</div>
+                      <div className="timeline-date">{formatDateTime(approvalDate)}</div>
                     </div>
                   </div>
                   <div className="timeline-item">
@@ -783,7 +826,7 @@ export default function LegalWorkflow() {
                     </div>
                     <div className="workflow-timeline-content">
                       <div className="workflow-timeline-title">Property Submitted</div>
-                      <div className="workflow-timeline-date">Dec 15, 2024 at 10:30 AM</div>
+                      <div className="workflow-timeline-date">{formatDateTime(submissionDate)}</div>
                     </div>
                   </div>
                   <div className="workflow-timeline-connector"></div>
@@ -807,7 +850,7 @@ export default function LegalWorkflow() {
                     </div>
                     <div className="workflow-timeline-content">
                       <div className="workflow-timeline-title">Business Review</div>
-                      <div className="workflow-timeline-date">Dec 15, 2024 at 11:00 AM</div>
+                      <div className="workflow-timeline-date">{formatDateTime(approvalDate)}</div>
                     </div>
                   </div>
                   <div className="workflow-timeline-connector"></div>
@@ -879,7 +922,7 @@ export default function LegalWorkflow() {
                         <span className="history-badge submitted">Approved</span>
                       </div>
                       <div className="history-action">Approved property for LOI signing</div>
-                      <div className="history-date">Dec 15, 2024 at 11:00 AM</div>
+                      <div className="history-date">{formatDateTime(approvalDate)}</div>
                     </div>
                   </div>
                 </div>
@@ -965,11 +1008,15 @@ export default function LegalWorkflow() {
                           );
                         });
 
-                        // Show success message
-                        alert(`File "${file.name}" uploaded successfully! The document is now available in Post-LOI Activities and Legal Due pages.`);
+                        // Show toast notification instead of alert
+                        setNotificationMessage(`File "${file.name}" uploaded successfully! The document is now available in Post-LOI Activities and Legal Due pages.`);
+                        setNotificationType("success");
+                        setShowNotification(true);
                       };
                       reader.onerror = () => {
-                        alert("Error reading file. Please try again.");
+                        setNotificationMessage("Error reading file. Please try again.");
+                        setNotificationType("error");
+                        setShowNotification(true);
                       };
                       reader.readAsDataURL(file);
                     }
@@ -1037,7 +1084,7 @@ export default function LegalWorkflow() {
                           strokeLinecap="round"
                         />
                       </svg>
-                      Upload signed LOI
+                      Upload
                     </>
                   )}
                 </button>
@@ -1353,5 +1400,6 @@ export default function LegalWorkflow() {
         </main >
       </div >
     </div >
+    </>
   );
 }
