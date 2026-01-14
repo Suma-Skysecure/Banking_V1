@@ -23,7 +23,15 @@ export default function BRTDashboard() {
   const brtConfirmations = [
     {
       id: 1,
-      name: "BRT Confirmation",
+      name: "New York Financial District",
+      stage: "Pending",
+      stageColor: "yellow",
+      progress: 50,
+      pendingAction: "active",
+    },
+    {
+      id: 2,
+      name: "Austin Tech Campus",
       stage: "Pending",
       stageColor: "yellow",
       progress: 50,

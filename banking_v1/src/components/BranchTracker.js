@@ -124,9 +124,18 @@ const ALL_BRANCHES = [
     pendingAction: "active",
     category: "business",
   },
-  // Account Role - Budget Approval
   {
     id: 41,
+    name: "Austin Tech Campus",
+    stage: "Legal Clearance",
+    stageColor: "orange",
+    progress: 50,
+    pendingAction: "active",
+    category: "business",
+  },
+  // Account Role - Budget Approval
+  {
+    id: 42,
     name: "New York Financial District",
     stage: "Budget approval",
     stageColor: "yellow",
@@ -136,7 +145,7 @@ const ALL_BRANCHES = [
   },
   // Account Role - Stamp Duty Approval
   {
-    id: 42,
+    id: 43,
     name: "New York Financial District",
     stage: "Stampduty approval",
     stageColor: "orange",
@@ -146,7 +155,7 @@ const ALL_BRANCHES = [
   },
   // Account Role - Advance to fit_out Vendor
   {
-    id: 43,
+    id: 44,
     name: "Austin Tech Campus",
     stage: "Advance to fit_out Vendor",
     stageColor: "blue",

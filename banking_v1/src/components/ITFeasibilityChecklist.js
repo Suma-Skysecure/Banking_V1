@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import ToastNotification from "@/components/ToastNotification";
 
 /* ===================== IT FEASIBILITY CHECKLIST ===================== */
 
@@ -114,6 +115,9 @@ export default function ITFeasibilityChecklist({ branchId }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [uploadedLOI, setUploadedLOI] = useState(null);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationType, setNotificationType] = useState("success");
 
   /* ===================== LOAD ===================== */
 
@@ -285,7 +289,9 @@ export default function ITFeasibilityChecklist({ branchId }) {
     setSubmitted(true);
     setSubmittedBy(payload.submittedBy);
     setSubmittedAt(payload.submittedAt);
-    alert("IT Assessment submitted (65%)");
+    setNotificationMessage("IT Assessment submitted successfully (65% complete)");
+    setNotificationType("success");
+    setShowNotification(true);
   };
 
   const handleSendToBRT = () => {
@@ -303,7 +309,9 @@ export default function ITFeasibilityChecklist({ branchId }) {
 
     updateDashboard("Pending Approval", 65);
     setSentToBRT(true);
-    alert("Sent to BRT Team");
+    setNotificationMessage("Assessment sent to BRT Team for review");
+    setNotificationType("success");
+    setShowNotification(true);
   };
 
   const handleDelete = () => {
@@ -320,226 +328,480 @@ export default function ITFeasibilityChecklist({ branchId }) {
     setSubmittedAt(null);
     setSubmittedBy("");
     setShowDeleteConfirm(false);
-
-    alert("IT Assessment deleted successfully");
+    setNotificationMessage("IT Assessment deleted successfully");
+    setNotificationType("success");
+    setShowNotification(true);
   };
 
   /* ===================== UI ===================== */
 
+  // Calculate section completion
+  const getSectionProgress = (sectionId) => {
+    const sectionData = data[sectionId];
+    if (!sectionData?.checks) return 0;
+    const checked = Object.values(sectionData.checks).filter(Boolean).length;
+    const total = SECTIONS.find(s => s.id === sectionId)?.items.length || 0;
+    return total > 0 ? Math.round((checked / total) * 100) : 0;
+  };
+
+  // Get section icon
+  const getSectionIcon = (sectionId) => {
+    const icons = {
+      network: "🌐",
+      hardware: "💻",
+      power: "⚡",
+      software: "📱",
+      security: "🔒",
+      dr: "🔄",
+      compliance: "📋"
+    };
+    return icons[sectionId] || "📝";
+  };
+
   if (!branchId) return <p style={{ padding: 24 }}>Invalid Branch</p>;
 
   return (
-    <div style={{ maxWidth: 1100, margin: "auto", padding: 24 }}>
-      {/* HEADER REMOVED AS REQUESTED */}
-
-      {/* POST-LOI ACTIVITY HEADER */}
-      {/* Header removed */}
-
-      {/* BRANCH DETAILS HEADER CARD */}
-      <div style={{ ...card, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <h2 style={{ color: "#1e3a8a", fontSize: "20px", fontWeight: "700", marginBottom: "8px" }}>{branchName}</h2>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#6b7280", marginBottom: "16px" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3"></circle>
-            </svg>
-            <span style={{ fontSize: "14px" }}>1450 Biscayne Boulevard, Miami, FL 33132</span>
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px" }}>
+      {/* Progress Summary Card */}
+      <div style={{
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        padding: "24px",
+        borderRadius: "12px",
+        marginBottom: "24px",
+        color: "white",
+        boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)"
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: "20px", fontWeight: "600", marginBottom: "8px" }}>IT Feasibility Assessment Progress</h2>
+            <p style={{ margin: 0, fontSize: "14px", opacity: 0.9 }}>Complete all mandatory sections to submit</p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "6px", backgroundColor: "#eff6ff", color: "#1e40af", padding: "4px 12px", borderRadius: "100px", fontSize: "13px", fontWeight: "600" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-              Pending Payment Approval
-            </span>
-            <span style={{ color: "#6b7280", fontSize: "13px" }}>Property ID: PROP-MIA-2024-002</span>
+          <div style={{
+            background: "rgba(255, 255, 255, 0.2)",
+            padding: "12px 20px",
+            borderRadius: "8px",
+            textAlign: "center"
+          }}>
+            <div style={{ fontSize: "28px", fontWeight: "700" }}>{totalBudget.toLocaleString('en-IN')}</div>
+            <div style={{ fontSize: "12px", opacity: 0.9 }}>Total Budget (₹)</div>
           </div>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ color: "#1e3a8a", fontSize: "24px", fontWeight: "700", marginBottom: "4px" }}>₹ 48,43,00,000</div>
-          <div style={{ color: "#6b7280", fontSize: "12px" }}>LOI Circulated on Dec 18, 2024</div>
-        </div>
-      </div>
-
-      {/* BUSINESS DETAILS SUMMARY */}
-      <div style={card}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" strokeWidth="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="9" y1="3" x2="9" y2="21"></line>
-          </svg>
-          <h3 style={{ margin: 0, color: "#1e3a8a", fontSize: "16px", fontWeight: "600" }}>Business Details Summary</h3>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "24px" }}>
-          {/* Row 1 */}
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>PROPERTY ID</div>
-            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>PROP-MIA-2024-002</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>PARKING SPACES</div>
-            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>8 Reserved</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>ZONING</div>
-            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>Commercial/Retail</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>PROPERTY TYPE</div>
-            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>Mixed Use</div>
-          </div>
-
-          {/* Row 2 */}
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>YEAR BUILT</div>
-            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>2019</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>LISTING STATUS</div>
-            <div style={{ display: "inline-block", backgroundColor: "#d1fae5", color: "#065f46", fontSize: "12px", fontWeight: "600", padding: "2px 8px", borderRadius: "4px" }}>Active</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>TOTAL AREA</div>
-            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>4,200 sq ft</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>VENDOR NAME</div>
-            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>Biscayne Development</div>
-          </div>
-
-          {/* Row 3 */}
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>AVAILABILITY</div>
-            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>30 days</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>FLOOR LEVEL</div>
-            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>Ground Floor + Mezzanine</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>VENDOR CONTACT</div>
-            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>+1 (305) 555-0198</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase" }}>LAST INSPECTION</div>
-            <div style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>Dec 10, 2024</div>
-          </div>
-        </div>
-      </div>
-      <div style={card}>
-        <h3>LOI Document</h3>
-        {uploadedLOI ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "15px", border: "1px solid #e0e0e0", borderRadius: "8px", backgroundColor: "#f9fafb" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-              <div style={{ width: "40px", height: "40px", backgroundColor: "#ffebee", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#f44336" }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-              </div>
-              <div>
-                <div style={{ fontWeight: "600", color: "#333", marginBottom: "4px" }}>{uploadedLOI.name}</div>
-                <div style={{ fontSize: "12px", color: "#666" }}>
-                  Uploaded on {formatDate(uploadedLOI.uploadDate)} • {formatFileSize(uploadedLOI.size)}
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          {SECTIONS.filter(s => s.mandatory).map(section => {
+            const progress = getSectionProgress(section.id);
+            const isComplete = progress === 100;
+            return (
+              <div key={section.id} style={{
+                flex: "1",
+                minWidth: "150px",
+                background: "rgba(255, 255, 255, 0.15)",
+                padding: "12px",
+                borderRadius: "8px",
+                backdropFilter: "blur(10px)"
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: "500" }}>{section.title.replace(" *", "")}</span>
+                  {isComplete && <span style={{ fontSize: "16px" }}>✓</span>}
                 </div>
+                <div style={{
+                  height: "6px",
+                  background: "rgba(255, 255, 255, 0.3)",
+                  borderRadius: "3px",
+                  overflow: "hidden"
+                }}>
+                  <div style={{
+                    height: "100%",
+                    width: `${progress}%`,
+                    background: isComplete ? "#10b981" : "white",
+                    transition: "width 0.3s ease"
+                  }} />
+                </div>
+                <div style={{ fontSize: "11px", marginTop: "4px", opacity: 0.9 }}>{progress}% Complete</div>
               </div>
-            </div>
-            <button
-              onClick={handleViewDocument}
-              style={{ padding: "8px 16px", backgroundColor: "#1e40af", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", fontWeight: "500" }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-              </svg>
-              View Document
-            </button>
-          </div>
-        ) : (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px", border: "1px solid #e0e0e0", borderRadius: "8px", backgroundColor: "#f9fafb", color: "#666", fontSize: "14px", textAlign: "center" }}>
-            No LOI document uploaded yet. Please upload a signed LOI document from the Legal Workflow page.
-          </div>
-        )}
+            );
+          })}
+        </div>
       </div>
 
       {/* SECTIONS */}
-      {SECTIONS.map(section => (
-        <div key={section.id} style={card}>
-          <h3>{section.title}</h3>
+      {SECTIONS.map(section => {
+        const progress = getSectionProgress(section.id);
+        const isComplete = progress === 100;
+        const checkedCount = data?.[section.id]?.checks ? Object.values(data[section.id].checks).filter(Boolean).length : 0;
+        
+        return (
+          <div key={section.id} style={{
+            ...card,
+            borderLeft: `4px solid ${isComplete ? "#10b981" : section.mandatory ? "#3b82f6" : "#94a3b8"}`,
+            position: "relative"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
+                <div style={{
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "12px",
+                  background: isComplete ? "#d1fae5" : section.mandatory ? "#dbeafe" : "#f1f5f9",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "24px"
+                }}>
+                  {getSectionIcon(section.id)}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                    <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600", color: "#111827" }}>
+                      {section.title}
+                    </h3>
+                    {isComplete && (
+                      <span style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        padding: "4px 10px",
+                        background: "#d1fae5",
+                        color: "#065f46",
+                        borderRadius: "12px",
+                        fontSize: "12px",
+                        fontWeight: "600"
+                      }}>
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                          <path d="M13.5 4L6 11.5L2.5 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        Complete
+                      </span>
+                    )}
+                    {section.mandatory && !isComplete && (
+                      <span style={{
+                        padding: "4px 10px",
+                        background: "#fef3c7",
+                        color: "#92400e",
+                        borderRadius: "12px",
+                        fontSize: "11px",
+                        fontWeight: "600"
+                      }}>
+                        Required
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: "13px", color: "#6b7280" }}>
+                    {checkedCount} of {section.items.length} items completed
+                  </div>
+                </div>
+              </div>
+              <div style={{
+                width: "60px",
+                height: "60px",
+                borderRadius: "50%",
+                background: isComplete ? "#d1fae5" : "#f3f4f6",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "14px",
+                fontWeight: "600",
+                color: isComplete ? "#065f46" : "#6b7280"
+              }}>
+                {progress}%
+              </div>
+            </div>
 
-          {section.items.map(item => (
-            <label key={item} style={checkItem}>
-              <input
-                type="checkbox"
-                checked={data?.[section.id]?.checks?.[item] || false}
-                onChange={e =>
-                  updateSection(section.id, "checks", {
-                    ...(data?.[section.id]?.checks || {}),
-                    [item]: e.target.checked,
-                  })
-                }
-              />
-              {item}
-            </label>
-          ))}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+              gap: "12px",
+              marginBottom: "20px"
+            }}>
+              {section.items.map(item => {
+                const isChecked = data?.[section.id]?.checks?.[item] || false;
+                return (
+                  <label key={item} style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "12px",
+                    background: isChecked ? "#f0fdf4" : "#f9fafb",
+                    border: `2px solid ${isChecked ? "#10b981" : "#e5e7eb"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    position: "relative"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isChecked) {
+                      e.currentTarget.style.borderColor = "#3b82f6";
+                      e.currentTarget.style.background = "#eff6ff";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isChecked) {
+                      e.currentTarget.style.borderColor = "#e5e7eb";
+                      e.currentTarget.style.background = "#f9fafb";
+                    }
+                  }}
+                  >
+                    <div style={{ position: "relative", flexShrink: 0 }}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={e =>
+                          updateSection(section.id, "checks", {
+                            ...(data?.[section.id]?.checks || {}),
+                            [item]: e.target.checked,
+                          })
+                        }
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          cursor: "pointer",
+                          accentColor: "#10b981"
+                        }}
+                      />
+                      {isChecked && (
+                        <div style={{
+                          position: "absolute",
+                          top: "2px",
+                          left: "2px",
+                          width: "16px",
+                          height: "16px",
+                          pointerEvents: "none"
+                        }}>
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M13.5 4L6 11.5L2.5 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <span style={{
+                      fontSize: "14px",
+                      color: isChecked ? "#065f46" : "#374151",
+                      fontWeight: isChecked ? "500" : "400",
+                      flex: 1
+                    }}>
+                      {item}
+                    </span>
+                    {isChecked && (
+                      <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                        <circle cx="8" cy="8" r="7" fill="#10b981" />
+                        <path d="M5 8L7 10L11 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
 
-          <textarea
-            placeholder="Section comments / risks"
-            value={data?.[section.id]?.comment || ""}
-            onChange={e =>
-              updateSection(section.id, "comment", e.target.value)
-            }
-            style={textarea}
-          />
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 200px",
+              gap: "16px",
+              marginTop: "20px"
+            }}>
+              <div>
+                <label style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: "#374151",
+                  marginBottom: "8px"
+                }}>
+                  Section Comments / Risks
+                </label>
+                <textarea
+                  placeholder="Add any comments, risks, or observations for this section..."
+                  value={data?.[section.id]?.comment || ""}
+                  onChange={e =>
+                    updateSection(section.id, "comment", e.target.value)
+                  }
+                  style={{
+                    ...textarea,
+                    minHeight: "100px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "8px",
+                    padding: "12px",
+                    fontSize: "14px",
+                    fontFamily: "inherit",
+                    resize: "vertical"
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: "#374151",
+                  marginBottom: "8px"
+                }}>
+                  Estimated Budget (₹)
+                </label>
+                <input
+                  type="number"
+                  placeholder="Enter amount"
+                  value={data?.[section.id]?.budget || ""}
+                  onChange={e =>
+                    updateSection(section.id, "budget", e.target.value)
+                  }
+                  style={{
+                    ...input,
+                    width: "100%",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "8px",
+                    padding: "12px",
+                    fontSize: "14px",
+                    fontFamily: "inherit"
+                  }}
+                />
+                {data?.[section.id]?.budget && (
+                  <div style={{
+                    marginTop: "8px",
+                    fontSize: "12px",
+                    color: "#6b7280"
+                  }}>
+                    ₹{Number(data[section.id].budget).toLocaleString('en-IN')}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
 
-          <input
-            type="number"
-            placeholder="Estimated budget ₹"
-            value={data?.[section.id]?.budget || ""}
-            onChange={e =>
-              updateSection(section.id, "budget", e.target.value)
-            }
-            style={input}
-          />
+      {/* OVERALL REMARKS */}
+      <div style={{
+        ...card,
+        background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+        border: "2px solid #e2e8f0"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+          <div style={{
+            width: "48px",
+            height: "48px",
+            borderRadius: "12px",
+            background: "#dbeafe",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "24px"
+          }}>
+            📝
+          </div>
+          <div>
+            <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600", color: "#111827" }}>
+              Overall IT Remarks <span style={{ color: "#dc2626" }}>*</span>
+            </h3>
+            <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#6b7280" }}>
+              Provide comprehensive assessment remarks and recommendations
+            </p>
+          </div>
         </div>
-      ))}
-
-      {/* OVERALL */}
-      <div style={card}>
-        <h3>Overall IT Remarks *</h3>
         <textarea
           value={overallRemarks}
           onChange={e => setOverallRemarks(e.target.value)}
-          style={textarea}
+          placeholder="Enter your overall assessment, key findings, risks, and recommendations..."
+          style={{
+            ...textarea,
+            minHeight: "120px",
+            border: "1px solid #d1d5db",
+            borderRadius: "8px",
+            padding: "16px",
+            fontSize: "14px",
+            fontFamily: "inherit",
+            resize: "vertical",
+            background: "white"
+          }}
         />
-        <h4>Total Estimated Budget: ₹ {totalBudget.toLocaleString()}</h4>
+        <div style={{
+          marginTop: "20px",
+          padding: "16px",
+          background: "white",
+          borderRadius: "8px",
+          border: "1px solid #e5e7eb",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
+          <div>
+            <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>Total Estimated Budget</div>
+            <div style={{ fontSize: "24px", fontWeight: "700", color: "#1e3a8a" }}>
+              ₹ {totalBudget.toLocaleString('en-IN')}
+            </div>
+          </div>
+          <div style={{
+            padding: "8px 16px",
+            background: totalBudget > 0 ? "#dbeafe" : "#f3f4f6",
+            borderRadius: "8px",
+            fontSize: "13px",
+            fontWeight: "600",
+            color: totalBudget > 0 ? "#1e40af" : "#6b7280"
+          }}>
+            {SECTIONS.filter(s => data[s.id]?.budget).length} sections budgeted
+          </div>
+        </div>
       </div>
 
       {/* ACTIONS */}
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "20px",
+        background: "white",
+        borderRadius: "12px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+        marginTop: "24px"
+      }}>
         <button
           onClick={() => setShowDeleteConfirm(true)}
-          style={{ ...button, background: "#f44336" }}
+          style={{
+            ...button,
+            background: "#fee2e2",
+            color: "#dc2626",
+            border: "1px solid #fecaca"
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = "#fecaca";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = "#fee2e2";
+          }}
         >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginRight: "8px", display: "inline" }}>
+            <path d="M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
           Delete Assessment
         </button>
 
-        <div>
+        <div style={{ display: "flex", gap: "12px" }}>
           {!submitted && (
             <button
               disabled={!canSubmit}
               onClick={handleSubmit}
               style={{
                 ...button,
-                background: canSubmit ? "#4caf50" : "#ccc",
+                background: canSubmit ? "#10b981" : "#d1d5db",
+                color: "white",
+                cursor: canSubmit ? "pointer" : "not-allowed",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                boxShadow: canSubmit ? "0 4px 12px rgba(16, 185, 129, 0.3)" : "none"
+              }}
+              onMouseEnter={(e) => {
+                if (canSubmit) {
+                  e.target.style.background = "#059669";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (canSubmit) {
+                  e.target.style.background = "#10b981";
+                }
               }}
             >
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                <path d="M13.5 4L6 11.5L2.5 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
               Submit IT Assessment
             </button>
           )}
@@ -547,8 +809,25 @@ export default function ITFeasibilityChecklist({ branchId }) {
           {submitted && !sentToBRT && (
             <button
               onClick={handleSendToBRT}
-              style={{ ...button, background: "#1976d2" }}
+              style={{
+                ...button,
+                background: "#3b82f6",
+                color: "white",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = "#2563eb";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "#3b82f6";
+              }}
             >
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                <path d="M2 8L6 12L14 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
               Send to BRT Team
             </button>
           )}
@@ -558,13 +837,90 @@ export default function ITFeasibilityChecklist({ branchId }) {
       {/* DOCUMENT PREVIEW MODAL */}
       {showDocumentModal && (
         <div style={modal} onClick={() => setShowDocumentModal(false)}>
-          <div style={{ ...modalBox, width: "800px", height: "80vh", maxWidth: "90%", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid #eee", paddingBottom: "15px" }}>
-              <h3 style={{ margin: 0 }}>LOI_{branchName.replace(/\s+/g, '_')}_2024.pdf</h3>
-              <button onClick={() => setShowDocumentModal(false)} style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer", color: "#666" }}>×</button>
+          <div style={{ 
+            ...modalBox, 
+            width: "900px", 
+            height: "85vh", 
+            maxWidth: "95%", 
+            display: "flex", 
+            flexDirection: "column",
+            padding: 0,
+            overflow: "hidden"
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ 
+              display: "flex", 
+              justifyContent: "space-between", 
+              alignItems: "center", 
+              padding: "20px 24px",
+              borderBottom: "1px solid #e5e7eb",
+              background: "#f9fafb"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "8px",
+                  background: "#fee2e2",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M14 2V8H20" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600", color: "#111827" }}>
+                    LOI_{branchName.replace(/\s+/g, '_')}_2024.pdf
+                  </h3>
+                  <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#6b7280" }}>
+                    Letter of Intent Document
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowDocumentModal(false)} 
+                style={{ 
+                  background: "none", 
+                  border: "none", 
+                  fontSize: "24px", 
+                  cursor: "pointer", 
+                  color: "#6b7280",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#f3f4f6";
+                  e.target.style.color = "#111827";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "none";
+                  e.target.style.color = "#6b7280";
+                }}
+              >
+                ×
+              </button>
             </div>
-            <div style={{ flex: 1, backgroundColor: "#f5f5f5", borderRadius: "8px", padding: "40px", overflowY: "auto", border: "1px solid #ddd" }}>
-              <div style={{ backgroundColor: "white", width: "100%", minHeight: "800px", padding: "60px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
+            <div style={{ 
+              flex: 1, 
+              backgroundColor: "#f9fafb", 
+              padding: "24px", 
+              overflowY: "auto"
+            }}>
+              <div style={{ 
+                backgroundColor: "white", 
+                width: "100%", 
+                minHeight: "100%", 
+                padding: "60px", 
+                boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                borderRadius: "8px"
+              }}>
                 <h1 style={{ textAlign: "center", marginBottom: "40px", color: "#333" }}>LETTER OF INTENT</h1>
                 <p style={{ textAlign: "right", marginBottom: "40px" }}>Date: December 18, 2024</p>
 
@@ -608,21 +964,75 @@ export default function ITFeasibilityChecklist({ branchId }) {
 
       {/* DELETE CONFIRM */}
       {showDeleteConfirm && (
-        <div style={modal}>
-          <div style={modalBox}>
-            <h3>Confirm Delete</h3>
-            <p>Are you sure you want to delete this IT assessment?</p>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={handleDelete} style={{ ...button, background: "#f44336" }}>
-                Yes, Delete
-              </button>
-              <button onClick={() => setShowDeleteConfirm(false)} style={button}>
+        <div style={modal} onClick={() => setShowDeleteConfirm(false)}>
+          <div style={modalBox} onClick={e => e.stopPropagation()}>
+            <div style={{ marginBottom: "20px" }}>
+              <div style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                background: "#fee2e2",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: "16px"
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 9V13M12 17H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </div>
+              <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600", color: "#111827", marginBottom: "8px" }}>
+                Confirm Delete
+              </h3>
+              <p style={{ margin: 0, fontSize: "14px", color: "#6b7280" }}>
+                Are you sure you want to delete this IT assessment? This action cannot be undone.
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+              <button 
+                onClick={() => setShowDeleteConfirm(false)} 
+                style={{
+                  ...button,
+                  background: "#f3f4f6",
+                  color: "#374151"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#e5e7eb";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "#f3f4f6";
+                }}
+              >
                 Cancel
+              </button>
+              <button 
+                onClick={handleDelete} 
+                style={{
+                  ...button,
+                  background: "#dc2626",
+                  color: "white"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#b91c1c";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "#dc2626";
+                }}
+              >
+                Yes, Delete
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Toast Notification */}
+      <ToastNotification
+        show={showNotification}
+        message={notificationMessage}
+        type={notificationType}
+        onClose={() => setShowNotification(false)}
+      />
     </div>
   );
 }
@@ -631,10 +1041,12 @@ export default function ITFeasibilityChecklist({ branchId }) {
 
 const card = {
   background: "#fff",
-  padding: 20,
-  borderRadius: 10,
-  marginBottom: 20,
+  padding: "24px",
+  borderRadius: "12px",
+  marginBottom: "24px",
   boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+  border: "1px solid #e5e7eb",
+  transition: "all 0.2s"
 };
 
 const checkItem = { display: "block", marginBottom: 6 };
@@ -643,19 +1055,35 @@ const textarea = {
   width: "100%",
   marginTop: 10,
   padding: 8,
+  border: "1px solid #d1d5db",
+  borderRadius: "8px",
+  fontSize: "14px",
+  fontFamily: "inherit",
+  resize: "vertical"
 };
 
 const input = {
   marginTop: 10,
   padding: 6,
   width: 220,
+  border: "1px solid #d1d5db",
+  borderRadius: "8px",
+  fontSize: "14px",
+  fontFamily: "inherit"
 };
 
 const button = {
   padding: "12px 24px",
   color: "#fff",
   border: "none",
-  borderRadius: 6,
+  borderRadius: "8px",
+  fontSize: "14px",
+  fontWeight: "600",
+  cursor: "pointer",
+  transition: "all 0.2s",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center"
 };
 
 const badge = {
@@ -669,16 +1097,18 @@ const badge = {
 const modal = {
   position: "fixed",
   inset: 0,
-  background: "rgba(0,0,0,0.4)",
+  background: "rgba(0,0,0,0.5)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   zIndex: 9999,
+  backdropFilter: "blur(4px)"
 };
 
 const modalBox = {
   background: "#fff",
-  padding: 20,
-  borderRadius: 10,
+  padding: "24px",
+  borderRadius: "12px",
   width: 320,
+  boxShadow: "0 10px 40px rgba(0,0,0,0.2)"
 };

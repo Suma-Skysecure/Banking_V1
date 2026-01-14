@@ -300,6 +300,53 @@ export default function LegalDueDiligencePage() {
     }
   }, []);
 
+  // Listen for BRT confirmation status changes and update compliance status
+  useEffect(() => {
+    const SHARED_STORAGE_KEY = "legalBrtCallStatus_PROP-MIA-2024-002";
+    
+    // Check initial BRT status from localStorage
+    const checkBrtStatus = () => {
+      if (typeof window !== 'undefined') {
+        const brtStatus = localStorage.getItem(SHARED_STORAGE_KEY);
+        if (brtStatus === "approved") {
+          setBrtConfirmed(true);
+          setComplianceConfirmed(true);
+        }
+      }
+    };
+
+    // Check on mount
+    checkBrtStatus();
+
+    // Listen for custom event from LegalCallPanel
+    const handleBrtStatusUpdate = (event) => {
+      if (event.detail?.status === "approved") {
+        setBrtConfirmed(true);
+        setComplianceConfirmed(true);
+      }
+    };
+
+    // Listen for storage changes
+    const handleStorageChange = (event) => {
+      if (event.key === SHARED_STORAGE_KEY && event.newValue === "approved") {
+        setBrtConfirmed(true);
+        setComplianceConfirmed(true);
+      }
+    };
+
+    window.addEventListener('legalBrtStatusUpdate', handleBrtStatusUpdate);
+    window.addEventListener('storage', handleStorageChange);
+
+    // Polling interval to ensure synchronization
+    const intervalId = setInterval(checkBrtStatus, 1000);
+
+    return () => {
+      window.removeEventListener('legalBrtStatusUpdate', handleBrtStatusUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(intervalId);
+    };
+  }, []);
+
   // Save state to localStorage whenever it changes
   useEffect(() => {
     const stateToSave = {
@@ -356,7 +403,8 @@ export default function LegalDueDiligencePage() {
     setCallRequired(value);
     if (value === "yes") {
       setBrtConfirmed(false);
-      setBusinessDecisionStatus("pending");
+      // When "Yes" is clicked, set Business Decision Status to "completed"
+      setBusinessDecisionStatus("completed");
     }
   };
 
@@ -367,6 +415,11 @@ export default function LegalDueDiligencePage() {
 
   const handleBrtConfirmed = (confirmed) => {
     setBrtConfirmed(confirmed);
+    // When BRT approves (status changes from "Pending Confirmation" to "BRT Approved"),
+    // set Compliance Confirmation Status to "completed"
+    if (confirmed) {
+      setComplianceConfirmed(true);
+    }
   };
 
   const handleBusinessDecisionComplete = (status) => {

@@ -231,7 +231,7 @@ export default function LegalComplianceStatus({
                 Compliance of business decision
               </div>
             </div>
-            {getStatusBadge(complianceConfirmed ? "approved" : "pending")}
+            {getStatusBadge(complianceConfirmed ? "completed" : "pending")}
           </div>
 
           {/* Final Status */}

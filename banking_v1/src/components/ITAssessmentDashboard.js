@@ -11,12 +11,9 @@ import "@/css/pageHeader.css";
 /* ===================== BRANCH DATA ===================== */
 
 const ALL_BRANCHES = [
-  { id: 1, name: "Downtown Manhattan Branch", category: "business", city: "New York", date: "2023-10-15" },
-  { id: 2, name: "Beverly Hills Boutique", category: "retail", city: "Los Angeles", date: "2023-11-02" },
-  { id: 3, name: "Chicago River North Site", category: "business", city: "Chicago", date: "2023-09-28" },
-  { id: 4, name: "Miami South Beach Location", category: "business", city: "Miami", date: "2023-12-10" },
-  { id: 5, name: "Seattle Waterfront Project", category: "commercial", city: "Seattle", date: "2024-01-05" },
-  { id: 6, name: "New York Financial District", category: "business", city: "New York", date: "2023-10-20" },
+  { id: 1, name: "New York Financial District",  city: "New York", date: "2023-10-15" },
+  { id: 2, name: "Austin Tech Campus", city: "Los Angeles", date: "2023-11-02" },
+
 ];
 
 /* ===================== DASHBOARD ===================== */
