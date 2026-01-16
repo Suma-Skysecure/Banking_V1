@@ -20,6 +20,7 @@ export default function AgreementExecution() {
   const [legalDocuments, setLegalDocuments] = useState([]);
   const [itAssessmentData, setItAssessmentData] = useState(null);
   const [itApprovalData, setItApprovalData] = useState(null);
+  const [itChecklistAssessment, setItChecklistAssessment] = useState(null);
   const [property, setProperty] = useState(null);
   const [submissionDate, setSubmissionDate] = useState(null);
   
@@ -86,6 +87,12 @@ export default function AgreementExecution() {
         setItApprovalData(null);
         setItAssessmentData(null);
       }
+
+      // 3. Load IT Checklist Assessment (from ITFeasibilityChecklist component)
+      const checklistData = JSON.parse(localStorage.getItem('itAssessment_1') || "{}");
+      if (checklistData && checklistData.data && Object.keys(checklistData.data).length > 0) {
+        setItChecklistAssessment(checklistData);
+      }
     };
 
     checkStatus();
@@ -93,9 +100,23 @@ export default function AgreementExecution() {
     // Listen for updates
     window.addEventListener('agreementBranchesUpdated', checkStatus);
     window.addEventListener('storage', checkStatus);
+    
+    // Listen for IT assessment updates
+    const handleITAssessmentUpdate = (e) => {
+      if (e.key === 'itAssessment_1' || !e.key) {
+        const checklistData = JSON.parse(localStorage.getItem('itAssessment_1') || "{}");
+        if (checklistData && checklistData.data && Object.keys(checklistData.data).length > 0) {
+          setItChecklistAssessment(checklistData);
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleITAssessmentUpdate);
+    
     return () => {
       window.removeEventListener('agreementBranchesUpdated', checkStatus);
       window.removeEventListener('storage', checkStatus);
+      window.removeEventListener('storage', handleITAssessmentUpdate);
     };
   }, []);
 
@@ -1998,7 +2019,7 @@ export default function AgreementExecution() {
             background: "#fff",
             borderRadius: "12px",
             width: "90%",
-            maxWidth: "900px",
+            maxWidth: "1000px",
             maxHeight: "90vh",
             overflow: "auto",
             boxShadow: "0 10px 40px rgba(0,0,0,0.2)"
@@ -2008,10 +2029,14 @@ export default function AgreementExecution() {
               justifyContent: "space-between",
               alignItems: "center",
               padding: "20px 24px",
-              borderBottom: "1px solid #e5e7eb"
+              borderBottom: "1px solid #e5e7eb",
+              position: "sticky",
+              top: 0,
+              background: "#fff",
+              zIndex: 10
             }}>
               <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600", color: "#111827" }}>
-                IT Assessment
+                IT Assessment Details
               </h3>
               <button onClick={() => setShowITModal(false)} style={{
                 background: "none",
@@ -2022,7 +2047,213 @@ export default function AgreementExecution() {
               }}>×</button>
             </div>
             <div style={{ padding: "24px" }}>
-              {itAssessmentData ? (
+              {itChecklistAssessment && itChecklistAssessment.data ? (
+                <div style={{ display: "grid", gap: "24px" }}>
+                  {/* Assessment Status Header */}
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "16px",
+                    backgroundColor: "#f9fafb",
+                    borderRadius: "8px",
+                    border: "1px solid #e5e7eb"
+                  }}>
+                    <div>
+                      <div style={{ fontSize: "14px", fontWeight: "600", color: "#111827", marginBottom: "4px" }}>
+                        Assessment Status
+                      </div>
+                      <div style={{ fontSize: "13px", color: "#6b7280" }}>
+                        {itChecklistAssessment.submitted ? (itChecklistAssessment.sentToBRT ? "Sent to BRT Team" : "Submitted") : "Draft"}
+                        {itChecklistAssessment.submittedBy && ` • Submitted by: ${itChecklistAssessment.submittedBy}`}
+                      </div>
+                      {itChecklistAssessment.submittedAt && (
+                        <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "4px" }}>
+                          Submitted on: {formatDate(itChecklistAssessment.submittedAt)}
+                        </div>
+                      )}
+                    </div>
+                    {itApprovalData?.status === "approved" && (
+                      <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "6px 12px",
+                        backgroundColor: "#d1fae5",
+                        color: "#065f46",
+                        borderRadius: "20px",
+                        fontSize: "13px",
+                        fontWeight: "600"
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                          <path d="M13 4L6 11L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        BRT Approved
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Checklist Sections */}
+                  <div>
+                    <h4 style={{ fontSize: "16px", fontWeight: "600", color: "#111827", marginBottom: "16px" }}>
+                      IT Feasibility Checklist Sections
+                    </h4>
+                    <div style={{ display: "grid", gap: "16px" }}>
+                      {Object.entries(itChecklistAssessment.data).map(([sectionId, sectionData]) => {
+                        if (!sectionData || (!sectionData.checks && !sectionData.comment && !sectionData.budget)) return null;
+                        
+                        const sectionTitles = {
+                          network: "Network & Connectivity",
+                          hardware: "Hardware & Infrastructure",
+                          power: "Power & Utilities",
+                          software: "Software & Applications",
+                          security: "Security & Compliance",
+                          dr: "Business Continuity & DR",
+                          compliance: "Regulatory & Audit Readiness"
+                        };
+
+                        const checkedItems = sectionData.checks ? Object.entries(sectionData.checks).filter(([_, checked]) => checked).map(([item]) => item) : [];
+                        const totalBudget = Object.values(itChecklistAssessment.data).reduce((sum, sec) => sum + (Number(sec?.budget) || 0), 0);
+
+                        return (
+                          <div key={sectionId} style={{
+                            padding: "16px",
+                            backgroundColor: "#fff",
+                            borderRadius: "8px",
+                            border: "1px solid #e5e7eb",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+                          }}>
+                            <h5 style={{ 
+                              fontSize: "15px", 
+                              fontWeight: "600", 
+                              color: "#111827", 
+                              marginBottom: "12px",
+                              paddingBottom: "8px",
+                              borderBottom: "1px solid #e5e7eb"
+                            }}>
+                              {sectionTitles[sectionId] || sectionId}
+                            </h5>
+
+                            {/* Checked Items */}
+                            {checkedItems.length > 0 && (
+                              <div style={{ marginBottom: "12px" }}>
+                                <div style={{ fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase" }}>
+                                  Completed Items ({checkedItems.length})
+                                </div>
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "8px" }}>
+                                  {checkedItems.map((item, idx) => (
+                                    <div key={idx} style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "8px",
+                                      padding: "8px 12px",
+                                      backgroundColor: "#f0fdf4",
+                                      borderRadius: "6px",
+                                      fontSize: "13px",
+                                      color: "#065f46"
+                                    }}>
+                                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                                        <path d="M13.5 4L6 11.5L2.5 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                      </svg>
+                                      {item}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Comments and Budget */}
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 180px", gap: "12px" }}>
+                              {sectionData.comment && (
+                                <div>
+                                  <div style={{ fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>Comments</div>
+                                  <div style={{ 
+                                    fontSize: "13px", 
+                                    color: "#374151", 
+                                    padding: "10px",
+                                    backgroundColor: "#f9fafb",
+                                    borderRadius: "6px",
+                                    border: "1px solid #e5e7eb",
+                                    minHeight: "60px",
+                                    whiteSpace: "pre-wrap"
+                                  }}>
+                                    {sectionData.comment}
+                                  </div>
+                                </div>
+                              )}
+                              {sectionData.budget && (
+                                <div>
+                                  <div style={{ fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>Budget (₹)</div>
+                                  <div style={{ 
+                                    fontSize: "16px", 
+                                    fontWeight: "600",
+                                    color: "#1e40af", 
+                                    padding: "10px",
+                                    backgroundColor: "#eff6ff",
+                                    borderRadius: "6px",
+                                    border: "1px solid #dbeafe",
+                                    textAlign: "center"
+                                  }}>
+                                    ₹{Number(sectionData.budget).toLocaleString('en-IN')}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Overall Remarks */}
+                  {itChecklistAssessment.overallRemarks && (
+                    <div style={{
+                      padding: "16px",
+                      backgroundColor: "#fef3c7",
+                      borderRadius: "8px",
+                      border: "1px solid #fcd34d"
+                    }}>
+                      <div style={{ fontSize: "14px", fontWeight: "600", color: "#92400e", marginBottom: "8px" }}>
+                        Overall IT Remarks
+                      </div>
+                      <div style={{ 
+                        fontSize: "14px", 
+                        color: "#78350f", 
+                        whiteSpace: "pre-wrap",
+                        lineHeight: "1.6"
+                      }}>
+                        {itChecklistAssessment.overallRemarks}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Total Budget Summary */}
+                  {(() => {
+                    const totalBudget = Object.values(itChecklistAssessment.data).reduce((sum, sec) => sum + (Number(sec?.budget) || 0), 0);
+                    if (totalBudget > 0) {
+                      return (
+                        <div style={{
+                          padding: "16px",
+                          backgroundColor: "#dbeafe",
+                          borderRadius: "8px",
+                          border: "1px solid #93c5fd",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center"
+                        }}>
+                          <div style={{ fontSize: "14px", fontWeight: "600", color: "#1e40af" }}>
+                            Total Estimated Budget
+                          </div>
+                          <div style={{ fontSize: "20px", fontWeight: "700", color: "#1e3a8a" }}>
+                            ₹{totalBudget.toLocaleString('en-IN')}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
+              ) : itAssessmentData ? (
                 <div style={{ display: "grid", gap: "20px" }}>
                   <div style={{
                     display: "flex",
@@ -2110,6 +2341,7 @@ export default function AgreementExecution() {
                   color: "#6b7280"
                 }}>
                   <p>No IT assessment data available yet.</p>
+                  <p style={{ fontSize: "13px", marginTop: "8px" }}>Please complete the IT Feasibility Assessment first.</p>
                 </div>
               )}
             </div>
