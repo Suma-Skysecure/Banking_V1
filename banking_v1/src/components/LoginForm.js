@@ -103,7 +103,18 @@ export default function LoginForm() {
         {/* Left Panel - Branding */}
         <div className="login-left-panel">
           <div className="login-overlay">
-            <h1 className="login-title">Branch Management System</h1>
+            <div className="login-title" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", justifyContent: "center" }}>
+              <img 
+                src="/kotak.png" 
+                alt="Kotak Logo" 
+                style={{ 
+                  height: "72px", 
+                  width: "auto",
+                  objectFit: "contain"
+                }} 
+              />
+              <h1 style={{ margin: 0, fontSize: "inherit", fontWeight: "inherit", textAlign: "center" }}>Branch Management System</h1>
+            </div>
             <p className="login-tagline">
               Streamlining every step of your business journey, from acquisition to launch.
             </p>

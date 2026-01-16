@@ -16,6 +16,9 @@ export const metadata = {
   title: "Branch Management System",
   description:
     "Branch Management System - Streamlining every step of your business journey",
+  icons: {
+    icon: "/title.png",
+  },
 };
 
 export default function RootLayout({ children }) {

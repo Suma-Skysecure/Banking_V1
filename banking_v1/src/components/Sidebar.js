@@ -22,7 +22,18 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
   return (
     <aside className={`dashboard-sidebar ${sidebarOpen ? "open" : "closed"}`}>
-      <div className="sidebar-logo">Branch Management System</div>
+      <div className="sidebar-logo" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+        <img 
+          src="/kotak.png" 
+          alt="Kotak Logo" 
+          style={{ 
+            height: "64px", 
+            width: "auto",
+            objectFit: "contain"
+          }} 
+        />
+        <span style={{ fontSize: "16px", textAlign: "center", lineHeight: "1.2" }}>Branch Management System</span>
+      </div>
       <nav className="sidebar-nav">
         {navigationItems.map((item, index) => {
           return (
