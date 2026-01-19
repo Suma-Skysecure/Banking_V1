@@ -1194,7 +1194,7 @@ export default function AgreementExecution() {
                   color: "#111827",
                   margin: 0
                 }}>
-                  Timesheet & Payment Status
+                  Termsheet & Payment Status
                 </h2>
               </div>
 
@@ -1266,7 +1266,7 @@ export default function AgreementExecution() {
                       color: "#111827",
                       marginBottom: "12px"
                     }}>
-                      $580,000
+                      ₹580,000
                     </div>
                     <div style={{
                       display: "flex",
@@ -1376,7 +1376,7 @@ export default function AgreementExecution() {
                       color: "#111827",
                       marginBottom: "12px"
                     }}>
-                      $40,600
+                      ₹40,600
                     </div>
                     <div style={{
                       display: "flex",
