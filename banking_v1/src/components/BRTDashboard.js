@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Sidebar from "@/components/Sidebar";
@@ -18,36 +18,124 @@ export default function BRTDashboard() {
   const { user } = useAuth();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [brtConfirmations, setBrtConfirmations] = useState([]);
 
-  // BRT Confirmation items - only BRT-related data
-  const brtConfirmations = [
-    {
-      id: 1,
-      name: "New York Financial District",
-      stage: "Pending",
-      stageColor: "yellow",
-      progress: 50,
-      pendingAction: "active",
-    },
-    {
-      id: 2,
-      name: "Austin Tech Campus",
-      stage: "Pending",
-      stageColor: "yellow",
-      progress: 50,
-      pendingAction: "active",
-    },
-  ];
+  // Load BRT branches from localStorage on mount
+  useEffect(() => {
+    const savedBranches = localStorage.getItem("brtBranches");
+    if (savedBranches) {
+      try {
+        const branches = JSON.parse(savedBranches);
+        // Ensure all BRT branches have 20% progress (if progress is 0 or undefined, set to 20)
+        const updatedBranches = branches.map(branch => ({
+          ...branch,
+          progress: (branch.progress === 0 || branch.progress === undefined) ? 20 : branch.progress,
+        }));
+        // Update localStorage if any branches were updated
+        const needsUpdate = branches.some(b => b.progress === 0 || b.progress === undefined);
+        if (needsUpdate) {
+          localStorage.setItem("brtBranches", JSON.stringify(updatedBranches));
+        }
+        setBrtConfirmations(updatedBranches);
+      } catch (error) {
+        console.error("Error loading BRT branches:", error);
+      }
+    }
 
-  const handleViewDetails = (e, item) => {
+    // Listen for new branches created by SRBM
+    const handleStorageChange = (e) => {
+      if (e.key === "brtBranches") {
+        try {
+          const updatedBranches = JSON.parse(e.newValue || "[]");
+          // Ensure all branches have 20% progress (if progress is 0 or undefined, set to 20)
+          const branchesWithProgress = updatedBranches.map(branch => ({
+            ...branch,
+            progress: (branch.progress === 0 || branch.progress === undefined) ? 20 : branch.progress,
+          }));
+          setBrtConfirmations(branchesWithProgress);
+        } catch (error) {
+          console.error("Error updating BRT branches:", error);
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Also listen for custom events (for same-tab updates)
+    const handleBranchUpdate = () => {
+      const savedBranches = localStorage.getItem("brtBranches");
+      if (savedBranches) {
+        try {
+          const branches = JSON.parse(savedBranches);
+          // Ensure all branches have 20% progress (if progress is 0 or undefined, set to 20)
+          const branchesWithProgress = branches.map(branch => ({
+            ...branch,
+            progress: (branch.progress === 0 || branch.progress === undefined) ? 20 : branch.progress,
+          }));
+          setBrtConfirmations(branchesWithProgress);
+        } catch (error) {
+          console.error("Error loading BRT branches:", error);
+        }
+      }
+    };
+
+    window.addEventListener("brtBranchUpdated", handleBranchUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("brtBranchUpdated", handleBranchUpdate);
+    };
+  }, []);
+
+  // Get route based on branch stage (same as BranchTracker)
+  const getStageRoute = (stage) => {
+    const stageRouteMap = {
+      "Property Search": "/property-search",
+      "Business Approval": "/business-approval",
+      "Legal Workflow": "/legal-workflow",
+      "Legal Clearance": "/legal-due",
+      "Project Execution": "/project-execution",
+      "Security guard deployment": "/legal-verification",
+      "PO to material vendor for Bought out Items": "/project-execution",
+      "Drawings to fit-out vendor": "/fit-out-vendor-process",
+      "PO to fit-out vendor": "/fit-out-vendor-po",
+      "Site Update": "/project-execution",
+      "Application for telephone connection": "/telephonic-connection-setup",
+      "Site Measurement": "/post-loi-activities",
+      "Agreement Execution": "/agreement-execution",
+      "Agreement Registration": "/agreement-registration",
+      "Agreement to Account": "/pim-update-rent-release",
+      "Advance to fit_out Vendor": "/accounts-review-process-orders",
+      "Post-LOI Activities": "/post-loi-activities",
+      "Layout Design": "/post-loi-layout-design",
+      "TSA (Stamp duty)": "/term-sheet-approval",
+      "TSA (Security Deposit)": "/security-deposit-payment",
+      "Vendor": "/vendor-creation",
+      "Budget approval": "/budget-approval",
+      "Stampduty approval": "/stamp-duty-payment-approval",
+      "Pending": "/brt-details",
+      "On Hold": null, // No redirect for On Hold
+      "Completed": null, // No redirect for Completed
+    };
+    return stageRouteMap[stage] || null;
+  };
+
+  const handleViewDetails = (e, branch) => {
     e.preventDefault();
-    // Navigate to BRT Details page with Legal and IT Feasibility sections
-    router.push("/brt-details");
+    // Always navigate to business-approval page
+    router.push("/business-approval");
+  };
+
+  const handleAddProperty = (e, item) => {
+    e.preventDefault();
+    // Navigate to Property Search page
+    router.push("/property-search");
   };
 
   const getProgressColor = (progress) => {
     if (progress === 100) return "green";
     if (progress >= 50) return "yellow";
+    if (progress === 20) return "orange"; // Orange color for 20% progress
     return "red";
   };
 
@@ -127,6 +215,11 @@ export default function BRTDashboard() {
                   branches={brtConfirmations}
                   onViewDetails={handleViewDetails}
                   getProgressColor={getProgressColor}
+                  viewDetailsText="View Details"
+                  actionType="link"
+                  onAddProperty={handleAddProperty}
+                  addPropertyText="Add Property"
+                  showAddProperty={true}
                 />
               </div>
             </div>

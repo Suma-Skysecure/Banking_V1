@@ -18,6 +18,7 @@ export default function BusinessApproval() {
   const [reviewComments, setReviewComments] = useState("");
   const [property, setProperty] = useState(null);
   const [submissionDate, setSubmissionDate] = useState(null);
+  const [activeTab, setActiveTab] = useState("business-approval");
   
   // Load property data from localStorage
   useEffect(() => {
@@ -304,6 +305,101 @@ export default function BusinessApproval() {
 
         <main className="dashboard-main">
           <div className="main-content">
+            {/* Tabs */}
+            <div style={{ 
+              marginBottom: "24px", 
+              borderBottom: "1px solid #e5e7eb" 
+            }}>
+              <div style={{ display: "flex", gap: "32px" }}>
+                <button
+                  onClick={() => setActiveTab("business-approval")}
+                  style={{
+                    padding: "16px 4px",
+                    borderBottom: activeTab === "business-approval" ? "2px solid #3b82f6" : "2px solid transparent",
+                    fontSize: "14px",
+                    fontWeight: activeTab === "business-approval" ? "600" : "500",
+                    color: activeTab === "business-approval" ? "#3b82f6" : "#6b7280",
+                    background: "none",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    borderRight: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeTab !== "business-approval") {
+                      e.target.style.color = "#374151";
+                      e.target.style.borderBottomColor = "#d1d5db";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeTab !== "business-approval") {
+                      e.target.style.color = "#6b7280";
+                      e.target.style.borderBottomColor = "transparent";
+                    }
+                  }}
+                >
+                  Business Approval
+                </button>
+                <button
+                  onClick={() => {
+                    router.push("/brt-details?tab=legal");
+                  }}
+                  style={{
+                    padding: "16px 4px",
+                    borderBottom: "2px solid transparent",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    color: "#6b7280",
+                    background: "none",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    borderRight: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.color = "#374151";
+                    e.target.style.borderBottomColor = "#d1d5db";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.color = "#6b7280";
+                    e.target.style.borderBottomColor = "transparent";
+                  }}
+                >
+                  Legal Clearance
+                </button>
+                <button
+                  onClick={() => {
+                    router.push("/brt-details?tab=it-feasibility");
+                  }}
+                  style={{
+                    padding: "16px 4px",
+                    borderBottom: "2px solid transparent",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    color: "#6b7280",
+                    background: "none",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    borderRight: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.color = "#374151";
+                    e.target.style.borderBottomColor = "#d1d5db";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.color = "#6b7280";
+                    e.target.style.borderBottomColor = "transparent";
+                  }}
+                >
+                  IT Feasibility
+                </button>
+              </div>
+            </div>
+
             <PageHeader
               title="Business Approval"
               subtitle="Review and approve property based on defined business criteria."
@@ -329,7 +425,10 @@ export default function BusinessApproval() {
               Back to Dashboard
             </Link>
 
-            {/* Property Overview Card */}
+            {/* Tab Content */}
+            {activeTab === "business-approval" && (
+              <>
+                {/* Property Overview Card */}
             <div className="property-overview-card">
               <div className="property-overview-left">
                 <h2 className="property-name-large">{displayProperty.name}</h2>
@@ -875,6 +974,8 @@ export default function BusinessApproval() {
                 </div>
               </div>
             </div>
+              </>
+            )}
           </div>
         </main>
       </div>

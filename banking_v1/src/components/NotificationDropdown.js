@@ -12,6 +12,7 @@ import { useNotifications } from "@/contexts/NotificationContext";
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Use the notification context instead of local state
   const {
@@ -21,6 +22,11 @@ export default function NotificationDropdown() {
     markAllAsRead,
     handleNotificationClick: onNotificationClick
   } = useNotifications();
+
+  // Only render client-side to avoid hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -154,7 +160,7 @@ export default function NotificationDropdown() {
           />
         </svg>
         {/* Badge for unread notifications */}
-        {unreadCount > 0 && (
+        {isMounted && unreadCount > 0 && (
           <span
             style={{
               position: "absolute",

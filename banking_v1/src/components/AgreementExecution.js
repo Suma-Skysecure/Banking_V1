@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
 import DashboardHeader from "@/components/DashboardHeader";
 import PropertySummaryCard from "@/components/PropertySummaryCard";
+import ToastNotification from "@/components/ToastNotification";
 import { useAuth } from "@/contexts/AuthContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
@@ -33,6 +34,11 @@ export default function AgreementExecution() {
   // Data states
   const [layoutDesignDocument, setLayoutDesignDocument] = useState(null);
   const [vendorDetails, setVendorDetails] = useState(null);
+  
+  // Toast notification states
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success");
 
   // Load property data from localStorage
   useEffect(() => {
@@ -1620,6 +1626,10 @@ export default function AgreementExecution() {
                   onMouseLeave={(e) => (e.target.style.backgroundColor = "#f97316")}
                   onClick={() => {
                     console.log("Proceed to Register Agreement");
+                    // Show success toast notification
+                    setToastMessage("Proceeding to register agreement...");
+                    setToastType("success");
+                    setShowToast(true);
                   }}
                 >
                   <span>Proceed to Register Agreement</span>
@@ -2348,6 +2358,15 @@ export default function AgreementExecution() {
           </div>
         </div>
       )}
+
+      {/* Toast Notification */}
+      <ToastNotification
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+        duration={3000}
+      />
     </div>
   );
 }

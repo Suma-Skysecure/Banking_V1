@@ -8,7 +8,9 @@ import DashboardTable from "@/components/DashboardTable";
 import UserProfile from "@/components/UserProfile";
 import NotificationDropdown from "@/components/NotificationDropdown";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import { filterBranchesByRole } from "@/config/roleStageMapping";
+import ToastNotification from "@/components/ToastNotification";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 
@@ -19,6 +21,7 @@ const ALL_BRANCHES = [];
 export default function BranchTracker() {
   const router = useRouter();
   const { user } = useAuth();
+  const { createNotification } = useNotifications();
   const [viewMode, setViewMode] = useState("list");
   const [currentPage, setCurrentPage] = useState(1);
   const [cityFilter, setCityFilter] = useState("all");
@@ -28,17 +31,48 @@ export default function BranchTracker() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [customBranches, setCustomBranches] = useState([]);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [branchToDelete, setBranchToDelete] = useState(null);
 
-  // Load custom branches from localStorage on mount
+  // Load custom branches from localStorage on mount and listen for updates
   useEffect(() => {
-    const savedBranches = localStorage.getItem("customBranches");
-    if (savedBranches) {
-      try {
-        setCustomBranches(JSON.parse(savedBranches));
-      } catch (error) {
-        console.error("Error loading custom branches:", error);
+    const loadCustomBranches = () => {
+      const savedBranches = localStorage.getItem("customBranches");
+      if (savedBranches) {
+        try {
+          setCustomBranches(JSON.parse(savedBranches));
+        } catch (error) {
+          console.error("Error loading custom branches:", error);
+        }
       }
-    }
+    };
+
+    // Initial load
+    loadCustomBranches();
+
+    // Listen for storage changes (cross-tab updates)
+    const handleStorageChange = (e) => {
+      if (e.key === "customBranches") {
+        loadCustomBranches();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Listen for custom events (same-tab updates)
+    const handleBranchUpdate = () => {
+      loadCustomBranches();
+    };
+
+    window.addEventListener("customBranchesUpdated", handleBranchUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("customBranchesUpdated", handleBranchUpdate);
+    };
   }, []);
 
   // Map stage names to routes - static mapping for optimal performance
@@ -73,17 +107,78 @@ export default function BranchTracker() {
     return stageRouteMap[stage] || null;
   }, []);
 
-  const handleDelete = useCallback((branch) => {
-    if (window.confirm(`Are you sure you want to delete "${branch.name}"?`)) {
-      // In a real app, this would call an API
-      alert(`Branch "${branch.name}" deleted successfully.`);
-      // For demo, we could remove from local state, but since it's static, just show alert
-    }
+  const handleDeleteClick = useCallback((branch) => {
+    // Open delete confirmation modal
+    setBranchToDelete(branch);
+    setShowDeleteConfirm(true);
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (!branchToDelete) return;
+
+    // Remove from custom branches (SRBM dashboard)
+    const updatedBranches = customBranches.filter(b => b.id !== branchToDelete.id);
+    setCustomBranches(updatedBranches);
+    localStorage.setItem("customBranches", JSON.stringify(updatedBranches));
+
+    // Also remove from BRT branches
+    const brtBranches = JSON.parse(localStorage.getItem("brtBranches") || "[]");
+    const updatedBRTBranches = brtBranches.filter(b => b.id !== branchToDelete.id);
+    localStorage.setItem("brtBranches", JSON.stringify(updatedBRTBranches));
+
+    // Dispatch custom event to notify BRTDashboard (for same-tab updates)
+    window.dispatchEvent(new Event("brtBranchUpdated"));
+    window.dispatchEvent(new Event("customBranchesUpdated"));
+
+    // Show success toast notification
+    setToastMessage(`Branch "${branchToDelete.name}" deleted successfully.`);
+    setToastType("success");
+    setShowToast(true);
+
+    // Close modal and reset
+    setShowDeleteConfirm(false);
+    setBranchToDelete(null);
+  }, [branchToDelete, customBranches]);
+
+  const cancelDelete = useCallback(() => {
+    setShowDeleteConfirm(false);
+    setBranchToDelete(null);
   }, []);
 
   const handleViewDetails = (e, branch) => {
     e.preventDefault();
-    // Get the route based on the branch stage
+    
+    // For Vendor role, always route to vendor creation page
+    if (user?.role === "Vendor") {
+      router.push("/vendor-creation");
+      return;
+    }
+    
+    // For Site measurement role, always route to Post-LOI activities page
+    if (user?.role === "Site measurement") {
+      router.push("/post-loi-activities");
+      return;
+    }
+    
+    // For Legal due role, always route to legal-due page
+    if (user?.role === "Legal due" || user?.role === "Legaldue" || user?.role === "Legal Team") {
+      router.push("/legal-due");
+      return;
+    }
+    
+    // For Agreement execution role, always route to agreement-execution page
+    if (user?.role === "Agreement execution") {
+      router.push("/agreement-execution");
+      return;
+    }
+    
+    // For SRBM role, route to Property Search page
+    if (user?.role === "SRBM") {
+      router.push("/property-search");
+      return;
+    }
+    
+    // Get the route based on the branch stage for other roles
     const route = getStageRoute(branch.stage);
     if (route) {
       router.push(route);
@@ -111,9 +206,36 @@ export default function BranchTracker() {
     const updatedBranches = [...customBranches, branch];
     setCustomBranches(updatedBranches);
     
-    // Save to localStorage
+    // Save to localStorage for SRBM dashboard
     localStorage.setItem("customBranches", JSON.stringify(updatedBranches));
-  }, [customBranches]);
+
+    // Also save branch for BRT dashboard
+    const brtBranches = JSON.parse(localStorage.getItem("brtBranches") || "[]");
+    const brtBranch = {
+      ...branch,
+      stage: "Pending",
+      stageColor: "yellow",
+      progress: 20, // Set progress to 20% for BRT
+    };
+    const updatedBRTBranches = [...brtBranches, brtBranch];
+    localStorage.setItem("brtBranches", JSON.stringify(updatedBRTBranches));
+
+    // Dispatch custom event to notify BRTDashboard (for same-tab updates)
+    window.dispatchEvent(new Event("brtBranchUpdated"));
+
+    // Create notification for BRT
+    createNotification(
+      `New branch "${newBranch.locationName}" created in ${newBranch.city}`,
+      "info",
+      "/brt-dashboard",
+      "BRT"
+    );
+
+    // Show toast notification
+    setToastMessage(`Branch "${newBranch.locationName}" created successfully in ${newBranch.city}`);
+    setToastType("success");
+    setShowToast(true);
+  }, [customBranches, createNotification]);
 
   // Filter branches based on user role using role-to-stage mapping
   // Each role will only see branches in stages assigned to them
@@ -137,12 +259,90 @@ export default function BranchTracker() {
         ["Property Search", "Business Approval", "Legal Workflow", "Project Execution", "Agreement Execution"].includes(branch.stage)
       );
     } else if (user.role === "Legal due" || user.role === "Legaldue" || user.role === "Legal Team") {
-      // For Legal Team, show branches in Legal Clearance stage
-      filteredBranches = allBranches.filter(branch =>
-        branch.stage === "Legal Clearance"
-      );
-    } else {
+      // For Legal Team, show all branches from SRBM (customBranches) regardless of current stage
+      // Display them with stage "Legal Clearance" and 50% progress
+      filteredBranches = customBranches.filter(branch => 
+        branch.stage !== "Completed" && branch.stage !== "On Hold"
+      ).map(branch => ({
+        ...branch,
+        stage: "Legal Clearance", // Override stage to show as Legal Clearance
+        stageColor: "yellow", // Set stage color for Legal Clearance
+        progress: 50 // Set progress to 50% for Legal due users
+      }));
+    } else if (user.role === "Agreement execution") {
+      // For Agreement execution, show all branches from SRBM (customBranches) regardless of current stage
+      // Display them with stage "Agreement Execution" and 70% progress
+      filteredBranches = customBranches.filter(branch => 
+        branch.stage !== "Completed" && branch.stage !== "On Hold"
+      ).map(branch => ({
+        ...branch,
+        stage: "Agreement Execution", // Override stage to show as Agreement Execution
+        stageColor: "yellow", // Set stage color for Agreement Execution
+        progress: 70 // Set progress to 70% for Agreement execution users
+      }));
+    } else if (user.role === "Vendor") {
+      // For Vendor, show all branches from SRBM (customBranches) regardless of current stage
+      // Display them with stage "Vendor Creation" and 30% progress
+      filteredBranches = customBranches.filter(branch => 
+        branch.stage !== "Completed" && branch.stage !== "On Hold"
+      ).map(branch => ({
+        ...branch,
+        stage: "Vendor Creation", // Override stage to show as Vendor Creation
+        stageColor: "orange", // Set stage color for Vendor Creation
+        progress: 30 // Set progress to 30% for Vendor users
+      }));
+    } else if (user.role === "Site measurement") {
+      // For Site measurement, show all branches from SRBM (customBranches) regardless of current stage
+      // Display them with stage "Site Measurement" and 35% progress
+      filteredBranches = customBranches.filter(branch => 
+        branch.stage !== "Completed" && branch.stage !== "On Hold"
+      ).map(branch => ({
+        ...branch,
+        stage: "Site Measurement", // Override stage to show as Site Measurement
+        stageColor: "orange", // Set stage color for Site Measurement
+        progress: 35 // Set progress to 35% for Site measurement users
+      }));
+    } else if (user.role === "Account") {
+      // For Account, show 3 rows with same city/area but different stages and progress
+      // Get the first branch from customBranches (or use a default)
+      const firstBranch = customBranches.find(branch => 
+        branch.stage !== "Completed" && branch.stage !== "On Hold"
+      ) || { city: "Mumbai", name: "Bandra", id: "default-account-1" };
+      
+      // Create 3 rows with different stages and progress
+      filteredBranches = [
+        {
+          ...firstBranch,
+          id: `${firstBranch.id || "account"}-budget`,
+          stage: "Budget approval",
+          stageColor: "yellow",
+          progress: 40
+        },
+        {
+          ...firstBranch,
+          id: `${firstBranch.id || "account"}-stampduty`,
+          stage: "Stampduty approval",
+          stageColor: "orange",
+          progress: 45
+        },
+        {
+          ...firstBranch,
+          id: `${firstBranch.id || "account"}-advance`,
+          stage: "Advance to fit_out Vendor",
+          stageColor: "blue",
+          progress: 50
+        }
+      ];
+    } else if (user.role === "SRBM") {
+      // SRBM sees only Property Search stage branches
       filteredBranches = filterBranchesByRole(allBranches, user.role);
+    } else {
+      // For other roles (Project execution)
+      // Show all branches created by SRBM (from customBranches) regardless of current stage
+      // This ensures all teams can see dynamic data from SRBM dashboard
+      filteredBranches = customBranches.filter(branch => 
+        branch.stage !== "Completed" && branch.stage !== "On Hold"
+      );
     }
 
     // Apply search filter
@@ -266,7 +466,7 @@ export default function BranchTracker() {
                 </label>
               </div>
               <div className="view-controls">
-                {user?.role !== "IT team" && (
+                {user?.role === "SRBM" && (
                   <button
                     className="add-branch-btn"
                     onClick={() => setIsModalOpen(true)}
@@ -282,6 +482,8 @@ export default function BranchTracker() {
               branches={branches}
               onViewDetails={handleViewDetails}
               getProgressColor={getProgressColor}
+              onDelete={user?.role === "SRBM" ? handleDeleteClick : undefined}
+              showDelete={user?.role === "SRBM"}
             />
 
             {/* Pagination */}
@@ -335,6 +537,126 @@ export default function BranchTracker() {
           onBranchCreated={handleBranchCreated}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div 
+          className="modal-overlay" 
+          onClick={cancelDelete}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            backdropFilter: "blur(4px)"
+          }}
+        >
+          <div 
+            className="modal-container" 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: "white",
+              borderRadius: "8px",
+              padding: "30px",
+              maxWidth: "400px",
+              width: "90%",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+            }}
+          >
+            <div style={{ marginBottom: "20px", textAlign: "center" }}>
+              <div style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                background: "#fee2e2",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 16px auto"
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path 
+                    d="M12 9V13M12 17H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" 
+                    stroke="#dc2626" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                  />
+                </svg>
+              </div>
+              <h3 style={{ 
+                margin: 0, 
+                fontSize: "18px", 
+                fontWeight: "600", 
+                color: "#111827", 
+                marginBottom: "8px" 
+              }}>
+                Confirm Delete
+              </h3>
+              <p style={{ 
+                margin: 0, 
+                fontSize: "14px", 
+                color: "#6b7280" 
+              }}>
+                Are you sure you want to delete branch <strong>"{branchToDelete?.name}"</strong>? This action cannot be undone.
+              </p>
+            </div>
+            <div style={{ 
+              display: "flex", 
+              gap: "12px", 
+              justifyContent: "flex-end" 
+            }}>
+              <button
+                onClick={cancelDelete}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#f3f4f6",
+                  color: "#374151",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s"
+                }}
+                onMouseEnter={(e) => { e.target.style.backgroundColor = "#e5e7eb"; }}
+                onMouseLeave={(e) => { e.target.style.backgroundColor = "#f3f4f6"; }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#dc2626",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s"
+                }}
+                onMouseEnter={(e) => { e.target.style.backgroundColor = "#b91c1c"; }}
+                onMouseLeave={(e) => { e.target.style.backgroundColor = "#dc2626"; }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      <ToastNotification
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+        duration={3000}
+      />
     </div>
   );
 }

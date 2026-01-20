@@ -8,8 +8,14 @@
  * @param {Function} onViewDetails - Callback function when "View Details" is clicked
  * @param {Function} getProgressColor - Function to get progress bar color
  * @param {string} viewDetailsText - Custom text for the view details link (default: "View Details")
+ * @param {Function} onDelete - Optional callback function when delete is clicked
+ * @param {boolean} showDelete - Whether to show the delete column (default: false)
+ * @param {string} actionType - Type of action button: "link" or "button" (default: "link")
+ * @param {Function} onAddProperty - Optional callback function for "Add Property" button
+ * @param {string} addPropertyText - Custom text for the add property button (default: "Add Property")
+ * @param {boolean} showAddProperty - Whether to show the "ADD" column (default: false)
  */
-export default function DashboardTable({ branches, onViewDetails, getProgressColor, viewDetailsText = "View Details" }) {
+export default function DashboardTable({ branches, onViewDetails, getProgressColor, viewDetailsText = "View Details", onDelete, showDelete = false, actionType = "link", onAddProperty, addPropertyText = "Add Property", showAddProperty = false }) {
   if (!branches || branches.length === 0) {
     return (
       <div className="table-container">
@@ -31,6 +37,8 @@ export default function DashboardTable({ branches, onViewDetails, getProgressCol
             <th>OVERALL PROGRESS</th>
             <th>PENDING ACTION</th>
             <th>ACTIONS</th>
+            {showAddProperty && <th>ADD</th>}
+            {showDelete && <th>DELETE</th>}
           </tr>
         </thead>
         <tbody>
@@ -60,13 +68,103 @@ export default function DashboardTable({ branches, onViewDetails, getProgressCol
                 ></div>
               </td>
               <td>
-                <button
-                  onClick={(e) => onViewDetails(e, branch)}
-                  className="view-details-link"
-                >
-                  {viewDetailsText}
-                </button>
+                {actionType === "button" ? (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onViewDetails && onViewDetails(e, branch);
+                    }}
+                    style={{
+                      padding: "8px 16px",
+                      backgroundColor: "#3b82f6",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = "#2563eb";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = "#3b82f6";
+                    }}
+                  >
+                    {viewDetailsText}
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => onViewDetails(e, branch)}
+                    className="view-details-link"
+                  >
+                    {viewDetailsText}
+                  </button>
+                )}
               </td>
+              {showAddProperty && (
+                <td>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onAddProperty && onAddProperty(e, branch);
+                    }}
+                    style={{
+                      padding: "8px 16px",
+                      backgroundColor: "#3b82f6",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = "#2563eb";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = "#3b82f6";
+                    }}
+                  >
+                    {addPropertyText}
+                  </button>
+                </td>
+              )}
+              {showDelete && (
+                <td>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onDelete && onDelete(branch);
+                    }}
+                    className="delete-btn"
+                    style={{
+                      padding: "6px 12px",
+                      backgroundColor: "#ef4444",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = "#dc2626";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = "#ef4444";
+                    }}
+                  >
+                    Delete
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

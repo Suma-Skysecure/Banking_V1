@@ -678,7 +678,7 @@ export default function BudgetApproval() {
                           Design Cost
                         </div>
                         <div style={{ fontSize: "16px", fontWeight: "600", color: "#111827" }}>
-                          $45,000
+                          ₹45,000
                         </div>
                       </div>
                       <div>
@@ -686,7 +686,7 @@ export default function BudgetApproval() {
                           Materials
                         </div>
                         <div style={{ fontSize: "16px", fontWeight: "600", color: "#111827" }}>
-                          $180,000
+                          ₹180,000
                         </div>
                       </div>
                       <div>
@@ -694,7 +694,7 @@ export default function BudgetApproval() {
                           Labor
                         </div>
                         <div style={{ fontSize: "16px", fontWeight: "600", color: "#111827" }}>
-                          $120,000
+                          ₹120,000
                         </div>
                       </div>
                       <div>
@@ -702,7 +702,7 @@ export default function BudgetApproval() {
                           Equipment
                         </div>
                         <div style={{ fontSize: "16px", fontWeight: "600", color: "#111827" }}>
-                          $85,000
+                          ₹85,000
                         </div>
                       </div>
                       <div>
@@ -710,7 +710,7 @@ export default function BudgetApproval() {
                           Contingency (10%)
                         </div>
                         <div style={{ fontSize: "16px", fontWeight: "600", color: "#111827" }}>
-                          $43,000
+                          ₹43,000
                         </div>
                       </div>
                     </div>
@@ -737,16 +737,16 @@ export default function BudgetApproval() {
                     fill="white"
                   />
                 </svg>
-                <h3 style={{ fontSize: "18px", fontWeight: "600", margin: 0 }}>$ Total Budget Information</h3>
+                <h3 style={{ fontSize: "18px", fontWeight: "600", margin: 0 }}>₹ Total Budget Information</h3>
               </div>
               <div style={{ display: "flex", gap: "48px", alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: "14px", opacity: 0.9, marginBottom: "4px" }}>Layout Cost</div>
-                  <div style={{ fontSize: "20px", fontWeight: "700" }}>$473,000</div>
+                  <div style={{ fontSize: "20px", fontWeight: "700" }}>₹473,000</div>
                 </div>
                 <div>
                   <div style={{ fontSize: "14px", opacity: 0.9, marginBottom: "4px" }}>Per Sq.Ft Cost</div>
-                  <div style={{ fontSize: "20px", fontWeight: "700" }}>$37.84</div>
+                  <div style={{ fontSize: "20px", fontWeight: "700" }}>₹37.84</div>
                 </div>
                 <div>
                   <div style={{ fontSize: "14px", opacity: 0.9, marginBottom: "4px" }}>Project Timeline</div>
@@ -800,7 +800,7 @@ export default function BudgetApproval() {
                       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontSize: "14px", color: "#6b7280" }}>Total Layout Budget:</span>
-                          <span style={{ fontSize: "16px", fontWeight: "600", color: "#111827" }}>$473,000</span>
+                          <span style={{ fontSize: "16px", fontWeight: "600", color: "#111827" }}>₹473,000</span>
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontSize: "14px", color: "#6b7280" }}>Budget Status:</span>

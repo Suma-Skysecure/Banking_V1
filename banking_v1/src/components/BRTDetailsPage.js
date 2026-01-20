@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Sidebar from "@/components/Sidebar";
 import NotificationDropdown from "@/components/NotificationDropdown";
@@ -19,8 +19,17 @@ import "@/css/branchTracker.css";
 export default function BRTDetailsPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("legal");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Set active tab from URL parameter when navigating from Business Approval
+  useEffect(() => {
+    const tabParam = searchParams?.get("tab");
+    if (tabParam && (tabParam === "legal" || tabParam === "it-feasibility")) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   return (
     <div className="dashboard-container">
@@ -105,6 +114,32 @@ export default function BRTDetailsPage() {
               borderBottom: "1px solid #e5e7eb" 
             }}>
               <div style={{ display: "flex", gap: "32px" }}>
+                <button
+                  onClick={() => router.push("/business-approval")}
+                  style={{
+                    padding: "16px 4px",
+                    borderBottom: "2px solid transparent",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    color: "#6b7280",
+                    background: "none",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    borderRight: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.color = "#374151";
+                    e.target.style.borderBottomColor = "#d1d5db";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.color = "#6b7280";
+                    e.target.style.borderBottomColor = "transparent";
+                  }}
+                >
+                  Business Approval
+                </button>
                 <button
                   onClick={() => setActiveTab("legal")}
                   style={{

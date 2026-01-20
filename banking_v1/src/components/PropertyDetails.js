@@ -19,6 +19,7 @@ export default function PropertyDetails() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
   const [property, setProperty] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Helper function to generate default values for missing property fields
   const generateDefaultPropertyFields = (property) => {
@@ -163,6 +164,13 @@ export default function PropertyDetails() {
 
   // Load property data from localStorage or use default
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') {
+      setIsLoading(false);
+      return;
+    }
+    
+    setIsLoading(true);
     const isImported = searchParams?.get("isImported") === "true";
     const propertyId = searchParams?.get("propertyId");
 
@@ -172,14 +180,19 @@ export default function PropertyDetails() {
       if (selectedPropertyData) {
         const selectedProperty = JSON.parse(selectedPropertyData);
         
-        // Check if this is the property we're looking for
-        // Match by propertyId or id, handling both string and number formats
+        // Always use the stored property - it's set when user clicks "View Property Details"
+        // This ensures that when BRT clicks "View Property Details", it shows the property they clicked
+        // Optional: verify it matches the URL propertyId if provided
         const propId = selectedProperty.propertyId || selectedProperty.id;
         const searchPropId = propertyId;
         
-        // If we have a propertyId in the URL, try to match it
-        // If no propertyId in URL, just use the stored property (for backward compatibility)
-        if (!searchPropId || (propId && propId.toString() === searchPropId.toString())) {
+        // Use the property if no URL param, or if IDs match
+        const shouldUseProperty = !searchPropId || 
+          (propId && propId.toString() === searchPropId.toString()) ||
+          (selectedProperty.id && selectedProperty.id.toString() === searchPropId.toString());
+        
+        // Always use stored property if it exists (it was just set when link was clicked)
+        if (selectedProperty) {
           // Format the property data to match the expected structure
           let formattedProperty;
           
@@ -220,19 +233,46 @@ export default function PropertyDetails() {
               isImported: true,
             };
           } else {
-            // Format regular property data
+            // Format regular property data (including manually added properties by BRT)
+            // Construct address from individual fields if address is not already set
+            let propertyAddress = selectedProperty.address;
+            if (!propertyAddress && (selectedProperty.addressLine || selectedProperty.city)) {
+              const addressParts = [
+                selectedProperty.addressLine,
+                selectedProperty.city,
+                selectedProperty.state,
+                selectedProperty.pincode
+              ].filter(Boolean);
+              propertyAddress = addressParts.join(", ");
+            }
+            
+            // Format totalArea - ensure it includes "sq ft" if it's just a number
+            let formattedTotalArea = selectedProperty.size || selectedProperty.totalArea || "";
+            if (formattedTotalArea && !formattedTotalArea.includes("sq ft") && !isNaN(parseFloat(formattedTotalArea))) {
+              formattedTotalArea = `${parseFloat(formattedTotalArea).toLocaleString('en-IN')} sq ft`;
+            }
+            
+            // Use propertyId if available, otherwise generate from id
+            const propertyId = selectedProperty.propertyId || 
+              (selectedProperty.id ? `PROP-${selectedProperty.id}` : `PROP-${Date.now()}`);
+            
+            // Determine if this is a manually added property (has addressLine, city, etc.)
+            const isManuallyAdded = !!(selectedProperty.addressLine || selectedProperty.city || selectedProperty.area);
+            
             formattedProperty = {
-              id: selectedProperty.id ? `PROP-MIA-2024-${String(selectedProperty.id).padStart(3, '0')}` : `PROP-${Date.now()}`,
+              id: propertyId,
+              propertyId: propertyId,
               name: selectedProperty.name || "",
-              address: selectedProperty.address || "",
-              status: selectedProperty.status || "Available",
-              statusType: selectedProperty.statusType || "pending",
-              // Regular properties have price in USD, keep as is
+              address: propertyAddress || "",
+              status: selectedProperty.status || selectedProperty.availability || "Available",
+              statusType: selectedProperty.statusType || (selectedProperty.availability === "Available Now" ? "available" : "pending"),
+              // For manually added properties, price is already in INR, so use as is
+              // For regular properties, price is in USD, so we'll convert in formatPrice
               price: selectedProperty.price || 0,
-              // Regular properties have pricePerSqft in USD
+              // Price per sqft - for manually added properties, it's already in INR
               pricePerSqft: selectedProperty.pricePerSqft || 0,
               type: selectedProperty.type || "",
-              totalArea: selectedProperty.size || "",
+              totalArea: formattedTotalArea,
               floorLevel: selectedProperty.floorLevel || defaultFields.floorLevel,
               parkingSpaces: selectedProperty.parkingSpaces || defaultFields.parkingSpaces,
               yearBuilt: selectedProperty.yearBuilt || defaultFields.yearBuilt,
@@ -242,13 +282,15 @@ export default function PropertyDetails() {
               listingStatus: selectedProperty.listingStatus || defaultFields.listingStatus,
               zoning: selectedProperty.zoning || defaultFields.zoning,
               lastInspection: selectedProperty.lastInspection || defaultFields.lastInspection,
-              siteInspection: selectedProperty.siteInspection || "",
+              siteInspection: selectedProperty.siteInspection || selectedProperty.requiredActions || "",
               dueDiligence: selectedProperty.dueDiligence || "",
               isImported: false,
+              isManuallyAdded: isManuallyAdded, // Flag to identify manually added properties
             };
           }
           
           setProperty(formattedProperty);
+          setIsLoading(false);
           return;
         }
       }
@@ -256,8 +298,9 @@ export default function PropertyDetails() {
       console.error("Error parsing property data:", error);
     }
 
-    // Use default property if no property data found
-    setProperty(defaultProperty);
+    // If no property data found, set to null
+    setProperty(null);
+    setIsLoading(false);
   }, [searchParams]);
 
   // Get required actions based on property data
@@ -320,8 +363,9 @@ export default function PropertyDetails() {
   const formatPrice = (price) => {
     if (!price && price !== 0) return "₹0";
     // For imported properties, price is stored as USD equivalent, so convert to INR
-    // For regular properties, price is already in USD, so convert to INR
-    const inrPrice = price * 83.5;
+    // For manually added properties, price is already in INR, so use as is
+    // For regular properties, price is in USD, so convert to INR
+    const inrPrice = property?.isManuallyAdded ? price : (price * 83.5);
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
@@ -330,11 +374,57 @@ export default function PropertyDetails() {
     }).format(inrPrice);
   };
 
-  // Show loading state if property is not loaded yet
+  // Show loading state while loading
+  if (isLoading) {
+    return (
+      <div className="dashboard-container">
+        <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <div className="dashboard-content-wrapper">
+          <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          <main className="dashboard-main">
+            <div className="main-content" style={{ padding: "40px", textAlign: "center" }}>
+              <div>Loading property details...</div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if property is not found
   if (!property) {
     return (
       <div className="dashboard-container">
-        <div style={{ padding: "40px", textAlign: "center" }}>Loading property details...</div>
+        <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <div className="dashboard-content-wrapper">
+          <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          <main className="dashboard-main">
+            <div className="main-content" style={{ padding: "40px", textAlign: "center" }}>
+              <h2>Property Not Found</h2>
+              <p style={{ color: "#6b7280", marginTop: "8px" }}>
+                The property details could not be loaded. Please go back and try again.
+              </p>
+              <Link href="/property-search" className="back-link" style={{ marginTop: "24px", display: "inline-block" }}>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  className="back-arrow"
+                >
+                  <path
+                    d="M10 12L6 8L10 4"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Back to Property Search
+              </Link>
+            </div>
+          </main>
+        </div>
       </div>
     );
   }
@@ -458,9 +548,15 @@ export default function PropertyDetails() {
               <div className="property-overview-right">
                 <div className="property-price-large">{formatPrice(property.price)}</div>
                 <div className="property-price-per-sqft-large">
-                  {property.isImported && property.pricePerSqft
-                    ? `₹${property.pricePerSqft.toLocaleString('en-IN')} per sq ft`
-                    : `₹${(property.pricePerSqft * 83.5).toLocaleString('en-IN')} per sq ft`}
+                  {property.pricePerSqft ? (
+                    property.isImported || property.isManuallyAdded
+                      ? `₹${property.pricePerSqft.toLocaleString('en-IN')} per sq ft`
+                      : `₹${(property.pricePerSqft * 83.5).toLocaleString('en-IN')} per sq ft`
+                  ) : (
+                    property.totalArea && property.price
+                      ? `₹${Math.round((property.price / parseFloat(property.totalArea.replace(/[^\d.]/g, ''))) || 0).toLocaleString('en-IN')} per sq ft`
+                      : ""
+                  )}
                 </div>
               </div>
             </div>
@@ -496,7 +592,7 @@ export default function PropertyDetails() {
                 <div className="info-list">
                   <div className="info-item">
                     <span className="info-label">Property ID:</span>
-                    <span className="info-value">{property.id || "N/A"}</span>
+                    <span className="info-value">{property.propertyId || property.id || "N/A"}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Property Type:</span>
@@ -661,62 +757,59 @@ export default function PropertyDetails() {
                   ))}
                 </div>
 
-                {/* Submit Button */}
-                <button
-                  className="submit-approval-button"
-                  onClick={() => {
-                    console.log("Submitting property for business approval");
-                    
-                    // Store property data in localStorage for Business Approval, Legal Workflow, and Dashboard
-                    if (property) {
-                      localStorage.setItem("propertyForBusinessApproval", JSON.stringify(property));
-                      // Also store submission timestamp
-                      localStorage.setItem("propertySubmissionDate", new Date().toISOString());
-                    }
-                    
-                    // Create notification for business approval - target Business role
-                    const notificationMessage = property?.name
-                      ? `Property "${property.name}" has been submitted for business approval`
-                      : "Property has been submitted for business approval";
-                    
-                    // Create notification targeted to Business role
-                    createNotification(notificationMessage, "info", "/business-approval", "Business");
-                    
-                    // Show success notification for SRBM users
-                    if (user?.role === "SRBM") {
+                {/* Submit Button - Only show for SRBM */}
+                {user?.role === "SRBM" && (
+                  <button
+                    className="submit-approval-button"
+                    onClick={() => {
+                      console.log("Submitting property for business approval");
+                      
+                      // Store property data in localStorage for Business Approval, Legal Workflow, and Dashboard
+                      if (property) {
+                        localStorage.setItem("propertyForBusinessApproval", JSON.stringify(property));
+                        // Also store submission timestamp
+                        localStorage.setItem("propertySubmissionDate", new Date().toISOString());
+                      }
+                      
+                      // Create notification for business approval - target Business role
+                      const notificationMessage = property?.name
+                        ? `Property "${property.name}" has been submitted for business approval`
+                        : "Property has been submitted for business approval";
+                      
+                      // Create notification targeted to Business role
+                      createNotification(notificationMessage, "info", "/business-approval", "Business");
+                      
+                      // Show success notification for SRBM users
                       setShowNotification(true);
                       // Don't redirect automatically - let user see the notification
                       // They can navigate manually if needed
-                    } else {
-                      // For other roles, redirect immediately
-                      router.push("/business-approval");
-                    }
-                  }}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    className="submit-icon"
+                    }}
                   >
-                    <path
-                      d="M18 2L9 11L2 6"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M18 2L12 18L9 11L2 6L18 2Z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  Submit for Business Approval
-                </button>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      className="submit-icon"
+                    >
+                      <path
+                        d="M18 2L9 11L2 6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M18 2L12 18L9 11L2 6L18 2Z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Submit for Business Approval
+                  </button>
+                )}
               </div>
             </div>
           </div>

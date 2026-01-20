@@ -5,16 +5,9 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import { useAuth } from "@/contexts/AuthContext";
+import { filterBranchesByRole } from "@/config/roleStageMapping";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
-
-/* ===================== BRANCH DATA ===================== */
-
-const ALL_BRANCHES = [
-  { id: 1, name: "New York Financial District",  city: "New York", date: "2023-10-15" },
-  { id: 2, name: "Austin Tech Campus", city: "Los Angeles", date: "2023-11-02" },
-
-];
 
 /* ===================== DASHBOARD ===================== */
 
@@ -25,12 +18,57 @@ export default function ITAssessmentDashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [itStatuses, setItStatuses] = useState({});
+  const [customBranches, setCustomBranches] = useState([]);
 
   // Filters State
   const [selectedCity, setSelectedCity] = useState("All Cities");
   const [selectedStatus, setSelectedStatus] = useState("All Statuses");
   const [selectedDate, setSelectedDate] = useState("");
-  const [viewMode, setViewMode] = useState("List"); // List or Kanban
+
+  // Load custom branches from localStorage on mount
+  useEffect(() => {
+    const loadBranches = () => {
+      const savedBranches = localStorage.getItem("customBranches");
+      if (savedBranches) {
+        try {
+          const branches = JSON.parse(savedBranches);
+          // Filter branches for IT team stages
+          const itStages = ["Property Search", "Business Approval", "Legal Workflow", "Project Execution", "Agreement Execution"];
+          const filteredBranches = branches.filter(branch =>
+            branch.stage && itStages.includes(branch.stage) &&
+            branch.stage !== "Completed" &&
+            branch.stage !== "On Hold"
+          );
+          setCustomBranches(filteredBranches);
+        } catch (error) {
+          console.error("Error loading custom branches:", error);
+        }
+      }
+    };
+
+    loadBranches();
+
+    // Listen for storage changes
+    const handleStorageChange = (e) => {
+      if (e.key === "customBranches") {
+        loadBranches();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Also listen for custom events (for same-tab updates)
+    const handleBranchUpdate = () => {
+      loadBranches();
+    };
+
+    window.addEventListener("customBranchesUpdated", handleBranchUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("customBranchesUpdated", handleBranchUpdate);
+    };
+  }, []);
 
   /* ===================== LOAD STATUS (CORRECT) ===================== */
   useEffect(() => {
@@ -50,20 +88,20 @@ export default function ITAssessmentDashboard() {
 
   /* ===================== UNIQUE CITIES ===================== */
   const uniqueCities = useMemo(() => {
-    const cities = ALL_BRANCHES.map(b => b.city);
-    return ["All Cities", ...new Set(cities)];
-  }, []);
+    const cities = customBranches.map(b => b.city || "");
+    return ["All Cities", ...new Set(cities.filter(c => c))];
+  }, [customBranches]);
 
   /* ===================== BUILD DISPLAY DATA ===================== */
   const branches = useMemo(() => {
-    return ALL_BRANCHES.filter((branch) => {
+    return customBranches.filter((branch) => {
       const stored = itStatuses[branch.id] || {};
       const status = stored.status || "Pending";
 
       // Filter Logic
-      const matchCity = selectedCity === "All Cities" || branch.city === selectedCity;
+      const matchCity = selectedCity === "All Cities" || (branch.city && branch.city === selectedCity);
       const matchStatus = selectedStatus === "All Statuses" || status === selectedStatus;
-      const matchDate = !selectedDate || branch.date === selectedDate;
+      const matchDate = !selectedDate || (branch.createdAt && new Date(branch.createdAt).toISOString().split('T')[0] === selectedDate);
 
       return matchCity && matchStatus && matchDate;
     }).map((branch) => {
@@ -97,12 +135,13 @@ export default function ITAssessmentDashboard() {
       return {
         ...branch,
         status,
-        progress,
+        progress: progress || branch.progress || 0,
         displayStage,
         displayStageColor,
+        category: branch.category || "",
       };
     });
-  }, [itStatuses, selectedCity, selectedStatus, selectedDate]);
+  }, [customBranches, itStatuses, selectedCity, selectedStatus, selectedDate]);
 
   /* ===================== ACCESS CONTROL ===================== */
   if (user?.role !== "IT team" && user?.role !== "BRT" && user?.role !== "BRT team") return null;
@@ -195,24 +234,6 @@ export default function ITAssessmentDashboard() {
                   />
                 </label>
               </div>
-
-              <div className="view-controls">
-                <button
-                  className={`view-btn ${viewMode === "List" ? "active" : ""}`}
-                  onClick={() => setViewMode("List")}
-                >
-                  List
-                </button>
-                <button
-                  className={`view-btn ${viewMode === "Kanban" ? "active" : ""}`}
-                  onClick={() => setViewMode("Kanban")}
-                >
-                  Kanban
-                </button>
-                <button className="add-branch-btn">
-                  <span>+</span> Add New Branch
-                </button>
-              </div>
             </div>
 
             <div className="table-container">
@@ -232,8 +253,8 @@ export default function ITAssessmentDashboard() {
                     <tr key={b.id}>
                       <td>
                         <div className="branch-info">
-                          <div className="branch-name">{b.name}</div>
-                          <div className="branch-category">{b.category}</div>
+                          <div className="branch-name">{b.name || "N/A"}</div>
+                          <div className="branch-category">{b.category || b.city || ""}</div>
                         </div>
                       </td>
 

@@ -29,6 +29,7 @@ export default function LegalWorkflow() {
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
   const [notificationType, setNotificationType] = useState("success");
+  const [activeTab, setActiveTab] = useState("business-approval");
 
   // All restrictions removed - all users have full access
 
@@ -503,13 +504,111 @@ export default function LegalWorkflow() {
 
         <main className="dashboard-main">
           <div className="main-content">
-            <PageHeader
-              title="LOI Signing"
-              subtitle="Review and sign the Letter of Intent for the approved property."
-            />
+            {/* Tabs */}
+            <div style={{ 
+              marginBottom: "24px", 
+              borderBottom: "1px solid #e5e7eb" 
+            }}>
+              <div style={{ display: "flex", gap: "32px" }}>
+                <button
+                  onClick={() => setActiveTab("business-approval")}
+                  style={{
+                    padding: "16px 4px",
+                    borderBottom: activeTab === "business-approval" ? "2px solid #3b82f6" : "2px solid transparent",
+                    fontSize: "14px",
+                    fontWeight: activeTab === "business-approval" ? "600" : "500",
+                    color: activeTab === "business-approval" ? "#3b82f6" : "#6b7280",
+                    background: "none",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    borderRight: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeTab !== "business-approval") {
+                      e.target.style.color = "#374151";
+                      e.target.style.borderBottomColor = "#d1d5db";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeTab !== "business-approval") {
+                      e.target.style.color = "#6b7280";
+                      e.target.style.borderBottomColor = "transparent";
+                    }
+                  }}
+                >
+                  Business Approval
+                </button>
+                <button
+                  onClick={() => {
+                    router.push("/brt-details?tab=legal");
+                  }}
+                  style={{
+                    padding: "16px 4px",
+                    borderBottom: "2px solid transparent",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    color: "#6b7280",
+                    background: "none",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    borderRight: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.color = "#374151";
+                    e.target.style.borderBottomColor = "#d1d5db";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.color = "#6b7280";
+                    e.target.style.borderBottomColor = "transparent";
+                  }}
+                >
+                  Legal Clearance
+                </button>
+                <button
+                  onClick={() => {
+                    router.push("/brt-details?tab=it-feasibility");
+                  }}
+                  style={{
+                    padding: "16px 4px",
+                    borderBottom: "2px solid transparent",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    color: "#6b7280",
+                    background: "none",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    borderRight: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.color = "#374151";
+                    e.target.style.borderBottomColor = "#d1d5db";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.color = "#6b7280";
+                    e.target.style.borderBottomColor = "transparent";
+                  }}
+                >
+                  IT Feasibility
+                </button>
+              </div>
+            </div>
 
-            {/* Back to Business Approval Link */}
-            <Link href="/business-approval" className="back-to-property-details">
+            {/* Tab Content */}
+            {activeTab === "business-approval" && (
+              <>
+                <PageHeader
+                  title="LOI Signing"
+                  subtitle="Review and sign the Letter of Intent for the approved property."
+                />
+
+                {/* Back to Business Approval Link */}
+                <Link href="/business-approval" className="back-to-property-details">
               <svg
                 width="16"
                 height="16"
@@ -1396,6 +1495,8 @@ export default function LegalWorkflow() {
               </div>
             </div>
 
+              </>
+            )}
           </div>
         </main >
       </div >

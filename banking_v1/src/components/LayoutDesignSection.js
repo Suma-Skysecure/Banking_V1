@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
+import ToastNotification from "@/components/ToastNotification";
 
 /**
  * Layout Design Section Component
@@ -10,6 +11,9 @@ export default function LayoutDesignSection() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success");
 
   // Cost estimate state (values in INR)
   const [designCost, setDesignCost] = useState(45000 * 83.5); // Converted from USD to INR
@@ -17,6 +21,26 @@ export default function LayoutDesignSection() {
   const [laborCost, setLaborCost] = useState(120000 * 83.5);
   const [equipmentCost, setEquipmentCost] = useState(85000 * 83.5);
   const [contingencyPercent, setContingencyPercent] = useState(10);
+
+  // Load uploaded file from localStorage on mount
+  useEffect(() => {
+    try {
+      const storedFile = localStorage.getItem("layoutDesignDocument");
+      if (storedFile) {
+        const fileData = JSON.parse(storedFile);
+        // Create a File-like object from stored data
+        if (fileData.name && fileData.size) {
+          setUploadedFile({
+            name: fileData.name,
+            size: fileData.size,
+            type: fileData.type || "application/pdf"
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error loading uploaded file:", error);
+    }
+  }, []);
 
   // Calculate total cost
   const totalCost = useMemo(() => {
@@ -56,6 +80,11 @@ export default function LayoutDesignSection() {
           data: reader.result // base64 data URL
         };
         localStorage.setItem("layoutDesignDocument", JSON.stringify(fileData));
+        
+        // Show success toast notification
+        setToastMessage(`Document "${file.name}" uploaded successfully!`);
+        setToastType("success");
+        setShowToast(true);
       };
       reader.readAsDataURL(file);
     }
@@ -102,6 +131,11 @@ export default function LayoutDesignSection() {
           data: reader.result // base64 data URL
         };
         localStorage.setItem("layoutDesignDocument", JSON.stringify(fileData));
+        
+        // Show success toast notification
+        setToastMessage(`Document "${file.name}" uploaded successfully!`);
+        setToastType("success");
+        setShowToast(true);
       };
       reader.readAsDataURL(file);
     }
@@ -112,6 +146,56 @@ export default function LayoutDesignSection() {
     localStorage.removeItem("layoutDesignDocument");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  const handleViewDocument = () => {
+    try {
+      const storedFile = localStorage.getItem("layoutDesignDocument");
+      if (storedFile) {
+        const fileData = JSON.parse(storedFile);
+        if (fileData.data) {
+          // Open document in new window/tab
+          const newWindow = window.open();
+          if (newWindow) {
+            newWindow.document.write(`
+              <html>
+                <head>
+                  <title>${fileData.name || "Layout Design Document"}</title>
+                  <style>
+                    body {
+                      margin: 0;
+                      padding: 0;
+                      display: flex;
+                      justify-content: center;
+                      align-items: center;
+                      min-height: 100vh;
+                      background: #f3f4f6;
+                    }
+                    iframe {
+                      width: 100%;
+                      height: 100vh;
+                      border: none;
+                    }
+                  </style>
+                </head>
+                <body>
+                  ${fileData.type === "application/pdf" 
+                    ? `<iframe src="${fileData.data}"></iframe>`
+                    : `<img src="${fileData.data}" style="max-width: 100%; max-height: 100vh; object-fit: contain;" />`
+                  }
+                </body>
+              </html>
+            `);
+            newWindow.document.close();
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error viewing document:", error);
+      setToastMessage("Error viewing document. Please try again.");
+      setToastType("error");
+      setShowToast(true);
     }
   };
 
@@ -276,24 +360,44 @@ export default function LayoutDesignSection() {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={handleRemoveFile}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#ef4444",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s"
-                }}
-                onMouseEnter={(e) => (e.target.style.backgroundColor = "#dc2626")}
-                onMouseLeave={(e) => (e.target.style.backgroundColor = "#ef4444")}
-              >
-                Remove
-              </button>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  onClick={handleViewDocument}
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: "#1e3a8a",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s"
+                  }}
+                  onMouseEnter={(e) => (e.target.style.backgroundColor = "#1e40af")}
+                  onMouseLeave={(e) => (e.target.style.backgroundColor = "#1e3a8a")}
+                >
+                  View
+                </button>
+                <button
+                  onClick={handleRemoveFile}
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: "#ef4444",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s"
+                  }}
+                  onMouseEnter={(e) => (e.target.style.backgroundColor = "#dc2626")}
+                  onMouseLeave={(e) => (e.target.style.backgroundColor = "#ef4444")}
+                >
+                  Remove
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -489,6 +593,15 @@ export default function LayoutDesignSection() {
           </div>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      <ToastNotification
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+        duration={3000}
+      />
     </div>
   );
 }

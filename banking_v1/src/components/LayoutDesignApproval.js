@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ToastNotification from "@/components/ToastNotification";
 
 /**
  * Layout Design Approval Component
@@ -22,6 +23,9 @@ export default function LayoutDesignApproval({
 }) {
   const [comments, setComments] = useState("");
   const [currentStatus, setCurrentStatus] = useState("Pending");
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success");
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-IN", {
@@ -47,50 +51,64 @@ export default function LayoutDesignApproval({
   const handleUpdateDecision = () => {
     console.log("Updating decision", { status: currentStatus, comments });
     // Handle update decision logic here
+    
+    // Show success toast notification
+    setToastMessage("Decision updated successfully!");
+    setToastType("success");
+    setShowToast(true);
   };
 
   // If showOnlyUpdateButton is true, return just the button without the card wrapper
   if (showOnlyUpdateButton) {
     return (
-      <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end" }}>
-        <button
-          onClick={handleUpdateDecision}
-          style={{
-            padding: "12px 20px",
-            backgroundColor: "#f97316",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "14px",
-            fontWeight: "600",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-            transition: "background-color 0.2s"
-          }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = "#ea580c")}
-          onMouseLeave={(e) => (e.target.style.backgroundColor = "#f97316")}
-        >
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M8 1V3M8 13V15M15 8H13M3 8H1M13.364 2.636L11.95 4.05M4.05 11.95L2.636 13.364M13.364 13.364L11.95 11.95M4.05 4.05L2.636 2.636"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-            <circle
-              cx="8"
-              cy="8"
-              r="3"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
-          </svg>
-          Update Decision
-        </button>
-      </div>
+      <>
+        <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end" }}>
+          <button
+            onClick={handleUpdateDecision}
+            style={{
+              padding: "12px 20px",
+              backgroundColor: "#f97316",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: "600",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              transition: "background-color 0.2s"
+            }}
+            onMouseEnter={(e) => (e.target.style.backgroundColor = "#ea580c")}
+            onMouseLeave={(e) => (e.target.style.backgroundColor = "#f97316")}
+          >
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M8 1V3M8 13V15M15 8H13M3 8H1M13.364 2.636L11.95 4.05M4.05 11.95L2.636 13.364M13.364 13.364L11.95 11.95M4.05 4.05L2.636 2.636"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <circle
+                cx="8"
+                cy="8"
+                r="3"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+            </svg>
+            Update Decision
+          </button>
+        </div>
+        <ToastNotification
+          show={showToast}
+          message={toastMessage}
+          type={toastType}
+          onClose={() => setShowToast(false)}
+          duration={3000}
+        />
+      </>
     );
   }
 
@@ -375,6 +393,15 @@ export default function LayoutDesignApproval({
           </div>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      <ToastNotification
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setShowToast(false)}
+        duration={3000}
+      />
     </div>
   );
 }

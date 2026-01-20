@@ -29,6 +29,37 @@ export default function PropertySearch() {
   const [importedProperties, setImportedProperties] = useState([]);
   const fileInputRef = useRef(null);
   const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationType, setNotificationType] = useState("success");
+  const [isAddPropertyModalOpen, setIsAddPropertyModalOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState(null);
+  const [propertyFormData, setPropertyFormData] = useState({
+    propertyId: "",
+    name: "",
+    area: "",
+    addressLine: "",
+    city: "",
+    state: "",
+    country: "",
+    pincode: "",
+    type: "",
+    totalArea: "",
+    availability: "",
+    price: "",
+    pricePerSqft: "",
+    floorLevel: "",
+    parkingSpaces: "",
+    yearBuilt: "",
+    vendorName: "",
+    vendorContact: "",
+    vendorEmail: "",
+    listingStatus: "",
+    zoning: "",
+    lastInspection: "",
+    requiredActions: "",
+    dueDiligence: "",
+  });
   
   // Load imported properties from localStorage on component mount
   useEffect(() => {
@@ -43,8 +74,11 @@ export default function PropertySearch() {
     }
   }, []);
   
-  // Check if user is SRBM - only SRBM can initiate search, import, and export
+  // Check user roles - BRT can perform actions, SRBM can initiate listing
+  const isBRT = user?.role === "BRT";
   const isSRBM = user?.role === "SRBM";
+  const canPerformActions = isBRT; // Only BRT can perform actions (import, export, add, delete)
+  const canSelectProperties = isBRT || isSRBM; // Both BRT and SRBM can select properties
 
   // Get file type from extension
   const getFileType = (fileName) => {
@@ -244,28 +278,43 @@ export default function PropertySearch() {
       return;
     }
 
-    if (excelFiles.length > 1) {
-      alert("Please upload only one Excel file at a time.");
+    // Limit to maximum 5 files
+    if (excelFiles.length > 5) {
+      alert("You can upload a maximum of 5 Excel files at a time. Please select up to 5 files.");
       return;
     }
 
     try {
-      const file = excelFiles[0];
-      const properties = await parseExcelFile(file);
+      // Process all Excel files and collect all properties
+      let allNewProperties = [];
       
-      if (properties.length === 0) {
-        alert("No property data found in the Excel file.");
+      for (const file of excelFiles) {
+        const properties = await parseExcelFile(file);
+        if (properties.length > 0) {
+          allNewProperties = [...allNewProperties, ...properties];
+        }
+      }
+      
+      if (allNewProperties.length === 0) {
+        alert("No property data found in the Excel file(s).");
         return;
       }
 
-      // Store imported properties
-      setImportedProperties(properties);
-      
-      // Store in localStorage for PropertyDetails access
-      localStorage.setItem("importedProperties", JSON.stringify(properties));
+      // Append new properties to existing ones (keep previous data)
+      setImportedProperties(prevProperties => {
+        const updatedProperties = [...prevProperties, ...allNewProperties];
+        
+        // Store in localStorage for PropertyDetails access
+        localStorage.setItem("importedProperties", JSON.stringify(updatedProperties));
+        
+        return updatedProperties;
+      });
 
       // Show success message and close modal
-      alert(`Successfully imported ${properties.length} property/properties from Excel!`);
+      const fileCount = excelFiles.length;
+      const propertyCount = allNewProperties.length;
+      setNotificationMessage(`Successfully imported ${propertyCount} property/properties from ${fileCount} Excel file(s)! Previous data has been preserved.`);
+      setShowNotification(true);
       setIsImportModalOpen(false);
       setIsDragging(false);
       setImportedFiles([]);
@@ -303,107 +352,7 @@ export default function PropertySearch() {
     setIsDragging(false);
   };
 
-  const properties = [
-    {
-      id: 1,
-      name: "Brickell Financial Tower - Suite 1205",
-      address: "701 Brickell Avenue, Miami, FL 33131",
-      type: "Commercial Office",
-      size: "3,500 sq ft",
-      status: "Available Now",
-      statusType: "available",
-      price: 4200000,
-      pricePerSqft: 1200,
-    },
-    {
-      id: 2,
-      name: "Downtown Arts Plaza",
-      address: "1450 Biscayne Boulevard, Miami, FL 33132",
-      type: "Mixed Use",
-      size: "4,200 sq ft",
-      status: "Available in 30 days",
-      statusType: "pending",
-      price: 5800000,
-      pricePerSqft: 1381,
-    },
-    {
-      id: 3,
-      name: "South Beach Creative Hub",
-      address: "1234 Ocean Drive, Miami, FL 33141",
-      type: "Retail Space",
-      size: "2,800 sq ft",
-      status: "Available Now",
-      statusType: "available",
-      price: 3900000,
-      pricePerSqft: 1393,
-    },
-    {
-      id: 4,
-      name: "Westside Innovation Center",
-      address: "5678 Westside Drive, Miami, FL 33131",
-      type: "Commercial Office",
-      size: "4,500 sq ft",
-      status: "Available in 60 days",
-      statusType: "pending",
-      price: 6200000,
-      pricePerSqft: 1378,
-    },
-    {
-      id: 5,
-      name: "North Miami Tech Park",
-      address: "9012 North Miami Drive, Miami, FL 33131",
-      type: "Industrial",
-      size: "12,000 sq ft",
-      status: "Available Now",
-      statusType: "available",
-      price: 18000000,
-      pricePerSqft: 1500,
-    },
-    {
-      id: 6,
-      name: "Eastside Business District",
-      address: "3456 Eastside Avenue, Miami, FL 33131",
-      type: "Commercial Office",
-      size: "3,200 sq ft",
-      status: "Available in 45 days",
-      statusType: "pending",
-      price: 4500000,
-      pricePerSqft: 1406,
-    },
-    {
-      id: 7,
-      name: "Eastside Business District",
-      address: "3456 Eastside Avenue, Miami, FL 33131",
-      type: "Commercial Office",
-      size: "3,200 sq ft",
-      status: "Available in 45 days",
-      statusType: "pending",
-      price: 4500000,
-      pricePerSqft: 1406,
-    },
-    {
-      id: 8,
-      name: "South Beach Marina",
-      address: "7890 Marina Drive, Miami, FL 33131",
-      type: "Commercial Office",
-      size: "2,500 sq ft",
-      status: "Available Now",
-      statusType: "available",
-      price: 3800000,
-      pricePerSqft: 1520,
-    },
-    {
-      id: 9,
-      name: "Westside Creative District",
-      address: "1122 Westside Street, Miami, FL 33131",
-      type: "Mixed Use",
-      size: "3,000 sq ft",
-      status: "Available in 20 days",
-      statusType: "pending",
-      price: 4100000,
-      pricePerSqft: 1367,
-    },
-  ];
+  // Removed static properties - only showing properties added by BRT
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -434,8 +383,7 @@ export default function PropertySearch() {
       console.log("Initiating listing for properties:", selectedProperties);
       
       // Get selected property names for the notification
-      const allProperties = [...properties, ...importedProperties];
-      const selectedProps = allProperties.filter(prop => 
+      const selectedProps = importedProperties.filter(prop => 
         selectedProperties.includes(prop.id)
       );
       const propertyNames = selectedProps.map(prop => prop.name).join(", ");
@@ -461,6 +409,7 @@ export default function PropertySearch() {
       
       // Show success notification for SRBM users
       if (user?.role === "SRBM") {
+        setNotificationMessage("Successfully initiated property for business approval");
         setShowNotification(true);
         // Don't redirect automatically - let user see the notification
         // They can navigate manually if needed
@@ -478,23 +427,175 @@ export default function PropertySearch() {
     }
   };
 
+  // Handle property deletion
+  const handleDeleteProperty = (propertyId) => {
+    setPropertyToDelete(propertyId);
+    setShowDeleteConfirm(true);
+  };
+
+  // Confirm property deletion
+  const confirmDeleteProperty = () => {
+    if (propertyToDelete) {
+      // Get property name for notification
+      const property = importedProperties.find(prop => prop.id === propertyToDelete);
+      const propertyName = property?.name || "Property";
+      
+      // Remove from imported properties
+      const updatedProperties = importedProperties.filter(prop => prop.id !== propertyToDelete);
+      setImportedProperties(updatedProperties);
+      
+      // Update localStorage
+      localStorage.setItem("importedProperties", JSON.stringify(updatedProperties));
+      
+      // Also remove from selected properties if it was selected
+      setSelectedProperties(prev => prev.filter(id => id !== propertyToDelete));
+      
+      // Show success notification
+      setNotificationMessage(`Property "${propertyName}" deleted successfully`);
+      setShowNotification(true);
+    }
+    setShowDeleteConfirm(false);
+    setPropertyToDelete(null);
+  };
+
+  // Cancel property deletion
+  const cancelDeleteProperty = () => {
+    setShowDeleteConfirm(false);
+    setPropertyToDelete(null);
+  };
+
+  // Handle property form input changes
+  const handlePropertyFormChange = (e) => {
+    const { name, value } = e.target;
+    setPropertyFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Handle add property form submission
+  const handleAddPropertySubmit = (e) => {
+    e.preventDefault();
+    
+    // Generate a unique ID for the new property
+    const newPropertyId = Date.now();
+    
+    // Determine statusType based on availability
+    const statusType = propertyFormData.availability === "Available Now" ? "available" : "pending";
+    
+    // Format size for display
+    const formattedSize = propertyFormData.totalArea 
+      ? `${parseFloat(propertyFormData.totalArea).toLocaleString('en-IN')} sq ft`
+      : propertyFormData.totalArea || "";
+
+    // Calculate price and pricePerSqft
+    const price = propertyFormData.price ? parseFloat(propertyFormData.price) : 0;
+    const totalAreaNum = propertyFormData.totalArea ? parseFloat(propertyFormData.totalArea) : 0;
+    const calculatedPricePerSqft = totalAreaNum > 0 && price > 0 
+      ? price / totalAreaNum 
+      : 0;
+    const pricePerSqft = propertyFormData.pricePerSqft 
+      ? parseFloat(propertyFormData.pricePerSqft) 
+      : calculatedPricePerSqft;
+
+    // Create property object
+    const newProperty = {
+      id: newPropertyId,
+      propertyId: propertyFormData.propertyId || `PROP-${newPropertyId}`,
+      name: propertyFormData.name || propertyFormData.propertyId || `Property ${newPropertyId}`, // Ensure name is always set
+      area: propertyFormData.area,
+      addressLine: propertyFormData.addressLine,
+      city: propertyFormData.city,
+      state: propertyFormData.state,
+      country: propertyFormData.country,
+      pincode: propertyFormData.pincode,
+      type: propertyFormData.type,
+      totalArea: propertyFormData.totalArea,
+      size: formattedSize, // For display in property card
+      availability: propertyFormData.availability,
+      status: propertyFormData.availability,
+      statusType: statusType, // For styling in property card
+      price: price,
+      pricePerSqft: pricePerSqft,
+      floorLevel: propertyFormData.floorLevel,
+      parkingSpaces: propertyFormData.parkingSpaces,
+      yearBuilt: propertyFormData.yearBuilt,
+      vendorName: propertyFormData.vendorName,
+      vendorContact: propertyFormData.vendorContact,
+      vendorEmail: propertyFormData.vendorEmail,
+      listingStatus: propertyFormData.listingStatus,
+      zoning: propertyFormData.zoning,
+      lastInspection: propertyFormData.lastInspection,
+      requiredActions: propertyFormData.requiredActions,
+      dueDiligence: propertyFormData.dueDiligence,
+      address: `${propertyFormData.addressLine}, ${propertyFormData.city}, ${propertyFormData.state} ${propertyFormData.pincode}`,
+      isImported: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Add to imported properties (or create a new properties list)
+    const updatedProperties = [...importedProperties, newProperty];
+    setImportedProperties(updatedProperties);
+    
+    // Save to localStorage
+    localStorage.setItem("importedProperties", JSON.stringify(updatedProperties));
+
+    // Reset form
+    setPropertyFormData({
+      propertyId: "",
+      name: "",
+      area: "",
+      addressLine: "",
+      city: "",
+      state: "",
+      country: "",
+      pincode: "",
+      type: "",
+      totalArea: "",
+      availability: "",
+      price: "",
+      pricePerSqft: "",
+      floorLevel: "",
+      parkingSpaces: "",
+      yearBuilt: "",
+      vendorName: "",
+      vendorContact: "",
+      vendorEmail: "",
+      listingStatus: "",
+      zoning: "",
+      lastInspection: "",
+      requiredActions: "",
+      dueDiligence: "",
+    });
+
+    // Close modal
+    setIsAddPropertyModalOpen(false);
+
+    // Show success notification
+    setNotificationMessage(`Property "${newProperty.name}" added successfully`);
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 3000);
+  };
+
   // Export selected properties to Excel
   const handleExportProperties = () => {
     if (selectedProperties.length === 0) {
-      alert("Please select at least one property to export.");
+      setNotificationMessage("Please select at least one property to export.");
+      setNotificationType("error");
+      setShowNotification(true);
       return;
     }
 
     // Get all properties (regular + imported)
-    const allProperties = [...properties, ...importedProperties];
-    
-    // Filter selected properties
-    const selectedProps = allProperties.filter(prop => 
+    // Filter selected properties (only from BRT-added properties)
+    const selectedProps = importedProperties.filter(prop => 
       selectedProperties.includes(prop.id)
     );
 
     if (selectedProps.length === 0) {
-      alert("No properties found to export.");
+      setNotificationMessage("No properties found to export.");
+      setNotificationType("error");
+      setShowNotification(true);
       return;
     }
 
@@ -615,16 +716,18 @@ export default function PropertySearch() {
     const fileName = `Properties_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(workbook, fileName);
 
-    // Show success message
-    alert(`Successfully exported ${selectedProps.length} property/properties to Excel!`);
+    // Show success toast notification
+    setNotificationMessage(`Successfully exported ${selectedProps.length} property/properties to Excel!`);
+    setNotificationType("success");
+    setShowNotification(true);
   };
 
   return (
     <>
       <ToastNotification
         show={showNotification}
-        message="Successfully initiated property for business approval"
-        type="success"
+        message={notificationMessage || "Successfully initiated property for business approval"}
+        type={notificationType}
         onClose={() => setShowNotification(false)}
         duration={3000}
       />
@@ -666,6 +769,7 @@ export default function PropertySearch() {
                         className="filter-select"
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
+                        disabled={!canPerformActions}
                       >
                         <option value="">Select Location</option>
                         <option value="miami">Miami, FL</option>
@@ -686,6 +790,7 @@ export default function PropertySearch() {
                         className="filter-select"
                         value={propertyType}
                         onChange={(e) => setPropertyType(e.target.value)}
+                        disabled={!canPerformActions}
                       >
                         <option value="all">All Types</option>
                         <option value="commercial-office">Commercial Office</option>
@@ -703,6 +808,7 @@ export default function PropertySearch() {
                         className="filter-select"
                         value={priceRange}
                         onChange={(e) => setPriceRange(e.target.value)}
+                        disabled={!canPerformActions}
                       >
                         <option value="all">All Prices</option>
                         <option value="0-2m">₹0 - ₹16.7 Cr</option>
@@ -714,8 +820,8 @@ export default function PropertySearch() {
                     <button 
                       type="submit" 
                       className="search-button"
-                      disabled={!isSRBM}
-                      title={!isSRBM ? "Only SRBM can initiate property search" : ""}
+                      disabled={!canPerformActions}
+                      title={!canPerformActions ? "Only BRT can initiate property search" : ""}
                     >
                       <svg
                         width="20"
@@ -755,36 +861,31 @@ export default function PropertySearch() {
                     </p>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, gap: "12px" }}>
-                    <button
-                      onClick={handleImportClick}
-                      disabled={!isSRBM}
-                      title={!isSRBM ? "Only SRBM can import properties" : ""}
-                      style={{
-                        padding: "10px 24px",
-                        backgroundColor: !isSRBM ? "#9ca3af" : "#f97316",
-                        color: "#ffffff",
-                        border: "none",
-                        borderRadius: "6px",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        cursor: !isSRBM ? "not-allowed" : "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        transition: "background-color 0.2s",
-                        opacity: !isSRBM ? 0.6 : 1,
-                      }}
-                      onMouseOver={(e) => {
-                        if (isSRBM) {
+                    {isBRT && (
+                      <button
+                        onClick={handleImportClick}
+                        title="Import properties from Excel"
+                        style={{
+                          padding: "10px 24px",
+                          backgroundColor: "#f97316",
+                          color: "#ffffff",
+                          border: "none",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          transition: "background-color 0.2s",
+                        }}
+                        onMouseOver={(e) => {
                           e.target.style.backgroundColor = "#ea580c";
-                        }
-                      }}
-                      onMouseOut={(e) => {
-                        if (isSRBM) {
+                        }}
+                        onMouseOut={(e) => {
                           e.target.style.backgroundColor = "#f97316";
-                        }
-                      }}
-                    >
+                        }}
+                      >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path
                           d="M8 2V10M4 6L8 2L12 6"
@@ -802,32 +903,34 @@ export default function PropertySearch() {
                       </svg>
                       Import
                     </button>
-                    <button
-                      onClick={handleExportProperties}
-                      disabled={selectedProperties.length === 0 || !isSRBM}
-                      title={!isSRBM ? "Only SRBM can export properties" : selectedProperties.length === 0 ? "Please select properties to export" : ""}
+                    )}
+                    {isBRT && (
+                      <button
+                        onClick={handleExportProperties}
+                        disabled={selectedProperties.length === 0}
+                        title={selectedProperties.length === 0 ? "Please select properties to export" : ""}
                       style={{
                         padding: "10px 24px",
-                        backgroundColor: (selectedProperties.length === 0 || !isSRBM) ? "#9ca3af" : "#3b82f6",
+                        backgroundColor: selectedProperties.length === 0 ? "#9ca3af" : "#3b82f6",
                         color: "#ffffff",
                         border: "none",
                         borderRadius: "6px",
                         fontSize: "14px",
                         fontWeight: "600",
-                        cursor: (selectedProperties.length === 0 || !isSRBM) ? "not-allowed" : "pointer",
+                        cursor: selectedProperties.length === 0 ? "not-allowed" : "pointer",
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
                         transition: "background-color 0.2s",
-                        opacity: (selectedProperties.length === 0 || !isSRBM) ? 0.6 : 1,
+                        opacity: selectedProperties.length === 0 ? 0.6 : 1,
                       }}
                       onMouseOver={(e) => {
-                        if (selectedProperties.length > 0 && isSRBM) {
+                        if (selectedProperties.length > 0) {
                           e.target.style.backgroundColor = "#2563eb";
                         }
                       }}
                       onMouseOut={(e) => {
-                        if (selectedProperties.length > 0 && isSRBM) {
+                        if (selectedProperties.length > 0) {
                           e.target.style.backgroundColor = "#3b82f6";
                         }
                       }}
@@ -849,19 +952,65 @@ export default function PropertySearch() {
                       </svg>
                       Export
                     </button>
+                    )}
+                    {isBRT && (
+                      <button
+                        onClick={() => {
+                          setIsAddPropertyModalOpen(true);
+                        }}
+                        style={{
+                          padding: "10px 24px",
+                          backgroundColor: "#3b82f6",
+                          color: "#ffffff",
+                          border: "none",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          transition: "background-color 0.2s",
+                        }}
+                        onMouseOver={(e) => {
+                          e.target.style.backgroundColor = "#2563eb";
+                        }}
+                        onMouseOut={(e) => {
+                          e.target.style.backgroundColor = "#3b82f6";
+                        }}
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M8 3V13M3 8H13"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        Add Property
+                      </button>
+                    )}
                   </div>
                   <div className="properties-summary">
-                    <span className="properties-count">{properties.length + importedProperties.length} Properties Found</span>
-                    <button
-                      className="initiate-button"
-                      onClick={handleInitiateListing}
-                      disabled={selectedProperties.length === 0 || !isSRBM}
-                      title={!isSRBM ? "Only SRBM can initiate property listing" : selectedProperties.length === 0 ? "Please select properties" : ""}
-                      style={{
-                        opacity: (selectedProperties.length === 0 || !isSRBM) ? 0.5 : 1,
-                        cursor: (selectedProperties.length === 0 || !isSRBM) ? "not-allowed" : "pointer"
-                      }}
-                    >
+                    <span className="properties-count">{importedProperties.length} Properties Found</span>
+                    {isSRBM && (
+                      <button
+                        className="initiate-button"
+                        onClick={handleInitiateListing}
+                        disabled={selectedProperties.length === 0}
+                        title={selectedProperties.length === 0 ? "Please select properties" : ""}
+                        style={{
+                          opacity: selectedProperties.length === 0 ? 0.5 : 1,
+                          cursor: selectedProperties.length === 0 ? "not-allowed" : "pointer"
+                        }}
+                      >
                       <svg
                         width="20"
                         height="20"
@@ -886,12 +1035,13 @@ export default function PropertySearch() {
                       </svg>
                       Initiate Property Listing for Business Approval
                     </button>
+                    )}
                   </div>
                 </div>
 
                 <div className="properties-list">
                   {/* Combine regular properties and imported properties */}
-                  {[...properties, ...importedProperties].map((property) => (
+                  {importedProperties.map((property) => (
                     <div key={property.id} className="property-card">
                       <div className="property-card-left">
                         <input
@@ -900,8 +1050,8 @@ export default function PropertySearch() {
                           className="property-checkbox"
                           checked={selectedProperties.includes(property.id)}
                           onChange={() => togglePropertySelection(property.id)}
-                          disabled={!isSRBM}
-                          title={!isSRBM ? "Only SRBM can select properties" : ""}
+                          disabled={!canSelectProperties}
+                          title={!canSelectProperties ? "Please login to select properties" : ""}
                         />
                         <div className="property-info">
                           <h3 className="property-name">{property.name}</h3>
@@ -1026,82 +1176,142 @@ export default function PropertySearch() {
                           <div className="property-price">
                             {property.isImported && property.price 
                               ? formatPrice(property.priceUSD || property.price / 83.5)
-                              : formatPrice(property.price)}
+                              : property.price 
+                                ? `₹${parseFloat(property.price).toLocaleString('en-IN')}`
+                                : "₹0"}
                           </div>
                           <div className="property-price-per-sqft">
                             {property.isImported && property.pricePerSqft
                               ? `₹${property.pricePerSqft.toLocaleString('en-IN')}/sq ft`
-                              : `₹${(property.pricePerSqft * 83.5).toLocaleString('en-IN')}/sq ft`}
+                              : property.pricePerSqft && property.pricePerSqft > 0
+                                ? `₹${parseFloat(property.pricePerSqft).toLocaleString('en-IN')}/sq ft`
+                                : property.totalArea && property.price
+                                  ? `₹${Math.round(property.price / parseFloat(property.totalArea)).toLocaleString('en-IN')}/sq ft`
+                                  : ""}
                           </div>
                         </div>
-                        {false ? (
-                          <div
-                            className="view-details-button"
-                            style={{ 
-                              opacity: 0.5, 
-                              cursor: "not-allowed",
-                              pointerEvents: "none"
-                            }}
-                          >
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 16 16"
-                              fill="none"
-                              className="eye-icon"
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          {false ? (
+                            <div
+                              className="view-details-button"
+                              style={{ 
+                                opacity: 0.5, 
+                                cursor: "not-allowed",
+                                pointerEvents: "none"
+                              }}
                             >
-                              <path
-                                d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                              <circle
-                                cx="8"
-                                cy="8"
-                                r="2"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                              />
-                            </svg>
-                            View Property Details
-                          </div>
-                        ) : (
-                          <Link
-                            href={`/property-details?propertyId=${property.id}&isImported=${property.isImported ? 'true' : 'false'}`}
-                            className="view-details-button"
-                            onClick={() => {
-                              // Store the selected property data in localStorage for PropertyDetails
-                              // Store all property data (both imported and regular) so PropertyDetails can access it
-                              localStorage.setItem("selectedProperty", JSON.stringify(property));
-                            }}
-                          >
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 16 16"
-                              fill="none"
-                              className="eye-icon"
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                className="eye-icon"
+                              >
+                                <path
+                                  d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <circle
+                                  cx="8"
+                                  cy="8"
+                                  r="2"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                />
+                              </svg>
+                              View Property Details
+                            </div>
+                          ) : (
+                            <Link
+                              href={`/property-details?propertyId=${property.id}&isImported=${property.isImported ? 'true' : 'false'}`}
+                              className="view-details-button"
+                              onClick={() => {
+                                // Store the selected property data in localStorage for PropertyDetails
+                                // Store all property data (both imported and regular) so PropertyDetails can access it
+                                localStorage.setItem("selectedProperty", JSON.stringify(property));
+                              }}
                             >
-                              <path
-                                d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                              <circle
-                                cx="8"
-                                cy="8"
-                                r="2"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                              />
-                            </svg>
-                            View Property Details
-                          </Link>
-                        )}
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                className="eye-icon"
+                              >
+                                <path
+                                  d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <circle
+                                  cx="8"
+                                  cy="8"
+                                  r="2"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                />
+                              </svg>
+                              View Property Details
+                            </Link>
+                          )}
+                          {canPerformActions && (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDeleteProperty(property.id);
+                              }}
+                              style={{
+                                padding: "8px",
+                                backgroundColor: "transparent",
+                                color: "#ef4444",
+                                border: "1px solid #ef4444",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                transition: "all 0.2s",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.backgroundColor = "#ef4444";
+                                e.target.style.color = "#ffffff";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.backgroundColor = "transparent";
+                                e.target.style.color = "#ef4444";
+                              }}
+                              title="Delete Property"
+                            >
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M2 4H14M12.6667 4V13.3333C12.6667 14 12 14.6667 11.3333 14.6667H4.66667C4 14.6667 3.33333 14 3.33333 13.3333V4M5.33333 4V2.66667C5.33333 2 6 1.33333 6.66667 1.33333H9.33333C10 1.33333 10.6667 2 10.6667 2.66667V4"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <path
+                                  d="M6.66667 7.33333V11.3333M9.33333 7.33333V11.3333"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1158,6 +1368,7 @@ export default function PropertySearch() {
               ref={fileInputRef}
               type="file"
               accept=".xls,.xlsx"
+              multiple
               onChange={handleFileSelect}
               style={{ display: "none" }}
             />
@@ -1273,6 +1484,678 @@ export default function PropertySearch() {
                 onMouseOut={(e) => (e.target.style.backgroundColor = "#f3f4f6")}
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Property Modal */}
+      {isAddPropertyModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
+          }}
+          onClick={() => setIsAddPropertyModalOpen(false)}
+        >
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              borderRadius: "8px",
+              width: "90%",
+              maxWidth: "900px",
+              maxHeight: "90vh",
+              overflow: "auto",
+              padding: "24px",
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+              <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#1e3a8a", margin: 0 }}>
+                Add New Property
+              </h2>
+              <button
+                onClick={() => setIsAddPropertyModalOpen(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "8px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M18 6L6 18M6 6L18 18"
+                    stroke="#6b7280"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleAddPropertySubmit}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Property Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={propertyFormData.name}
+                    onChange={handlePropertyFormChange}
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Property ID
+                  </label>
+                  <input
+                    type="text"
+                    name="propertyId"
+                    value={propertyFormData.propertyId}
+                    onChange={handlePropertyFormChange}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Area *
+                  </label>
+                  <input
+                    type="text"
+                    name="area"
+                    value={propertyFormData.area}
+                    onChange={handlePropertyFormChange}
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    City *
+                  </label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={propertyFormData.city}
+                    onChange={handlePropertyFormChange}
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Address Line *
+                  </label>
+                  <input
+                    type="text"
+                    name="addressLine"
+                    value={propertyFormData.addressLine}
+                    onChange={handlePropertyFormChange}
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    State *
+                  </label>
+                  <input
+                    type="text"
+                    name="state"
+                    value={propertyFormData.state}
+                    onChange={handlePropertyFormChange}
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Country *
+                  </label>
+                  <input
+                    type="text"
+                    name="country"
+                    value={propertyFormData.country}
+                    onChange={handlePropertyFormChange}
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Pincode
+                  </label>
+                  <input
+                    type="text"
+                    name="pincode"
+                    value={propertyFormData.pincode}
+                    onChange={handlePropertyFormChange}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Property Type *
+                  </label>
+                  <select
+                    name="type"
+                    value={propertyFormData.type}
+                    onChange={handlePropertyFormChange}
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  >
+                    <option value="">Select Type</option>
+                    <option value="Commercial Office">Commercial Office</option>
+                    <option value="Retail">Retail</option>
+                    <option value="Industrial">Industrial</option>
+                    <option value="Mixed Use">Mixed Use</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Total Area (sq ft) *
+                  </label>
+                  <input
+                    type="text"
+                    name="totalArea"
+                    value={propertyFormData.totalArea}
+                    onChange={handlePropertyFormChange}
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Availability *
+                  </label>
+                  <select
+                    name="availability"
+                    value={propertyFormData.availability}
+                    onChange={handlePropertyFormChange}
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  >
+                    <option value="">Select Availability</option>
+                    <option value="Available Now">Available Now</option>
+                    <option value="Available in 30 days">Available in 30 days</option>
+                    <option value="Available in 45 days">Available in 45 days</option>
+                    <option value="Available in 60 days">Available in 60 days</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Price (INR) *
+                  </label>
+                  <input
+                    type="number"
+                    name="price"
+                    value={propertyFormData.price}
+                    onChange={handlePropertyFormChange}
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Price Per Sq Ft (INR)
+                  </label>
+                  <input
+                    type="number"
+                    name="pricePerSqft"
+                    value={propertyFormData.pricePerSqft}
+                    onChange={handlePropertyFormChange}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Floor Level
+                  </label>
+                  <input
+                    type="text"
+                    name="floorLevel"
+                    value={propertyFormData.floorLevel}
+                    onChange={handlePropertyFormChange}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Parking Spaces
+                  </label>
+                  <input
+                    type="text"
+                    name="parkingSpaces"
+                    value={propertyFormData.parkingSpaces}
+                    onChange={handlePropertyFormChange}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Year Built
+                  </label>
+                  <input
+                    type="text"
+                    name="yearBuilt"
+                    value={propertyFormData.yearBuilt}
+                    onChange={handlePropertyFormChange}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Vendor Name
+                  </label>
+                  <input
+                    type="text"
+                    name="vendorName"
+                    value={propertyFormData.vendorName}
+                    onChange={handlePropertyFormChange}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Vendor Contact
+                  </label>
+                  <input
+                    type="text"
+                    name="vendorContact"
+                    value={propertyFormData.vendorContact}
+                    onChange={handlePropertyFormChange}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Vendor Email
+                  </label>
+                  <input
+                    type="email"
+                    name="vendorEmail"
+                    value={propertyFormData.vendorEmail}
+                    onChange={handlePropertyFormChange}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Listing Status
+                  </label>
+                  <input
+                    type="text"
+                    name="listingStatus"
+                    value={propertyFormData.listingStatus}
+                    onChange={handlePropertyFormChange}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Zoning
+                  </label>
+                  <input
+                    type="text"
+                    name="zoning"
+                    value={propertyFormData.zoning}
+                    onChange={handlePropertyFormChange}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Last Inspection
+                  </label>
+                  <input
+                    type="date"
+                    name="lastInspection"
+                    value={propertyFormData.lastInspection}
+                    onChange={handlePropertyFormChange}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Required Actions
+                  </label>
+                  <textarea
+                    name="requiredActions"
+                    value={propertyFormData.requiredActions}
+                    onChange={handlePropertyFormChange}
+                    rows={3}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      resize: "vertical",
+                    }}
+                  />
+                </div>
+
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "4px" }}>
+                    Required Action - Due Diligence
+                  </label>
+                  <textarea
+                    name="dueDiligence"
+                    value={propertyFormData.dueDiligence}
+                    onChange={handlePropertyFormChange}
+                    rows={3}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      resize: "vertical",
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "24px", gap: "12px" }}>
+                <button
+                  type="button"
+                  onClick={() => setIsAddPropertyModalOpen(false)}
+                  style={{
+                    padding: "10px 24px",
+                    backgroundColor: "#6b7280",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    padding: "10px 24px",
+                    backgroundColor: "#3b82f6",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                  }}
+                >
+                  Add Property
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={cancelDeleteProperty}
+        >
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              borderRadius: "8px",
+              padding: "24px",
+              maxWidth: "400px",
+              width: "90%",
+              boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ marginBottom: "20px" }}>
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  color: "#111827",
+                  marginBottom: "8px",
+                }}
+              >
+                Confirm Delete
+              </h3>
+              <p style={{ margin: 0, fontSize: "14px", color: "#6b7280" }}>
+                Are you sure you want to delete this property?
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+              <button
+                onClick={cancelDeleteProperty}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#f3f4f6",
+                  color: "#374151",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#e5e7eb";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#f3f4f6";
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteProperty}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#dc2626",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#b91c1c";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#dc2626";
+                }}
+              >
+                OK
               </button>
             </div>
           </div>
