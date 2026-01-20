@@ -2,23 +2,52 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import UserProfile from "@/components/UserProfile";
 import "@/css/branchTracker.css";
+
+// All available navigation items
+const ALL_NAVIGATION_ITEMS = [
+  {
+    name: "Dashboard",
+    icon: "🌐",
+    href: "/dashboard",
+    page: "dashboard"
+  },
+  { name: "Property Search", icon: "🔍", href: "/property-search", page: "propertySearch" },
+];
+
+// Roles that should NOT see Property Search
+const RESTRICTED_ROLES = [
+  "Site measurement",
+  "Sitemeasure",
+  "Vendor",
+  "Account",
+  "Legal due",
+  "Legaldue",
+  "Legal Team",
+  "IT team",
+  "Agreement execution"
+];
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  const navigationItems = [
-    {
-      name: "Dashboard",
-      icon: "🌐",
-      href: "/dashboard",
-      page: "dashboard"
-    },
-    { name: "Property Search", icon: "🔍", href: "/property-search", page: "propertySearch" },
-  ];
+  // Filter navigation items based on user role
+  const navigationItems = useMemo(() => {
+    if (!user?.role) {
+      return ALL_NAVIGATION_ITEMS;
+    }
+
+    // If user role is in restricted list, hide Property Search
+    if (RESTRICTED_ROLES.includes(user.role)) {
+      return ALL_NAVIGATION_ITEMS.filter(item => item.name !== "Property Search");
+    }
+
+    return ALL_NAVIGATION_ITEMS;
+  }, [user?.role]);
 
   return (
     <aside className={`dashboard-sidebar ${sidebarOpen ? "open" : "closed"}`}>
