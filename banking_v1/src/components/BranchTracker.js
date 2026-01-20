@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import PageHeader from "@/components/PageHeader";
@@ -13,157 +13,8 @@ import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 
 // All available branches - in production, this would come from an API
-const ALL_BRANCHES = [
-  // New York Financial District - Property Search stage (for SRBM role)
-  {
-    id: 6,
-    name: "New York Financial District",
-    stage: "Property Search",
-    stageColor: "orange",
-    progress: 30,
-    pendingAction: "yellow",
-    category: "business",
-  },
-  // New York Financial District - Business Approval stage (for Business role)
-  {
-    id: 31,
-    name: "New York Financial District",
-    stage: "Business Approval",
-    stageColor: "yellow",
-    progress: 30,
-    pendingAction: "yellow",
-    category: "business",
-  },
-  // New York Financial District - Site Measurement stage (for Site measurement role)
-  {
-    id: 32,
-    name: "New York Financial District",
-    stage: "Site Measurement",
-    stageColor: "blue",
-    progress: 30,
-    pendingAction: "yellow",
-    category: "business",
-  },
-  // New York Financial District - Vendor stage (for Vendor role)
-  {
-    id: 33,
-    name: "New York Financial District",
-    stage: "Vendor",
-    stageColor: "blue",
-    progress: 30,
-    pendingAction: "yellow",
-    category: "business",
-  },
-  // New York Financial District - Agreement Execution stage (for Agreement execution role)
-  {
-    id: 34,
-    name: "New York Financial District",
-    stage: "Agreement Execution",
-    stageColor: "blue",
-    progress: 30,
-    pendingAction: "yellow",
-    category: "business",
-  },
-  // Austin Tech Campus - Property Search stage (for SRBM role)
-  {
-    id: 14,
-    name: "Austin Tech Campus",
-    stage: "Property Search",
-    stageColor: "orange",
-    progress: 35,
-    pendingAction: "yellow",
-    category: "business",
-  },
-  // Austin Tech Campus - Business Approval stage (for Business role)
-  {
-    id: 35,
-    name: "Austin Tech Campus",
-    stage: "Business Approval",
-    stageColor: "yellow",
-    progress: 35,
-    pendingAction: "yellow",
-    category: "business",
-  },
-  // Austin Tech Campus - Site Measurement stage (for Site measurement role)
-  {
-    id: 36,
-    name: "Austin Tech Campus",
-    stage: "Site Measurement",
-    stageColor: "blue",
-    progress: 35,
-    pendingAction: "yellow",
-    category: "business",
-  },
-  // Austin Tech Campus - Vendor stage (for Vendor role)
-  {
-    id: 37,
-    name: "Austin Tech Campus",
-    stage: "Vendor",
-    stageColor: "blue",
-    progress: 35,
-    pendingAction: "yellow",
-    category: "business",
-  },
-  // Austin Tech Campus - Agreement Execution stage (for Agreement execution role)
-  {
-    id: 38,
-    name: "Austin Tech Campus",
-    stage: "Agreement Execution",
-    stageColor: "blue",
-    progress: 35,
-    pendingAction: "yellow",
-    category: "business",
-  },
-  // New York Financial District - Legal Clearance stage (for Legal Due role)
-  {
-    id: 40,
-    name: "New York Financial District",
-    stage: "Legal Clearance",
-    stageColor: "orange",
-    progress: 50,
-    pendingAction: "active",
-    category: "business",
-  },
-  {
-    id: 41,
-    name: "Austin Tech Campus",
-    stage: "Legal Clearance",
-    stageColor: "orange",
-    progress: 50,
-    pendingAction: "active",
-    category: "business",
-  },
-  // Account Role - Budget Approval
-  {
-    id: 42,
-    name: "New York Financial District",
-    stage: "Budget approval",
-    stageColor: "yellow",
-    progress: 10,
-    pendingAction: "active",
-    category: "business",
-  },
-  // Account Role - Stamp Duty Approval
-  {
-    id: 43,
-    name: "New York Financial District",
-    stage: "Stampduty approval",
-    stageColor: "orange",
-    progress: 20,
-    pendingAction: "active",
-    category: "business",
-  },
-  // Account Role - Advance to fit_out Vendor
-  {
-    id: 44,
-    name: "Austin Tech Campus",
-    stage: "Advance to fit_out Vendor",
-    stageColor: "blue",
-    progress: 45,
-    pendingAction: "active",
-    category: "commercial",
-  },
-];
+// Empty array - only branches created by users will be shown
+const ALL_BRANCHES = [];
 
 export default function BranchTracker() {
   const router = useRouter();
@@ -176,6 +27,19 @@ export default function BranchTracker() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [customBranches, setCustomBranches] = useState([]);
+
+  // Load custom branches from localStorage on mount
+  useEffect(() => {
+    const savedBranches = localStorage.getItem("customBranches");
+    if (savedBranches) {
+      try {
+        setCustomBranches(JSON.parse(savedBranches));
+      } catch (error) {
+        console.error("Error loading custom branches:", error);
+      }
+    }
+  }, []);
 
   // Map stage names to routes - static mapping for optimal performance
   const getStageRoute = useCallback((stage) => {
@@ -226,6 +90,31 @@ export default function BranchTracker() {
     }
   };
 
+  // Handle new branch creation
+  const handleBranchCreated = useCallback((newBranch) => {
+    // Generate a unique ID (using timestamp + random number)
+    const branchId = Date.now() + Math.floor(Math.random() * 1000);
+    const branch = {
+      id: branchId,
+      name: newBranch.locationName,
+      city: newBranch.city,
+      stage: "Property Search",
+      stageColor: "orange",
+      progress: 0,
+      pendingAction: "yellow",
+      category: "business",
+      numberOfBranches: newBranch.numberOfBranches,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Add to custom branches
+    const updatedBranches = [...customBranches, branch];
+    setCustomBranches(updatedBranches);
+    
+    // Save to localStorage
+    localStorage.setItem("customBranches", JSON.stringify(updatedBranches));
+  }, [customBranches]);
+
   // Filter branches based on user role using role-to-stage mapping
   // Each role will only see branches in stages assigned to them
   // Optimized with useMemo to prevent unnecessary re-filtering
@@ -235,23 +124,25 @@ export default function BranchTracker() {
       return [];
     }
 
-    let filteredBranches = ALL_BRANCHES;
+    // Merge static branches with custom branches
+    const allBranches = [...ALL_BRANCHES, ...customBranches];
+    let filteredBranches = allBranches;
 
     // For IT team, show only branches pending IT assessment
     if (user.role === "IT team") {
       // Branches that need IT assessment - those not completed and in relevant stages
-      filteredBranches = ALL_BRANCHES.filter(branch =>
+      filteredBranches = allBranches.filter(branch =>
         branch.stage !== "Completed" &&
         branch.stage !== "On Hold" &&
         ["Property Search", "Business Approval", "Legal Workflow", "Project Execution", "Agreement Execution"].includes(branch.stage)
       );
     } else if (user.role === "Legal due" || user.role === "Legaldue" || user.role === "Legal Team") {
       // For Legal Team, show branches in Legal Clearance stage
-      filteredBranches = ALL_BRANCHES.filter(branch =>
+      filteredBranches = allBranches.filter(branch =>
         branch.stage === "Legal Clearance"
       );
     } else {
-      filteredBranches = filterBranchesByRole(ALL_BRANCHES, user.role);
+      filteredBranches = filterBranchesByRole(allBranches, user.role);
     }
 
     // Apply search filter
@@ -265,7 +156,7 @@ export default function BranchTracker() {
     }
 
     return filteredBranches;
-  }, [user?.role, searchQuery]);
+  }, [user?.role, searchQuery, customBranches]);
 
   const getProgressColor = useCallback((progress) => {
     if (progress === 100) return "green";
@@ -375,18 +266,6 @@ export default function BranchTracker() {
                 </label>
               </div>
               <div className="view-controls">
-                <button
-                  className={`view-btn ${viewMode === "list" ? "active" : ""}`}
-                  onClick={() => setViewMode("list")}
-                >
-                  List
-                </button>
-                <button
-                  className={`view-btn ${viewMode === "kanban" ? "active" : ""}`}
-                  onClick={() => setViewMode("kanban")}
-                >
-                  Kanban
-                </button>
                 {user?.role !== "IT team" && (
                   <button
                     className="add-branch-btn"
@@ -453,6 +332,7 @@ export default function BranchTracker() {
       {isModalOpen && (
         <CreateBranchModal
           onClose={() => setIsModalOpen(false)}
+          onBranchCreated={handleBranchCreated}
         />
       )}
     </div>
@@ -460,7 +340,8 @@ export default function BranchTracker() {
 }
 
 // Create New Branch Modal Component
-function CreateBranchModal({ onClose }) {
+function CreateBranchModal({ onClose, onBranchCreated }) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     city: "",
     locationName: "",
@@ -485,7 +366,20 @@ function CreateBranchModal({ onClose }) {
     e.preventDefault();
     // Handle form submission logic here
     console.log("Submitting form:", formData);
-    // You can add API call or state update here
+    
+    // Call the callback to create the branch
+    if (onBranchCreated) {
+      onBranchCreated(formData);
+    }
+    
+    // Reset form
+    setFormData({
+      city: "",
+      locationName: "",
+      numberOfBranches: "",
+    });
+    
+    // Close modal
     onClose();
   };
 
@@ -494,6 +388,9 @@ function CreateBranchModal({ onClose }) {
       onClose();
     }
   };
+
+  // Check if user is SRBM
+  const isSRBM = user?.role === "SRBM";
 
   return (
     <div className="modal-overlay" onClick={handleBackdropClick}>
@@ -524,25 +421,37 @@ function CreateBranchModal({ onClose }) {
             <label className="form-label">
               City <span className="required-asterisk">*</span>
             </label>
-            <select
-              name="city"
-              value={formData.city}
-              onChange={handleChange}
-              className="form-select"
-              required
-            >
-              <option value="">Select City</option>
-              <option value="manhattan">Manhattan</option>
-              <option value="beverly">Beverly Hills</option>
-              <option value="chicago">Chicago</option>
-              <option value="miami">Miami</option>
-              <option value="seattle">Seattle</option>
-            </select>
+            {isSRBM ? (
+              <input
+                type="text"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                className="form-input"
+                placeholder="Enter city name"
+                required
+              />
+            ) : (
+              <select
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                className="form-select"
+                required
+              >
+                <option value="">Select City</option>
+                <option value="manhattan">Manhattan</option>
+                <option value="beverly">Beverly Hills</option>
+                <option value="chicago">Chicago</option>
+                <option value="miami">Miami</option>
+                <option value="seattle">Seattle</option>
+              </select>
+            )}
           </div>
 
           <div className="form-field">
             <label className="form-label">
-              Location Name <span className="required-asterisk">*</span>
+              Area <span className="required-asterisk">*</span>
             </label>
             <input
               type="text"
