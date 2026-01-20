@@ -38,64 +38,80 @@ export default function ITFeasibilitySection() {
 
   // Load data from localStorage
   useEffect(() => {
-    // Load property data from localStorage (same as Legal Due page)
-    const loadPropertyData = () => {
+    // Load branches from brtBranches (created by SRBM)
+    const loadBranchesData = () => {
       try {
-        const propertyData = localStorage.getItem("propertyForBusinessApproval");
-        if (!propertyData) {
+        // Load branches from brtBranches
+        const brtBranchesData = localStorage.getItem("brtBranches");
+        if (!brtBranchesData) {
           setBranches([]);
           return;
         }
 
-        const property = JSON.parse(propertyData);
+        const brtBranches = JSON.parse(brtBranchesData);
+        if (!Array.isArray(brtBranches) || brtBranches.length === 0) {
+          setBranches([]);
+          return;
+        }
+
         const statuses = JSON.parse(localStorage.getItem("itStatuses") || "{}");
         
-        // Use branch ID 1 as default (or extract from property if available)
-        const branchId = 1;
-        const statusData = statuses[branchId] || {};
-        const status = statusData.status || "Pending IT Assessment";
+        // Map each branch with its assessment data
+        const branchesWithAssessments = brtBranches.map(branch => {
+          const branchId = branch.id;
+          const statusData = statuses[branchId] || {};
+          const status = statusData.status || "Pending IT Assessment";
 
-        let statusColor = "gray";
-        if (status === "In Progress") statusColor = "yellow";
-        if (status === "Completed") statusColor = "green";
-        if (status === "Pending Approval") statusColor = "orange";
-        if (status === "Rejected") statusColor = "red";
+          let statusColor = "gray";
+          if (status === "In Progress") statusColor = "yellow";
+          if (status === "Completed") statusColor = "green";
+          if (status === "Pending Approval") statusColor = "orange";
+          if (status === "Rejected") statusColor = "red";
 
-        // Load assessment data if exists
-        const assessmentData = JSON.parse(localStorage.getItem(`itAssessment_${branchId}`) || "null");
+          // Load assessment data if exists
+          const assessmentData = JSON.parse(localStorage.getItem(`itAssessment_${branchId}`) || "null");
 
-        // Create single branch from property data
-        const singleBranch = {
-          id: branchId,
-          name: property.name || property.propertyName || "Property",
-          location: property.address || property.propertyAddress || "Location not available",
-          size: property.totalArea || property.size || "Size not available",
-          stage: "Legal Workflow",
-          status,
-          statusColor,
-          assessment: assessmentData
-        };
+          return {
+            id: branchId,
+            name: branch.name || "Branch",
+            location: `${branch.city || ""}${branch.city && branch.name ? ", " : ""}${branch.name || ""}`.trim() || "Location not available",
+            size: branch.totalArea || branch.size || "Size not available",
+            stage: branch.stage || "Legal Workflow",
+            status,
+            statusColor,
+            assessment: assessmentData
+          };
+        });
 
-        setBranches([singleBranch]);
+        setBranches(branchesWithAssessments);
       } catch (error) {
-        console.error("Error loading property data:", error);
+        console.error("Error loading branches data:", error);
         setBranches([]);
       }
     };
 
-    loadPropertyData();
+    loadBranchesData();
 
-    // Listen for property changes
+    // Listen for changes in brtBranches, itStatuses, or itAssessment_*
     const handleStorageChange = (e) => {
-      if (e.key === "propertyForBusinessApproval" || e.key === "itStatuses" || e.key?.startsWith("itAssessment_")) {
-        loadPropertyData();
+      if (e.key === "brtBranches" || e.key === "itStatuses" || e.key?.startsWith("itAssessment_")) {
+        loadBranchesData();
       }
     };
 
+    // Also listen for custom events (same-tab updates)
+    const handleCustomEvent = () => {
+      loadBranchesData();
+    };
+
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('brtBranchUpdated', handleCustomEvent);
+    window.addEventListener('itAssessmentUpdated', handleCustomEvent);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('brtBranchUpdated', handleCustomEvent);
+      window.removeEventListener('itAssessmentUpdated', handleCustomEvent);
     };
   }, []);
 

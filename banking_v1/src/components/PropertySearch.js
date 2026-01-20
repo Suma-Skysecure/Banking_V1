@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
@@ -21,6 +21,7 @@ export default function PropertySearch() {
   const [location, setLocation] = useState("");
   const [propertyType, setPropertyType] = useState("all");
   const [priceRange, setPriceRange] = useState("all");
+  const [isSearchApplied, setIsSearchApplied] = useState(false);
   const [selectedProperties, setSelectedProperties] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -356,9 +357,86 @@ export default function PropertySearch() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // Handle search logic here
-    console.log("Search filters:", { location, propertyType, priceRange });
+    // Apply search filters
+    setIsSearchApplied(true);
   };
+
+  // Filter properties based on search criteria
+  const filteredProperties = useMemo(() => {
+    if (!isSearchApplied) {
+      return importedProperties; // Return all properties if search not applied
+    }
+
+    return importedProperties.filter((property) => {
+      // Location filter
+      if (location && location !== "") {
+        const propertyCity = (property.city || "").toLowerCase();
+        const propertyAddress = (property.address || "").toLowerCase();
+        const locationLower = location.toLowerCase();
+        
+        // Map location values to city names
+        const locationMap = {
+          "bangalore": "bangalore",
+          "mumbai": "mumbai",
+          "delhi": "delhi",
+          "hyderabad": "hyderabad",
+          "chennai": "chennai",
+          "pune": "pune",
+          "kolkata": "kolkata"
+        };
+        
+        const searchLocation = locationMap[location] || locationLower;
+        const matchesLocation = propertyCity.includes(searchLocation) || 
+                                propertyAddress.includes(searchLocation);
+        
+        if (!matchesLocation) return false;
+      }
+
+      // Property Type filter
+      if (propertyType && propertyType !== "all") {
+        const propertyTypeLower = (property.type || "").toLowerCase();
+        const typeMap = {
+          "commercial-office": ["commercial office", "office", "commercial"],
+          "retail": ["retail", "retail / commercial"],
+          "industrial": ["industrial"],
+          "mixed-use": ["mixed use", "mixed-use"]
+        };
+        
+        const searchTypes = typeMap[propertyType] || [propertyType];
+        const matchesType = searchTypes.some(type => propertyTypeLower.includes(type));
+        
+        if (!matchesType) return false;
+      }
+
+      // Price Range filter
+      if (priceRange && priceRange !== "all") {
+        // Get property price in INR
+        let propertyPrice = 0;
+        if (property.isImported && property.priceUSD) {
+          propertyPrice = property.priceUSD * 83.5;
+        } else if (property.price) {
+          propertyPrice = property.isManuallyAdded ? property.price : (property.price * 83.5);
+        }
+
+        // Price ranges in INR (crores)
+        const priceRanges = {
+          "0-2m": { min: 0, max: 16.7 * 10000000 }, // ₹0 - ₹16.7 Cr
+          "2m-5m": { min: 16.7 * 10000000, max: 41.75 * 10000000 }, // ₹16.7 Cr - ₹41.75 Cr
+          "5m-10m": { min: 41.75 * 10000000, max: 83.5 * 10000000 }, // ₹41.75 Cr - ₹83.5 Cr
+          "10m+": { min: 83.5 * 10000000, max: Infinity } // ₹83.5 Cr+
+        };
+
+        const range = priceRanges[priceRange];
+        if (range) {
+          if (propertyPrice < range.min || propertyPrice > range.max) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    });
+  }, [importedProperties, location, propertyType, priceRange, isSearchApplied]);
 
   const togglePropertySelection = (propertyId) => {
     setSelectedProperties((prev) =>
@@ -769,16 +847,15 @@ export default function PropertySearch() {
                         className="filter-select"
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
-                        disabled={!canPerformActions}
                       >
                         <option value="">Select Location</option>
-                        <option value="miami">Miami, FL</option>
-                        <option value="new-york">New York, NY</option>
-                        <option value="san-francisco">San Francisco, CA</option>
-                        <option value="chicago">Chicago, IL</option>
-                        <option value="boston">Boston, MA</option>
-                        <option value="seattle">Seattle, WA</option>
-                        <option value="los-angeles">Los Angeles, CA</option>
+                        <option value="bangalore">Bangalore</option>
+                        <option value="mumbai">Mumbai</option>
+                        <option value="delhi">Delhi</option>
+                        <option value="hyderabad">Hyderabad</option>
+                        <option value="chennai">Chennai</option>
+                        <option value="pune">Pune</option>
+                        <option value="kolkata">Kolkata</option>
                       </select>
                     </div>
                     <div className="filter-group">
@@ -790,7 +867,6 @@ export default function PropertySearch() {
                         className="filter-select"
                         value={propertyType}
                         onChange={(e) => setPropertyType(e.target.value)}
-                        disabled={!canPerformActions}
                       >
                         <option value="all">All Types</option>
                         <option value="commercial-office">Commercial Office</option>
@@ -808,7 +884,6 @@ export default function PropertySearch() {
                         className="filter-select"
                         value={priceRange}
                         onChange={(e) => setPriceRange(e.target.value)}
-                        disabled={!canPerformActions}
                       >
                         <option value="all">All Prices</option>
                         <option value="0-2m">₹0 - ₹16.7 Cr</option>
@@ -820,8 +895,6 @@ export default function PropertySearch() {
                     <button 
                       type="submit" 
                       className="search-button"
-                      disabled={!canPerformActions}
-                      title={!canPerformActions ? "Only BRT can initiate property search" : ""}
                     >
                       <svg
                         width="20"
@@ -847,6 +920,32 @@ export default function PropertySearch() {
                       </svg>
                       Search Properties
                     </button>
+                    {isSearchApplied && (
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setLocation("");
+                          setPropertyType("all");
+                          setPriceRange("all");
+                          setIsSearchApplied(false);
+                        }}
+                        style={{
+                          padding: "10px 20px",
+                          backgroundColor: "#6b7280",
+                          color: "#ffffff",
+                          border: "none",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          transition: "background-color 0.2s"
+                        }}
+                        onMouseEnter={(e) => { e.target.style.backgroundColor = "#4b5563"; }}
+                        onMouseLeave={(e) => { e.target.style.backgroundColor = "#6b7280"; }}
+                      >
+                        Clear Filters
+                      </button>
+                    )}
                   </div>
                 </form>
               </section>
@@ -999,7 +1098,7 @@ export default function PropertySearch() {
                     )}
                   </div>
                   <div className="properties-summary">
-                    <span className="properties-count">{importedProperties.length} Properties Found</span>
+                    <span className="properties-count">{filteredProperties.length} Properties Found</span>
                     {isSRBM && (
                       <button
                         className="initiate-button"
@@ -1040,8 +1139,8 @@ export default function PropertySearch() {
                 </div>
 
                 <div className="properties-list">
-                  {/* Combine regular properties and imported properties */}
-                  {importedProperties.map((property) => (
+                  {/* Display filtered properties */}
+                  {filteredProperties.map((property) => (
                     <div key={property.id} className="property-card">
                       <div className="property-card-left">
                         <input

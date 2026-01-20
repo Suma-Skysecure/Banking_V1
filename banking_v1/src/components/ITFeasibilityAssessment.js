@@ -136,6 +136,10 @@ export default function ITFeasibilityAssessment({ params }) {
 
     updateDashboard("In Progress", 65);
     setSubmitted(true);
+    
+    // Dispatch custom event to notify BRT IT Feasibility section (for same-tab updates)
+    window.dispatchEvent(new Event("itAssessmentUpdated"));
+    
     alert("IT Assessment submitted (65%)");
   };
 
@@ -154,6 +158,9 @@ export default function ITFeasibilityAssessment({ params }) {
 
     updateDashboard("Pending Approval", 65);
     setSentToBRT(true);
+
+    // Dispatch custom event to notify BRT IT Feasibility section (for same-tab updates)
+    window.dispatchEvent(new Event("itAssessmentUpdated"));
 
     createNotification(
       `IT Team has updated the assessment form for ${branchName} and sent it for BRT approval`,

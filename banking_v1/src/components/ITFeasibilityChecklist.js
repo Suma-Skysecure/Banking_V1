@@ -292,6 +292,9 @@ export default function ITFeasibilityChecklist({ branchId }) {
     setNotificationMessage("IT Assessment submitted successfully (65% complete)");
     setNotificationType("success");
     setShowNotification(true);
+
+    // Dispatch custom event to notify BRT IT Feasibility section (for same-tab updates)
+    window.dispatchEvent(new Event("itAssessmentUpdated"));
   };
 
   const handleSendToBRT = () => {
@@ -312,6 +315,9 @@ export default function ITFeasibilityChecklist({ branchId }) {
     setNotificationMessage("Assessment sent to BRT Team for review");
     setNotificationType("success");
     setShowNotification(true);
+
+    // Dispatch custom event to notify BRT IT Feasibility section (for same-tab updates)
+    window.dispatchEvent(new Event("itAssessmentUpdated"));
   };
 
   const handleDelete = () => {
