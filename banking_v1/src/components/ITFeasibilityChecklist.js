@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import ToastNotification from "@/components/ToastNotification";
 
 /* ===================== IT FEASIBILITY CHECKLIST ===================== */
@@ -104,6 +105,7 @@ const SECTIONS = [
 
 export default function ITFeasibilityChecklist({ branchId }) {
   const { user } = useAuth();
+  const { createNotification } = useNotifications();
 
   const [branchName, setBranchName] = useState("");
   const [data, setData] = useState({});
@@ -295,6 +297,16 @@ export default function ITFeasibilityChecklist({ branchId }) {
 
     // Dispatch custom event to notify BRT IT Feasibility section (for same-tab updates)
     window.dispatchEvent(new Event("itAssessmentUpdated"));
+
+    // Send notification to Agreement execution team when IT team submits assessment
+    if (user?.role === "IT team") {
+      createNotification(
+        "IT team has submitted the IT feasibility assessment",
+        "info",
+        "/agreement-execution",
+        "Agreement execution"
+      );
+    }
   };
 
   const handleSendToBRT = () => {

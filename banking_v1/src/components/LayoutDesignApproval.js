@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import ToastNotification from "@/components/ToastNotification";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 /**
  * Layout Design Approval Component
@@ -21,6 +23,8 @@ export default function LayoutDesignApproval({
   ],
   showOnlyUpdateButton = false // New prop to show only Update Decision button
 }) {
+  const { user } = useAuth();
+  const { createNotification } = useNotifications();
   const [comments, setComments] = useState("");
   const [currentStatus, setCurrentStatus] = useState("Pending");
   const [showToast, setShowToast] = useState(false);
@@ -56,6 +60,16 @@ export default function LayoutDesignApproval({
     setToastMessage("Decision updated successfully!");
     setToastType("success");
     setShowToast(true);
+
+    // Send notification to Agreement execution team when Site measurement updates decision
+    if (user?.role === "Site measurement") {
+      createNotification(
+        "Site Measurement has updated the layout cost estimation decision",
+        "info",
+        "/agreement-execution",
+        "Agreement execution"
+      );
+    }
   };
 
   // If showOnlyUpdateButton is true, return just the button without the card wrapper

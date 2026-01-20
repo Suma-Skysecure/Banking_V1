@@ -8,6 +8,7 @@ import PageHeader from "@/components/PageHeader";
 import DashboardHeader from "@/components/DashboardHeader";
 import PropertySummaryCard from "@/components/PropertySummaryCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import "@/css/branchTracker.css";
 import "@/css/pageHeader.css";
 import "@/css/postLOIActivities.css";
@@ -15,6 +16,7 @@ import "@/css/businessApproval.css";
 
 export default function StampDutyPaymentApproval() {
   const { user } = useAuth();
+  const { createNotification } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [approvalStatus, setApprovalStatus] = useState("pending");
   const [comments, setComments] = useState("");
@@ -268,6 +270,16 @@ export default function StampDutyPaymentApproval() {
     setToastType("info");
     setShowToast(true);
     console.log("Updating approval status", { status: approvalStatus, comments });
+
+    // Send notification to Agreement execution team when Account updates approval status
+    if (user?.role === "Account") {
+      createNotification(
+        "Account has updated the stamp duty payment approval status",
+        "info",
+        "/agreement-execution",
+        "Agreement execution"
+      );
+    }
   };
 
   return (

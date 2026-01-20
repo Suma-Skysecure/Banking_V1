@@ -319,6 +319,16 @@ export default function PropertySearch() {
       setIsImportModalOpen(false);
       setIsDragging(false);
       setImportedFiles([]);
+
+      // Send notification to SRBM when BRT imports properties
+      if (isBRT) {
+        createNotification(
+          `BRT has imported ${propertyCount} property/properties from ${fileCount} Excel file(s)`,
+          "info",
+          "/property-search",
+          "SRBM"
+        );
+      }
     } catch (error) {
       console.error("Error parsing Excel file:", error);
       alert(`Error parsing Excel file: ${error.message}`);
@@ -484,6 +494,15 @@ export default function PropertySearch() {
       
       // Create notification targeted to Business role
       createNotification(notificationMessage, "info", "/business-approval", "Business");
+      
+      // Create notification for BRT when SRBM initiates listing
+      if (user?.role === "SRBM") {
+        const brtNotificationMessage = propertyCount === 1
+          ? `SRBM has initiated property "${propertyNames}" for business approval`
+          : `SRBM has initiated ${propertyCount} properties for business approval`;
+        
+        createNotification(brtNotificationMessage, "info", "/brt-dashboard", "BRT");
+      }
       
       // Show success notification for SRBM users
       if (user?.role === "SRBM") {
@@ -653,6 +672,16 @@ export default function PropertySearch() {
     setNotificationMessage(`Property "${newProperty.name}" added successfully`);
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 3000);
+
+    // Send notification to SRBM when BRT adds a property
+    if (isBRT) {
+      createNotification(
+        `BRT has added a new property: "${newProperty.name}" in ${newProperty.city || "Unknown Location"}`,
+        "info",
+        "/property-search",
+        "SRBM"
+      );
+    }
   };
 
   // Export selected properties to Excel
@@ -1003,7 +1032,7 @@ export default function PropertySearch() {
                       Import
                     </button>
                     )}
-                    {isBRT && (
+                    {(isBRT || isSRBM) && (
                       <button
                         onClick={handleExportProperties}
                         disabled={selectedProperties.length === 0}

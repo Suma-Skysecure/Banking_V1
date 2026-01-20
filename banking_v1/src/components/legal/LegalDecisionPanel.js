@@ -5,6 +5,7 @@ import PermissionWrapper from "@/components/PermissionWrapper";
 import LegalCallPanel from "./LegalCallPanel";
 import DocumentUploadModal from "@/components/DocumentUploadModal";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * LegalDecisionPanel Component
@@ -29,6 +30,7 @@ export default function LegalDecisionPanel({
   onBusinessDecisionComplete,
   onSubmitted,
 }) {
+  const { user } = useAuth();
   const { createNotification } = useNotifications();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -146,6 +148,16 @@ export default function LegalDecisionPanel({
 
     if (onShowToast) {
       onShowToast("Submitted to Agreement Execution", "success");
+    }
+
+    // Send notification to Agreement execution team when Legal due submits to execution
+    if (user?.role === "Legal due" || user?.role === "Legaldue" || user?.role === "Legal Team") {
+      createNotification(
+        "Legal due has submitted final agreements to execution",
+        "info",
+        "/agreement-execution",
+        "Agreement execution"
+      );
     }
   };
 

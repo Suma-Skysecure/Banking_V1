@@ -557,6 +557,16 @@ export default function VendorCreation() {
       "Site measurement"
     );
 
+    // Send notification to Agreement execution team when Vendor creates vendor
+    if (user?.role === "Vendor") {
+      createNotification(
+        `Vendor "${legalName}" has been created`,
+        "info",
+        "/agreement-execution",
+        "Agreement execution"
+      );
+    }
+
     // Show success notification
     setNotificationMessage("Vendor created and submitted for verification. Notification sent to Site Measurement Team.");
     setNotificationType("success");

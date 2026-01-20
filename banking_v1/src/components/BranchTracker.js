@@ -223,12 +223,63 @@ export default function BranchTracker() {
     // Dispatch custom event to notify BRTDashboard (for same-tab updates)
     window.dispatchEvent(new Event("brtBranchUpdated"));
 
-    // Create notification for BRT
+    // Create notifications for all teams
+    const branchInfo = `New branch "${newBranch.locationName}" created in ${newBranch.city}`;
+    
+    // Notification for BRT team
     createNotification(
-      `New branch "${newBranch.locationName}" created in ${newBranch.city}`,
+      branchInfo,
       "info",
       "/brt-dashboard",
       "BRT"
+    );
+
+    // Notification for Site measurement team
+    createNotification(
+      branchInfo,
+      "info",
+      "/dashboard",
+      "Site measurement"
+    );
+
+    // Notification for Vendor team
+    createNotification(
+      branchInfo,
+      "info",
+      "/dashboard",
+      "Vendor"
+    );
+
+    // Notification for Account team (singular as used in codebase)
+    createNotification(
+      branchInfo,
+      "info",
+      "/dashboard",
+      "Account"
+    );
+
+    // Notification for Legal Due team (primary role name)
+    createNotification(
+      branchInfo,
+      "info",
+      "/dashboard",
+      "Legal due"
+    );
+
+    // Notification for IT team
+    createNotification(
+      branchInfo,
+      "info",
+      "/dashboard",
+      "IT team"
+    );
+
+    // Notification for Agreement Execution team
+    createNotification(
+      branchInfo,
+      "info",
+      "/dashboard",
+      "Agreement execution"
     );
 
     // Show toast notification

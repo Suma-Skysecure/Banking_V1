@@ -779,6 +779,15 @@ export default function PropertyDetails() {
                       // Create notification targeted to Business role
                       createNotification(notificationMessage, "info", "/business-approval", "Business");
                       
+                      // Create notification for BRT when SRBM submits for business approval
+                      if (user?.role === "SRBM") {
+                        const brtNotificationMessage = property?.name
+                          ? `SRBM has submitted property "${property.name}" for business approval`
+                          : "SRBM has submitted a property for business approval";
+                        
+                        createNotification(brtNotificationMessage, "info", "/brt-dashboard", "BRT");
+                      }
+                      
                       // Show success notification for SRBM users
                       setShowNotification(true);
                       // Don't redirect automatically - let user see the notification
