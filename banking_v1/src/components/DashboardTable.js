@@ -25,7 +25,8 @@ export default function DashboardTable({ branches, onViewDetails, getProgressCol
       <table className="branch-table">
         <thead>
           <tr>
-            <th>BRANCH NAME</th>
+            <th>CITY</th>
+            <th>AREA</th>
             <th>CURRENT STAGE</th>
             <th>OVERALL PROGRESS</th>
             <th>PENDING ACTION</th>
@@ -35,6 +36,7 @@ export default function DashboardTable({ branches, onViewDetails, getProgressCol
         <tbody>
           {branches.map((branch) => (
             <tr key={branch.id}>
+              <td className="branch-name">{branch.city || "N/A"}</td>
               <td className="branch-name">{branch.name}</td>
               <td>
                 <span className={`stage-badge ${branch.stageColor}`}>
