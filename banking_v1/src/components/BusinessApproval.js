@@ -428,7 +428,7 @@ export default function BusinessApproval() {
             {/* Tab Content */}
             {activeTab === "business-approval" && (
               <>
-                {/* Property Overview Card */}
+            {/* Property Overview Card */}
             <div className="property-overview-card">
               <div className="property-overview-left">
                 <h2 className="property-name-large">{displayProperty.name}</h2>

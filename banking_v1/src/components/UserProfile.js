@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import "@/css/userProfile.css";
 
@@ -17,7 +18,12 @@ export default function UserProfile({
   onLogout,
   showLogout = true 
 }) {
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Get user initials for avatar
   const getUserInitials = () => {
@@ -76,6 +82,10 @@ export default function UserProfile({
     const colorPair = colors[Math.abs(hash) % colors.length];
     return `linear-gradient(135deg, ${colorPair[0]}, ${colorPair[1]})`;
   };
+
+  if (!mounted || loading) {
+    return null;
+  }
 
   if (variant === "compact") {
     return (

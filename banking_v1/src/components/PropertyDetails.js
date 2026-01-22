@@ -18,6 +18,8 @@ export default function PropertyDetails() {
   const { createNotification } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationType, setNotificationType] = useState("success");
   const [property, setProperty] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -433,8 +435,8 @@ export default function PropertyDetails() {
     <>
       <ToastNotification
         show={showNotification}
-        message="Successfully initiated property for business approval"
-        type="success"
+        message={notificationMessage}
+        type={notificationType}
         onClose={() => setShowNotification(false)}
         duration={3000}
       />
@@ -479,6 +481,33 @@ export default function PropertyDetails() {
             {/* Property Overview */}
             <div className="property-overview-card">
               <div className="property-overview-left">
+                {(() => {
+                  const rejectedId = property?.id || property?.propertyId;
+                  let isRejected = false;
+                  if (typeof window !== "undefined" && rejectedId) {
+                    try {
+                      const storedRejected = localStorage.getItem("rejectedProperties");
+                      const rejectedList = storedRejected ? JSON.parse(storedRejected) : [];
+                      isRejected = rejectedList.includes(String(rejectedId));
+                    } catch (error) {
+                      console.error("Error loading rejected properties:", error);
+                    }
+                  }
+                  return isRejected ? (
+                    <div className="rejected-banner rejected-banner-in-card">
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="9" stroke="#dc2626" strokeWidth="1.5" />
+                        <path
+                          d="M10 6V10M10 14H10.01"
+                          stroke="#dc2626"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <span className="rejected-banner-text">This Property has been Rejected</span>
+                    </div>
+                  ) : null;
+                })()}
                 <h2 className="property-name-large">{property.name}</h2>
                 <div className="property-address-large">
                   <svg
@@ -550,7 +579,7 @@ export default function PropertyDetails() {
                 <div className="property-price-per-sqft-large">
                   {property.pricePerSqft ? (
                     property.isImported || property.isManuallyAdded
-                      ? `₹${property.pricePerSqft.toLocaleString('en-IN')} per sq ft`
+                    ? `₹${property.pricePerSqft.toLocaleString('en-IN')} per sq ft`
                       : `₹${(property.pricePerSqft * 83.5).toLocaleString('en-IN')} per sq ft`
                   ) : (
                     property.totalArea && property.price
@@ -757,67 +786,118 @@ export default function PropertyDetails() {
                   ))}
                 </div>
 
-                {/* Submit Button - Only show for SRBM */}
+                {/* Submit/Reject Buttons - Only show for SRBM */}
                 {user?.role === "SRBM" && (
-                  <button
-                    className="submit-approval-button"
-                    onClick={() => {
-                      console.log("Submitting property for business approval");
-                      
-                      // Store property data in localStorage for Business Approval, Legal Workflow, and Dashboard
-                      if (property) {
-                        localStorage.setItem("propertyForBusinessApproval", JSON.stringify(property));
-                        // Also store submission timestamp
-                        localStorage.setItem("propertySubmissionDate", new Date().toISOString());
-                      }
-                      
-                      // Create notification for business approval - target Business role
-                      const notificationMessage = property?.name
-                        ? `Property "${property.name}" has been submitted for business approval`
-                        : "Property has been submitted for business approval";
-                      
-                      // Create notification targeted to Business role
-                      createNotification(notificationMessage, "info", "/business-approval", "Business");
-                      
-                      // Create notification for BRT when SRBM submits for business approval
-                      if (user?.role === "SRBM") {
-                        const brtNotificationMessage = property?.name
-                          ? `SRBM has submitted property "${property.name}" for business approval`
-                          : "SRBM has submitted a property for business approval";
+                  <div className="approval-actions">
+                    <button
+                      className="submit-approval-button"
+                      onClick={() => {
+                        console.log("Submitting property for business approval");
                         
-                        createNotification(brtNotificationMessage, "info", "/brt-dashboard", "BRT");
-                      }
-                      
-                      // Show success notification for SRBM users
-                      setShowNotification(true);
-                      // Don't redirect automatically - let user see the notification
-                      // They can navigate manually if needed
-                    }}
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      className="submit-icon"
+                        // Store property data in localStorage for Business Approval, Legal Workflow, and Dashboard
+                        if (property) {
+                          localStorage.setItem("propertyForBusinessApproval", JSON.stringify(property));
+                          // Also store submission timestamp
+                          localStorage.setItem("propertySubmissionDate", new Date().toISOString());
+                        }
+                        
+                        // Create notification for business approval - target Business role
+                        const notificationMessage = property?.name
+                          ? `Property "${property.name}" has been submitted for business approval`
+                          : "Property has been submitted for business approval";
+                        
+                        // Create notification targeted to Business role
+                        createNotification(notificationMessage, "info", "/business-approval", "Business");
+                          
+                          // Create notification for BRT when SRBM submits for business approval
+                          if (user?.role === "SRBM") {
+                            const brtNotificationMessage = property?.name
+                              ? `SRBM has submitted property "${property.name}" for business approval`
+                              : "SRBM has submitted a property for business approval";
+                            
+                            createNotification(brtNotificationMessage, "info", "/brt-dashboard", "BRT");
+                          }
+                        
+                        // Show success notification for SRBM users
+                          setNotificationMessage("Property submitted for business approval");
+                          setNotificationType("success");
+                          setShowNotification(true);
+                          // Don't redirect automatically - let user see the notification
+                          // They can navigate manually if needed
+                      }}
                     >
-                      <path
-                        d="M18 2L9 11L2 6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M18 2L12 18L9 11L2 6L18 2Z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    Submit for Business Approval
-                  </button>
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        className="submit-icon"
+                      >
+                        <path
+                          d="M18 2L9 11L2 6"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M18 2L12 18L9 11L2 6L18 2Z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      Submit for Business Approval
+                    </button>
+
+                    <button
+                      className="reject-approval-button"
+                      onClick={() => {
+                        console.log("Rejecting property for business approval");
+
+                        if (property) {
+                          const rejectedId = property.id || property.propertyId;
+                          if (rejectedId) {
+                            const storedRejected = localStorage.getItem("rejectedProperties");
+                            const rejectedList = storedRejected ? JSON.parse(storedRejected) : [];
+                            const rejectedKey = String(rejectedId);
+                            if (!rejectedList.includes(rejectedKey)) {
+                              rejectedList.push(rejectedKey);
+                              localStorage.setItem("rejectedProperties", JSON.stringify(rejectedList));
+                            }
+                          }
+                        }
+
+                        const brtNotificationMessage = property?.name
+                          ? `SRBM has rejected property "${property.name}"`
+                          : "SRBM has rejected a property";
+
+                        createNotification(brtNotificationMessage, "warning", "/brt-dashboard", "BRT");
+
+                        setNotificationMessage("Property rejected");
+                        setNotificationType("error");
+                        setShowNotification(true);
+                      }}
+                    >
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        className="reject-icon"
+                      >
+                        <path
+                          d="M6 6L14 14M14 6L6 14"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      Reject
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

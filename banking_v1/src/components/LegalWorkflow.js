@@ -602,13 +602,13 @@ export default function LegalWorkflow() {
             {/* Tab Content */}
             {activeTab === "business-approval" && (
               <>
-                <PageHeader
-                  title="LOI Signing"
-                  subtitle="Review and sign the Letter of Intent for the approved property."
-                />
+            <PageHeader
+              title="LOI Signing"
+              subtitle="Review and sign the Letter of Intent for the approved property."
+            />
 
-                {/* Back to Business Approval Link */}
-                <Link href="/business-approval" className="back-to-property-details">
+            {/* Back to Business Approval Link */}
+            <Link href="/business-approval" className="back-to-property-details">
               <svg
                 width="16"
                 height="16"

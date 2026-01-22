@@ -35,6 +35,7 @@ export default function PropertySearch() {
   const [isAddPropertyModalOpen, setIsAddPropertyModalOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState(null);
+  const [rejectedPropertyIds, setRejectedPropertyIds] = useState([]);
   const [propertyFormData, setPropertyFormData] = useState({
     propertyId: "",
     name: "",
@@ -74,12 +75,53 @@ export default function PropertySearch() {
       console.error("Error loading imported properties from localStorage:", error);
     }
   }, []);
+
+  const loadRejectedProperties = () => {
+    try {
+      const storedRejected = localStorage.getItem("rejectedProperties");
+      if (storedRejected) {
+        const parsedRejected = JSON.parse(storedRejected);
+        if (Array.isArray(parsedRejected)) {
+          setRejectedPropertyIds(parsedRejected.map((id) => String(id)));
+          return;
+        }
+      }
+      setRejectedPropertyIds([]);
+    } catch (error) {
+      console.error("Error loading rejected properties from localStorage:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadRejectedProperties();
+
+    const handleStorage = (event) => {
+      if (event.key === "rejectedProperties") {
+        loadRejectedProperties();
+      }
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadRejectedProperties();
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
   
   // Check user roles - BRT can perform actions, SRBM can initiate listing
   const isBRT = user?.role === "BRT";
   const isSRBM = user?.role === "SRBM";
   const canPerformActions = isBRT; // Only BRT can perform actions (import, export, add, delete)
   const canSelectProperties = isBRT || isSRBM; // Both BRT and SRBM can select properties
+  const rejectedPropertyIdSet = useMemo(() => new Set(rejectedPropertyIds), [rejectedPropertyIds]);
 
   // Get file type from extension
   const getFileType = (fileName) => {
@@ -290,7 +332,7 @@ export default function PropertySearch() {
       let allNewProperties = [];
       
       for (const file of excelFiles) {
-        const properties = await parseExcelFile(file);
+      const properties = await parseExcelFile(file);
         if (properties.length > 0) {
           allNewProperties = [...allNewProperties, ...properties];
         }
@@ -304,12 +346,33 @@ export default function PropertySearch() {
       // Append new properties to existing ones (keep previous data)
       setImportedProperties(prevProperties => {
         const updatedProperties = [...prevProperties, ...allNewProperties];
-        
-        // Store in localStorage for PropertyDetails access
+      
+      // Store in localStorage for PropertyDetails access
         localStorage.setItem("importedProperties", JSON.stringify(updatedProperties));
         
         return updatedProperties;
       });
+
+      // Clear rejected status for any properties that were re-imported
+      try {
+        const rejectedRaw = localStorage.getItem("rejectedProperties");
+        if (rejectedRaw) {
+          const rejectedList = JSON.parse(rejectedRaw);
+          if (Array.isArray(rejectedList)) {
+            const importedIds = new Set(
+              allNewProperties
+                .map((prop) => prop?.id || prop?.propertyId)
+                .filter(Boolean)
+                .map((id) => String(id))
+            );
+            const updatedRejected = rejectedList.filter((id) => !importedIds.has(String(id)));
+            localStorage.setItem("rejectedProperties", JSON.stringify(updatedRejected));
+            loadRejectedProperties();
+          }
+        }
+      } catch (error) {
+        console.error("Error updating rejected properties on import:", error);
+      }
 
       // Show success message and close modal
       const fileCount = excelFiles.length;
@@ -990,30 +1053,30 @@ export default function PropertySearch() {
                   </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, gap: "12px" }}>
                     {isBRT && (
-                      <button
-                        onClick={handleImportClick}
+                    <button
+                      onClick={handleImportClick}
                         title="Import properties from Excel"
-                        style={{
-                          padding: "10px 24px",
+                      style={{
+                        padding: "10px 24px",
                           backgroundColor: "#f97316",
-                          color: "#ffffff",
-                          border: "none",
-                          borderRadius: "6px",
-                          fontSize: "14px",
-                          fontWeight: "600",
+                        color: "#ffffff",
+                        border: "none",
+                        borderRadius: "6px",
+                        fontSize: "14px",
+                        fontWeight: "600",
                           cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          transition: "background-color 0.2s",
-                        }}
-                        onMouseOver={(e) => {
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        transition: "background-color 0.2s",
+                      }}
+                      onMouseOver={(e) => {
                           e.target.style.backgroundColor = "#ea580c";
-                        }}
-                        onMouseOut={(e) => {
+                      }}
+                      onMouseOut={(e) => {
                           e.target.style.backgroundColor = "#f97316";
-                        }}
-                      >
+                      }}
+                    >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path
                           d="M8 2V10M4 6L8 2L12 6"
@@ -1033,8 +1096,8 @@ export default function PropertySearch() {
                     </button>
                     )}
                     {(isBRT || isSRBM) && (
-                      <button
-                        onClick={handleExportProperties}
+                    <button
+                      onClick={handleExportProperties}
                         disabled={selectedProperties.length === 0}
                         title={selectedProperties.length === 0 ? "Please select properties to export" : ""}
                       style={{
@@ -1129,16 +1192,16 @@ export default function PropertySearch() {
                   <div className="properties-summary">
                     <span className="properties-count">{filteredProperties.length} Properties Found</span>
                     {isSRBM && (
-                      <button
-                        className="initiate-button"
-                        onClick={handleInitiateListing}
+                    <button
+                      className="initiate-button"
+                      onClick={handleInitiateListing}
                         disabled={selectedProperties.length === 0}
                         title={selectedProperties.length === 0 ? "Please select properties" : ""}
-                        style={{
+                      style={{
                           opacity: selectedProperties.length === 0 ? 0.5 : 1,
                           cursor: selectedProperties.length === 0 ? "not-allowed" : "pointer"
-                        }}
-                      >
+                      }}
+                    >
                       <svg
                         width="20"
                         height="20"
@@ -1182,6 +1245,21 @@ export default function PropertySearch() {
                           title={!canSelectProperties ? "Please login to select properties" : ""}
                         />
                         <div className="property-info">
+                          {(rejectedPropertyIdSet.has(String(property.id)) ||
+                            (property.propertyId && rejectedPropertyIdSet.has(String(property.propertyId)))) && (
+                            <div className="rejected-banner rejected-banner-in-card">
+                              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <circle cx="10" cy="10" r="9" stroke="#dc2626" strokeWidth="1.5" />
+                                <path
+                                  d="M10 6V10M10 14H10.01"
+                                  stroke="#dc2626"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                              <span className="rejected-banner-text">This Property has been Rejected</span>
+                            </div>
+                          )}
                           <h3 className="property-name">{property.name}</h3>
                           <div className="property-address">
                             <svg
@@ -1319,74 +1397,74 @@ export default function PropertySearch() {
                           </div>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          {false ? (
-                            <div
-                              className="view-details-button"
-                              style={{ 
-                                opacity: 0.5, 
-                                cursor: "not-allowed",
-                                pointerEvents: "none"
-                              }}
+                        {false ? (
+                          <div
+                            className="view-details-button"
+                            style={{ 
+                              opacity: 0.5, 
+                              cursor: "not-allowed",
+                              pointerEvents: "none"
+                            }}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 16 16"
+                              fill="none"
+                              className="eye-icon"
                             >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 16 16"
-                                fill="none"
-                                className="eye-icon"
-                              >
-                                <path
-                                  d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                                <circle
-                                  cx="8"
-                                  cy="8"
-                                  r="2"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                />
-                              </svg>
-                              View Property Details
-                            </div>
-                          ) : (
-                            <Link
-                              href={`/property-details?propertyId=${property.id}&isImported=${property.isImported ? 'true' : 'false'}`}
-                              className="view-details-button"
-                              onClick={() => {
-                                // Store the selected property data in localStorage for PropertyDetails
-                                // Store all property data (both imported and regular) so PropertyDetails can access it
-                                localStorage.setItem("selectedProperty", JSON.stringify(property));
-                              }}
+                              <path
+                                d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <circle
+                                cx="8"
+                                cy="8"
+                                r="2"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                              />
+                            </svg>
+                            View Property Details
+                          </div>
+                        ) : (
+                          <Link
+                            href={`/property-details?propertyId=${property.id}&isImported=${property.isImported ? 'true' : 'false'}`}
+                            className="view-details-button"
+                            onClick={() => {
+                              // Store the selected property data in localStorage for PropertyDetails
+                              // Store all property data (both imported and regular) so PropertyDetails can access it
+                              localStorage.setItem("selectedProperty", JSON.stringify(property));
+                            }}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 16 16"
+                              fill="none"
+                              className="eye-icon"
                             >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 16 16"
-                                fill="none"
-                                className="eye-icon"
-                              >
-                                <path
-                                  d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                                <circle
-                                  cx="8"
-                                  cy="8"
-                                  r="2"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                />
-                              </svg>
-                              View Property Details
-                            </Link>
-                          )}
+                              <path
+                                d="M8 4C4 4 1.33333 6.66667 1 8C1.33333 9.33333 4 12 8 12C12 12 14.6667 9.33333 15 8C14.6667 6.66667 12 4 8 4Z"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <circle
+                                cx="8"
+                                cy="8"
+                                r="2"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                              />
+                            </svg>
+                            View Property Details
+                          </Link>
+                        )}
                           {canPerformActions && (
                             <button
                               onClick={(e) => {
@@ -2293,4 +2371,3 @@ export default function PropertySearch() {
     </>
   );
 }
-

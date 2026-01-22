@@ -96,12 +96,12 @@ export default function DashboardTable({ branches, onViewDetails, getProgressCol
                     {viewDetailsText}
                   </button>
                 ) : (
-                  <button
-                    onClick={(e) => onViewDetails(e, branch)}
-                    className="view-details-link"
-                  >
-                    {viewDetailsText}
-                  </button>
+                <button
+                  onClick={(e) => onViewDetails(e, branch)}
+                  className="view-details-link"
+                >
+                  {viewDetailsText}
+                </button>
                 )}
               </td>
               {showAddProperty && (
@@ -163,7 +163,7 @@ export default function DashboardTable({ branches, onViewDetails, getProgressCol
                   >
                     Delete
                   </button>
-                </td>
+              </td>
               )}
             </tr>
           ))}

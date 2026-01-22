@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./AuthContext";
 
@@ -19,8 +19,7 @@ export const NotificationProvider = ({ children }) => {
   const router = useRouter();
   const [notifications, setNotifications] = useState([]);
 
-  // Load and filter notifications based on user role
-  useEffect(() => {
+  const loadNotificationsForRole = useCallback(() => {
     if (!user) {
       setNotifications(prev => prev.length > 0 ? [] : prev);
       return;
@@ -44,6 +43,23 @@ export const NotificationProvider = ({ children }) => {
       setNotifications(prev => prev.length > 0 ? [] : prev);
     }
   }, [user]);
+
+  // Load and filter notifications based on user role
+  useEffect(() => {
+    loadNotificationsForRole();
+  }, [loadNotificationsForRole]);
+
+  // Refresh when notifications are updated in another tab/session
+  useEffect(() => {
+    const handleStorage = (event) => {
+      if (event.key === "pms_notifications") {
+        loadNotificationsForRole();
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [loadNotificationsForRole]);
 
   // Create a new notification
   const createNotification = (message, type = "info", link = null, targetRole = null) => {
@@ -159,22 +175,7 @@ export const NotificationProvider = ({ children }) => {
 
   // Refresh notifications function
   const refreshNotifications = () => {
-    try {
-      const storedNotifications = localStorage.getItem("pms_notifications");
-      if (storedNotifications) {
-        const parsedNotifications = JSON.parse(storedNotifications);
-        // Filter notifications: show only if no targetRole or targetRole matches current user's role
-        const filteredNotifications = parsedNotifications.filter(notif =>
-          !notif.targetRole || notif.targetRole === user?.role
-        );
-        setNotifications(filteredNotifications);
-      } else {
-        setNotifications([]);
-      }
-    } catch (error) {
-      console.error("Error loading notifications from localStorage:", error);
-      setNotifications([]);
-    }
+    loadNotificationsForRole();
   };
 
   return (

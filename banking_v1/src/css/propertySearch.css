@@ -193,6 +193,27 @@
   gap: 16px;
 }
 
+.rejected-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: #eff6ff;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+}
+
+.rejected-banner-in-card {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.rejected-banner-text {
+  font-size: 14px;
+  color: #dc2626;
+  font-weight: 500;
+}
+
 .property-card {
   display: flex;
   justify-content: space-between;

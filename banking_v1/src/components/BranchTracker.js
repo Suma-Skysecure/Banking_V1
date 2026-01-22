@@ -805,20 +805,20 @@ function CreateBranchModal({ onClose, onBranchCreated }) {
                 required
               />
             ) : (
-              <select
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                className="form-select"
-                required
-              >
-                <option value="">Select City</option>
-                <option value="manhattan">Manhattan</option>
-                <option value="beverly">Beverly Hills</option>
-                <option value="chicago">Chicago</option>
-                <option value="miami">Miami</option>
-                <option value="seattle">Seattle</option>
-              </select>
+            <select
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              className="form-select"
+              required
+            >
+              <option value="">Select City</option>
+              <option value="manhattan">Manhattan</option>
+              <option value="beverly">Beverly Hills</option>
+              <option value="chicago">Chicago</option>
+              <option value="miami">Miami</option>
+              <option value="seattle">Seattle</option>
+            </select>
             )}
           </div>
 
